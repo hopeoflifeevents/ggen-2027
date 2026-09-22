@@ -29,7 +29,6 @@
     .font-bebas { font-family: 'Bebas Neue', sans-serif; }
     .font-mono-code { font-family: 'Space Mono', monospace; }
 
-    /* Laser scan animation */
     @keyframes scanLine {
       0% { top: 6%; opacity: 0.8; }
       50% { top: 88%; opacity: 1; }
@@ -49,14 +48,16 @@
 
     #reader video {
       object-fit: cover !important;
-      border-radius: 1.5rem;
+      border-radius: 1.25rem;
+      width: 100% !important;
+      height: 100% !important;
     }
   </style>
 </head>
 <body class="text-slate-100 min-h-screen flex flex-col justify-between selection:bg-amber-400 selection:text-black">
 
   <!-- TOP APP BAR -->
-  <header class="bg-slate-900/80 backdrop-blur-xl border-b border-white/10 px-4 py-3 sticky top-0 z-30">
+  <header class="bg-slate-900/90 backdrop-blur-xl border-b border-white/10 px-4 py-3 sticky top-0 z-30 shadow-lg">
     <div class="max-w-md mx-auto flex items-center justify-between">
       <div class="flex items-center gap-2.5">
         <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-amber-400 flex items-center justify-center text-white shadow-md shadow-blue-500/30">
@@ -72,78 +73,128 @@
         </div>
       </div>
 
-      <!-- Live Counter Badge -->
-      <button onclick="fetchStats()" class="bg-white/5 border border-white/10 hover:border-amber-400/50 px-3 py-1.5 rounded-xl flex items-center gap-2 transition active:scale-95">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <div class="text-left leading-none font-mono-code">
-          <span id="counterText" class="text-xs font-bold text-amber-300">-- / --</span>
-          <span class="block text-[8px] text-slate-400 uppercase tracking-wider">Admitted</span>
-        </div>
-      </button>
+      <div class="flex items-center gap-2">
+        <!-- Sound Toggle -->
+        <button onclick="toggleAudio()" id="soundBtn" title="Toggle Beep" class="bg-white/5 hover:bg-white/10 border border-white/10 p-2 rounded-xl text-slate-300 transition active:scale-95">
+          <i data-lucide="volume-2" id="soundIcon" class="w-4 h-4 text-amber-300"></i>
+        </button>
+
+        <!-- Live Counter Badge -->
+        <button onclick="fetchStats()" title="Tap to refresh count" class="bg-white/5 border border-white/10 hover:border-amber-400/50 px-3 py-1.5 rounded-xl flex items-center gap-2 transition active:scale-95">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <div class="text-left leading-none font-mono-code">
+            <span id="counterText" class="text-xs font-bold text-amber-300">-- / --</span>
+            <span class="block text-[8px] text-slate-400 uppercase tracking-wider">Admitted</span>
+          </div>
+        </button>
+      </div>
     </div>
   </header>
 
   <!-- MAIN SCANNER CONTAINER -->
-  <main class="max-w-md mx-auto w-full p-4 flex-1 flex flex-col justify-center">
+  <main class="max-w-md mx-auto w-full p-4 flex-1 flex flex-col justify-start">
 
-    <!-- CAMERA VIEWFINDER FRAME -->
-    <div class="relative bg-slate-950 rounded-3xl p-3 border border-white/10 shadow-2xl overflow-hidden mb-4">
+    <!-- CAMERA CONTAINER (Cleanly Framed, No Overlapping Reticle) -->
+    <div class="bg-slate-950 rounded-3xl p-3 border border-white/10 shadow-2xl mb-4">
       
-      <!-- Reticle corner borders -->
-      <div class="absolute top-5 left-5 w-7 h-7 border-t-2 border-l-2 border-amber-400 z-20 rounded-tl-lg pointer-events-none"></div>
-      <div class="absolute top-5 right-5 w-7 h-7 border-t-2 border-r-2 border-amber-400 z-20 rounded-tr-lg pointer-events-none"></div>
-      <div class="absolute bottom-5 left-5 w-7 h-7 border-b-2 border-l-2 border-amber-400 z-20 rounded-bl-lg pointer-events-none"></div>
-      <div class="absolute bottom-5 right-5 w-7 h-7 border-b-2 border-r-2 border-amber-400 z-20 rounded-br-lg pointer-events-none"></div>
+      <!-- Video Viewfinder Frame -->
+      <div class="relative w-full aspect-square bg-slate-900 rounded-2xl overflow-hidden flex items-center justify-center">
+        
+        <!-- Reticle corners frame the video area only -->
+        <div class="absolute top-3 left-3 w-6 h-6 border-t-2 border-l-2 border-amber-400 z-20 rounded-tl-lg pointer-events-none"></div>
+        <div class="absolute top-3 right-3 w-6 h-6 border-t-2 border-r-2 border-amber-400 z-20 rounded-tr-lg pointer-events-none"></div>
+        <div class="absolute bottom-3 left-3 w-6 h-6 border-b-2 border-l-2 border-amber-400 z-20 rounded-bl-lg pointer-events-none"></div>
+        <div class="absolute bottom-3 right-3 w-6 h-6 border-b-2 border-r-2 border-amber-400 z-20 rounded-br-lg pointer-events-none"></div>
 
-      <!-- Laser Scanner Line -->
-      <div id="laser" class="laser-line"></div>
+        <!-- Laser Line -->
+        <div id="laser" class="laser-line"></div>
 
-      <!-- Video Feed Container -->
-      <div id="reader" class="w-full aspect-square bg-slate-900 rounded-2xl overflow-hidden flex items-center justify-center relative">
-        <div id="cameraLoadingText" class="text-xs font-mono-code text-slate-500 text-center p-4">
-          <i data-lucide="camera" class="w-8 h-8 text-slate-600 mx-auto mb-2 animate-bounce"></i>
-          Requesting camera permissions...
+        <!-- Video Target -->
+        <div id="reader" class="w-full h-full"></div>
+
+        <!-- Fallback/Permission Overlay -->
+        <div id="cameraPrompt" class="absolute inset-0 bg-slate-900/95 flex flex-col items-center justify-center p-6 text-center z-10">
+          <div class="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-amber-400 mb-3 shadow-md">
+            <i data-lucide="camera" class="w-6 h-6"></i>
+          </div>
+          <h3 class="text-sm font-bold text-white mb-1">Camera Permission Needed</h3>
+          <p class="text-[11px] text-slate-400 mb-4 leading-relaxed">
+            Allow camera access to scan QR passes. If on desktop, test on your smartphone or use manual lookup below.
+          </p>
+          <button onclick="requestCameraAccess()" class="bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-slate-950 text-xs font-extrabold uppercase tracking-wider px-5 py-2.5 rounded-full transition active:scale-95 shadow-md shadow-amber-400/20 flex items-center gap-1.5">
+            <i data-lucide="video" class="w-3.5 h-3.5"></i>
+            <span>Enable Camera</span>
+          </button>
         </div>
       </div>
 
-      <!-- Camera Selector & Controls -->
-      <div class="mt-3 flex items-center gap-2">
-        <select id="cameraSelect" onchange="switchCamera(this.value)" class="flex-1 bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono-code text-slate-300 focus:outline-none focus:border-amber-400">
-          <option value="">Loading cameras...</option>
-        </select>
+      <!-- Quick Controls: Flip Camera + Flashlight -->
+      <div class="mt-3 flex items-center justify-between gap-2 px-1">
+        <div class="text-[11px] font-mono-code text-slate-400 flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="cameraStatusText">Rear Viewfinder Ready</span>
+        </div>
 
-        <button type="button" onclick="toggleTorch()" id="torchBtn" class="hidden bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 p-2 rounded-xl transition active:scale-95">
-          <i data-lucide="flashlight" class="w-4 h-4 text-amber-300"></i>
-        </button>
+        <div class="flex items-center gap-2">
+          <!-- Torch Toggle -->
+          <button type="button" onclick="toggleTorch()" id="torchBtn" title="Flashlight" class="bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 p-2 rounded-xl transition active:scale-95">
+            <i data-lucide="zap" class="w-4 h-4 text-amber-300"></i>
+          </button>
+
+          <!-- Flip Camera -->
+          <button type="button" onclick="flipCamera()" title="Switch Camera" class="bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 p-2 rounded-xl transition active:scale-95">
+            <i data-lucide="refresh-cw" class="w-4 h-4 text-blue-300"></i>
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- MANUAL LOOKUP ACCORDION (For Cracked Screens / Low Battery) -->
-    <div class="bg-slate-900/60 border border-white/10 rounded-2xl p-3 backdrop-blur-md">
-      <details class="group">
+    <!-- MANUAL LOOKUP (Supports Pass ID, Name, or Reg ID) -->
+    <div class="bg-slate-900/70 border border-white/10 rounded-2xl p-3 backdrop-blur-md mb-4 shadow-lg">
+      <details class="group" id="manualDetailsAccordion">
         <summary class="flex justify-between items-center cursor-pointer list-none text-xs font-mono-code font-bold text-slate-300">
           <span class="flex items-center gap-2">
-            <i data-lucide="keyboard" class="w-4 h-4 text-blue-400"></i>
-            <span>MANUAL PASS LOOKUP</span>
+            <i data-lucide="keyboard" class="w-4 h-4 text-amber-400"></i>
+            <span>MANUAL LOOKUP (NAME OR PASS ID)</span>
           </span>
           <i data-lucide="chevron-down" class="w-4 h-4 text-slate-500 transition-transform group-open:rotate-180"></i>
         </summary>
 
         <form onsubmit="handleManualSearch(event)" class="mt-3 pt-3 border-t border-white/5 flex gap-2">
-          <input type="text" id="manualCode" placeholder="e.g. EMPOWERED-0001" required
-            class="flex-1 bg-slate-800/80 border border-white/10 rounded-xl px-3 py-2 text-sm text-white font-mono-code uppercase placeholder:text-slate-500 focus:outline-none focus:border-amber-400 transition" />
-          <button type="submit" class="bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs uppercase tracking-wider active:scale-95 transition">
-            Check
+          <div class="relative flex-1">
+            <input type="text" id="manualCode" placeholder="e.g. EMPOWERED-0001 or Lawrence" required
+              class="w-full bg-slate-800/80 border border-white/10 rounded-xl pl-3 pr-8 py-2 text-sm text-white font-mono-code placeholder:text-slate-500 focus:outline-none focus:border-amber-400 transition" />
+            <button type="button" onclick="document.getElementById('manualCode').value=''" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white text-xs">✕</button>
+          </div>
+          <button type="submit" id="manualSearchBtn" class="bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs uppercase tracking-wider active:scale-95 transition flex items-center gap-1">
+            <span>Check</span>
           </button>
         </form>
       </details>
+    </div>
+
+    <!-- RECENTLY ADMITTED ACTIVITY FEED -->
+    <div class="bg-slate-900/40 border border-white/5 rounded-2xl p-3">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-[10px] font-mono-code text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+          <i data-lucide="history" class="w-3 h-3 text-blue-400"></i>
+          <span>Recently Admitted</span>
+        </span>
+        <span id="recentCount" class="text-[9px] font-mono-code text-slate-600">Live</span>
+      </div>
+
+      <div id="recentScansList" class="space-y-1.5">
+        <div class="text-[11px] font-mono-code text-slate-600 text-center py-2">
+          No scans yet this session.
+        </div>
+      </div>
     </div>
 
   </main>
 
   <!-- FOOTER BRANDING -->
   <footer class="text-center py-3 text-[10px] font-mono-code text-slate-500 border-t border-white/5">
-    Hope of Life Christian Ministries • Acts 1:8
+    Hope of Life Christian Ministries • GGen Movement
   </footer>
 
   <!-- ======================================================== -->
@@ -175,18 +226,23 @@
     // ==============================================================
     // CONFIGURATION: PASTE YOUR DEPLOYED APPS SCRIPT URL HERE
     // ==============================================================
-    const APPS_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbxOB6MC6oCHNcOEMwf2KC8eTfhFED6WvRr5jnjL4yi50nRvmADrTi2TWapH3Q8ozg88Fw/exec";
+    const APPS_SCRIPT_API_URL = "hhttps://script.google.com/macros/s/AKfycbxOB6MC6oCHNcOEMwf2KC8eTfhFED6WvRr5jnjL4yi50nRvmADrTi2TWapH3Q8ozg88Fw/exec";
 
     lucide.createIcons();
 
     let html5QrCode = null;
     let isProcessing = false;
-    let currentCameraId = null;
+    let currentCameraIndex = 0;
+    let cameraList = [];
+    let isTorchOn = false;
+    let isSoundMuted = false;
     let autoCloseTimer = null;
     let countdownInterval = null;
+    let recentAdmitted = [];
 
-    // Web Audio Synthesizer Beeps (Works 100% offline, zero audio files needed)
+    // Sound Synthesizer
     function playBeep(type = 'success') {
+      if (isSoundMuted) return;
       try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const osc = audioCtx.createOscillator();
@@ -195,17 +251,15 @@
         gain.connect(audioCtx.destination);
 
         if (type === 'success') {
-          // Cheerful two-tone chord
           osc.type = 'sine';
-          osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
-          osc.frequency.setValueAtTime(880.00, audioCtx.currentTime + 0.1); // A5
+          osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+          osc.frequency.setValueAtTime(880.00, audioCtx.currentTime + 0.1);
           gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
           gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
           osc.start();
           osc.stop(audioCtx.currentTime + 0.35);
           if (navigator.vibrate) navigator.vibrate([80, 50, 80]);
         } else {
-          // Warning/Error low buzzing tone
           osc.type = 'sawtooth';
           osc.frequency.setValueAtTime(180, audioCtx.currentTime);
           gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
@@ -217,72 +271,88 @@
       } catch (e) {}
     }
 
-    // Initialize Cameras
-    async function initCamera() {
+    function toggleAudio() {
+      isSoundMuted = !isSoundMuted;
+      const soundIcon = document.getElementById("soundIcon");
+      if (isSoundMuted) {
+        soundIcon.setAttribute("data-lucide", "volume-x");
+        soundIcon.classList.replace("text-amber-300", "text-slate-500");
+      } else {
+        soundIcon.setAttribute("data-lucide", "volume-2");
+        soundIcon.classList.replace("text-slate-500", "text-amber-300");
+      }
+      lucide.createIcons();
+    }
+
+    // Camera Management
+    async function requestCameraAccess() {
       try {
         const devices = await Html5Qrcode.getCameras();
-        const select = document.getElementById("cameraSelect");
-        select.innerHTML = "";
-
         if (devices && devices.length > 0) {
-          // Prefer back environment camera
-          let backCamera = devices.find(d => d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('rear'));
-          currentCameraId = backCamera ? backCamera.id : devices[0].id;
+          cameraList = devices;
+          let backIndex = devices.findIndex(d => d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('rear') || d.label.toLowerCase().includes('environment'));
+          currentCameraIndex = backIndex !== -1 ? backIndex : 0;
 
-          devices.forEach(device => {
-            const opt = document.createElement("option");
-            opt.value = device.id;
-            opt.text = device.label || `Camera ${select.length + 1}`;
-            if (device.id === currentCameraId) opt.selected = true;
-            select.appendChild(opt);
-          });
-
-          startScanner(currentCameraId);
+          document.getElementById("cameraPrompt").classList.add("hidden");
+          startScanner(cameraList[currentCameraIndex].id);
         } else {
-          document.getElementById("cameraLoadingText").innerText = "No camera found on this device.";
+          alert("No camera found on this device.");
         }
       } catch (err) {
-        document.getElementById("cameraLoadingText").innerText = "Camera permission denied or camera unavailable.";
+        alert("Camera permission denied. Please allow camera access in browser settings.");
       }
     }
 
     function startScanner(cameraId) {
       if (html5QrCode) {
-        html5QrCode.stop().then(() => startScannerInstance(cameraId)).catch(() => startScannerInstance(cameraId));
+        html5QrCode.stop().then(() => startInstance(cameraId)).catch(() => startInstance(cameraId));
       } else {
-        startScannerInstance(cameraId);
+        startInstance(cameraId);
       }
     }
 
-    function startScannerInstance(cameraId) {
+    function startInstance(cameraId) {
       html5QrCode = new Html5Qrcode("reader");
       const config = {
         fps: 15,
-        qrbox: { width: 250, height: 250 },
+        qrbox: { width: 220, height: 220 },
         aspectRatio: 1.0
       };
 
       html5QrCode.start(cameraId, config, onScanSuccess, () => {});
-      document.getElementById("cameraLoadingText").classList.add("hidden");
+      document.getElementById("cameraStatusText").innerText = cameraList[currentCameraIndex] ? cameraList[currentCameraIndex].label.slice(0, 20) : "Active";
     }
 
-    function switchCamera(newCameraId) {
-      if (newCameraId && newCameraId !== currentCameraId) {
-        currentCameraId = newCameraId;
-        startScanner(newCameraId);
+    function flipCamera() {
+      if (!cameraList || cameraList.length <= 1) {
+        alert("Only one camera detected on this device.");
+        return;
+      }
+      currentCameraIndex = (currentCameraIndex + 1) % cameraList.length;
+      startScanner(cameraList[currentCameraIndex].id);
+    }
+
+    async function toggleTorch() {
+      if (!html5QrCode) return;
+      try {
+        isTorchOn = !isTorchOn;
+        await html5QrCode.applyVideoConstraints({
+          advanced: [{ torch: isTorchOn }]
+        });
+      } catch (e) {
+        alert("Torch/Flashlight not supported by this camera hardware.");
       }
     }
 
-    // Process Scanned Code
+    // QR Success
     async function onScanSuccess(decodedText) {
       if (isProcessing) return;
       isProcessing = true;
       document.getElementById("laser").style.display = "none";
-
       await processPassVerification(decodedText);
     }
 
-    // Manual Form Submission
+    // Manual Search Handler
     async function handleManualSearch(e) {
       e.preventDefault();
       const code = document.getElementById("manualCode").value.trim();
@@ -291,18 +361,22 @@
       await processPassVerification(code);
     }
 
-    // Send code to Apps Script Check-in Endpoint
+    // Process Pass Verification
     async function processPassVerification(code) {
-      // Demo preview fallback if URL not set
-      if (!APPS_SCRIPT_API_URL || APPS_SCRIPT_API_URL.includes("YOUR_APPS_SCRIPT_WEB_APP_URL_HERE")) {
+      // Preview Fallback
+      if (!APPS_SCRIPT_API_URL || APPS_SCRIPT_API_URL.includes("REPLACE_ME")) {
         playBeep('success');
-        showModal('success', {
-          title: "PREVIEW MODE: VERIFIED",
-          badge: "ADMISSION CONFIRMED",
+        const demoData = {
           name: "Lawrence Justine Maqui",
           church: "Hope of Life Christian Ministries",
-          passId: "EMPOWERED-0001",
+          passId: code.toUpperCase(),
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+        addRecentScan(demoData);
+        showModal('success', {
+          title: "PREVIEW: VERIFIED",
+          badge: "ADMISSION CONFIRMED",
+          ...demoData
         });
         return;
       }
@@ -320,6 +394,7 @@
 
         if (result.success) {
           playBeep('success');
+          addRecentScan(result.delegate);
           showModal('success', {
             title: "DELEGATE ADMITTED",
             badge: "ENTRY VERIFIED ● PASS ACTIVE",
@@ -328,7 +403,7 @@
             passId: result.delegate.passId,
             time: result.delegate.checkInTime
           });
-          fetchStats(); // Update live counter
+          fetchStats();
         } else if (result.errorType === 'ALREADY_CHECKED_IN') {
           playBeep('error');
           showModal('warning', {
@@ -363,7 +438,25 @@
       }
     }
 
-    // Modal Display Handler
+    function addRecentScan(delegate) {
+      recentAdmitted.unshift(delegate);
+      if (recentAdmitted.length > 3) recentAdmitted.pop();
+
+      const container = document.getElementById("recentScansList");
+      container.innerHTML = recentAdmitted.map(d => `
+        <div class="bg-slate-950/80 border border-white/5 rounded-xl px-3 py-2 flex items-center justify-between text-xs font-mono-code">
+          <div>
+            <div class="text-white font-bold">${d.name}</div>
+            <div class="text-[10px] text-slate-400">${d.church}</div>
+          </div>
+          <div class="text-right">
+            <span class="text-amber-400 font-bold">${d.passId}</span>
+            <div class="text-[9px] text-emerald-400">${d.time || d.checkInTime}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
     function showModal(type, data) {
       const modal = document.getElementById("resultModal");
       const content = document.getElementById("modalContent");
@@ -380,7 +473,7 @@
         badge.className = "inline-block text-[10px] font-mono-code font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-2 bg-emerald-500/20 text-emerald-300 border border-emerald-400/40";
         badge.innerText = data.badge;
         title.innerText = data.title;
-        btn.className = "w-full py-3 rounded-xl font-bebas text-2xl tracking-wider uppercase transition active:scale-95 flex items-center justify-center gap-2 bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-black shadow-lg shadow-emerald-400/20";
+        btn.className = "w-full py-3 rounded-xl font-bebas text-2xl tracking-wider uppercase transition active:scale-95 flex items-center justify-center gap-2 bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-black shadow-lg shadow-emerald-400/20 cursor-pointer";
       } else if (type === 'warning') {
         content.className = "w-full max-w-sm rounded-3xl p-6 border border-amber-500/50 bg-gradient-to-b from-slate-900 to-amber-950/60 text-center shadow-[0_0_50px_rgba(245,158,11,0.35)]";
         iconBox.className = "w-16 h-16 rounded-2xl mx-auto flex items-center justify-center mb-3 bg-amber-400 text-slate-950 shadow-lg shadow-amber-400/50";
@@ -388,7 +481,7 @@
         badge.className = "inline-block text-[10px] font-mono-code font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-2 bg-amber-500/20 text-amber-300 border border-amber-400/40";
         badge.innerText = data.badge;
         title.innerText = data.title;
-        btn.className = "w-full py-3 rounded-xl font-bebas text-2xl tracking-wider uppercase transition active:scale-95 flex items-center justify-center gap-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black shadow-lg shadow-amber-400/20";
+        btn.className = "w-full py-3 rounded-xl font-bebas text-2xl tracking-wider uppercase transition active:scale-95 flex items-center justify-center gap-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black shadow-lg shadow-amber-400/20 cursor-pointer";
       } else {
         content.className = "w-full max-w-sm rounded-3xl p-6 border border-rose-500/50 bg-gradient-to-b from-slate-900 to-rose-950/60 text-center shadow-[0_0_50px_rgba(244,63,94,0.35)]";
         iconBox.className = "w-16 h-16 rounded-2xl mx-auto flex items-center justify-center mb-3 bg-rose-500 text-white shadow-lg shadow-rose-500/50";
@@ -396,7 +489,7 @@
         badge.className = "inline-block text-[10px] font-mono-code font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-2 bg-rose-500/20 text-rose-300 border border-rose-400/40";
         badge.innerText = data.badge;
         title.innerText = data.title;
-        btn.className = "w-full py-3 rounded-xl font-bebas text-2xl tracking-wider uppercase transition active:scale-95 flex items-center justify-center gap-2 bg-rose-500 hover:bg-rose-400 text-white font-black";
+        btn.className = "w-full py-3 rounded-xl font-bebas text-2xl tracking-wider uppercase transition active:scale-95 flex items-center justify-center gap-2 bg-rose-500 hover:bg-rose-400 text-white font-black cursor-pointer";
       }
 
       details.innerHTML = `
@@ -407,14 +500,12 @@
       `;
 
       lucide.createIcons();
-
       modal.classList.remove("hidden");
       setTimeout(() => {
         content.classList.remove("scale-95", "opacity-0");
         content.classList.add("scale-100", "opacity-100");
       }, 20);
 
-      // Auto-resume countdown
       let remaining = 3;
       document.getElementById("countdownSecs").innerText = remaining;
       clearInterval(countdownInterval);
@@ -448,7 +539,7 @@
     }
 
     async function fetchStats() {
-      if (!APPS_SCRIPT_API_URL || APPS_SCRIPT_API_URL.includes("YOUR_APPS_SCRIPT_WEB_APP_URL_HERE")) return;
+      if (!APPS_SCRIPT_API_URL || APPS_SCRIPT_API_URL.includes("REPLACE_ME")) return;
       try {
         const res = await fetch(APPS_SCRIPT_API_URL, {
           method: 'POST',
@@ -462,7 +553,8 @@
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-      initCamera();
+      // Auto-trigger camera prompt on page load
+      requestCameraAccess();
       fetchStats();
     });
   </script>
