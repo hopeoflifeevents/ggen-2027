@@ -693,17 +693,22 @@
       return 'blue';
     }
 
+    // ==============================================================
+    // 1. LEVELED PILLARS (KEYNOTE PLENARY LINEUP)
+    // ==============================================================
     function renderSpeakers(speakers) {
       const container = document.getElementById("speakersContainer");
       if (!speakers || speakers.length === 0) return;
-
+    
       container.innerHTML = speakers.map(sp => {
         const themeKey = getPillarThemeKey(sp);
         const theme = colorConfig[themeKey] || colorConfig.blue;
         const isRevealed = (sp.status === 'REVEALED' && sp.photoUrl);
-
+    
         return `
-          <div class="group relative rounded-3xl overflow-hidden border ${theme.border} shadow-2xl transition-all duration-500 hover:-translate-y-2 h-[420px] sm:h-[450px] flex flex-col justify-between p-5 bg-slate-950">
+          <div class="group relative rounded-3xl overflow-hidden border ${theme.border} shadow-2xl transition-all duration-500 hover:-translate-y-2 h-[440px] sm:h-[460px] flex flex-col justify-between p-5 bg-slate-950">
+            
+            <!-- Background Photo / Silhouette -->
             <div class="absolute inset-0 z-0 overflow-hidden">
               ${isRevealed ? `
                 <img src="${sp.photoUrl}" alt="${sp.speakerName}" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700" />
@@ -716,54 +721,69 @@
                   </svg>
                 </div>
               `}
-              <div class="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-slate-950/40 to-transparent pointer-events-none"></div>
-              <div class="absolute inset-x-0 bottom-0 h-[48%] bg-gradient-to-t from-slate-950 via-slate-950/85 to-transparent pointer-events-none"></div>
+              <div class="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-slate-950/60 to-transparent pointer-events-none"></div>
+              <div class="absolute inset-x-0 bottom-0 h-[52%] bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent pointer-events-none"></div>
             </div>
-
-            <div class="relative z-10 flex items-center justify-between gap-2">
-              <div class="${theme.badge} border text-xs sm:text-sm font-bebas tracking-widest px-3.5 py-1.5 rounded-xl uppercase shadow-lg flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full ${theme.pulse} ${isRevealed ? '' : 'animate-ping'}"></span>
-                <span>${sp.title}</span>
+    
+            <!-- 1. TOP HEADER: FIXED HEIGHT TO KEEP ALL PILLARS 100% LEVEL -->
+            <div class="relative z-10 flex items-center justify-between gap-2 h-9 w-full">
+              <div class="${theme.badge} border text-xs sm:text-[13px] font-bebas tracking-wide px-3 py-1 rounded-xl uppercase shadow-lg flex items-center gap-1.5 whitespace-nowrap overflow-hidden max-w-[70%]">
+                <span class="w-2 h-2 rounded-full ${theme.pulse} ${isRevealed ? '' : 'animate-ping'} flex-shrink-0"></span>
+                <span class="truncate">${sp.title}</span>
               </div>
-              <span class="bg-slate-950/90 border border-white/15 text-[9px] font-mono-code font-bold ${theme.subColor} px-2.5 py-1.5 rounded-xl uppercase shadow-sm">
+              <span class="bg-slate-950/90 border border-white/15 text-[9px] font-mono-code font-bold ${theme.subColor} px-2.5 py-1 rounded-xl uppercase shadow-sm whitespace-nowrap flex-shrink-0">
                 PLENARY ${sp.pillarNum}
               </span>
             </div>
-
-            <div class="relative z-10 text-left">
-              ${!isRevealed ? `
-                <div class="mb-2">
-                  <span class="bg-amber-400 text-slate-950 font-mono-code font-black text-[9px] uppercase px-2.5 py-1 rounded-md tracking-wider shadow-md inline-block">
+    
+            <!-- 2. BOTTOM CONTENT: STRUCTURED SLOTS TO PREVENT JUMPING -->
+            <div class="relative z-10 text-left w-full">
+              
+              <!-- Reveal Slot (Keeps same height whether revealed or not) -->
+              <div class="h-6 flex items-center mb-1">
+                ${!isRevealed ? `
+                  <span class="bg-amber-400 text-slate-950 font-mono-code font-black text-[9px] uppercase px-2 py-0.5 rounded tracking-wider shadow-md inline-block">
                     PLENARY REVEAL SOON
                   </span>
-                </div>
-              ` : ''}
-
-              <h3 class="font-bebas text-2xl sm:text-3xl text-white tracking-wide leading-tight drop-shadow-md">
-                ${isRevealed ? sp.speakerName : sp.title}
-              </h3>
-
-              <p class="text-[11px] ${theme.subColor} font-semibold uppercase tracking-wider font-mono-code mt-0.5">
+                ` : ''}
+              </div>
+    
+              <!-- Speaker / Plenary Name (Fixed height box) -->
+              <div class="h-14 sm:h-16 flex items-center">
+                <h3 class="font-bebas text-2xl sm:text-[1.75rem] text-white tracking-wide leading-tight drop-shadow-md line-clamp-2">
+                  ${isRevealed ? sp.speakerName : sp.title}
+                </h3>
+              </div>
+    
+              <!-- Title Subtitle -->
+              <p class="text-[11px] ${theme.subColor} font-semibold uppercase tracking-wider font-mono-code truncate">
                 ${isRevealed ? sp.speakerTitle : sp.subtitle}
               </p>
-
+    
+              <!-- Footer Metadata Bar -->
               <div class="mt-3 pt-2.5 border-t border-white/10 flex items-center justify-between text-[9px] text-slate-400 font-mono-code">
-                <span class="text-white font-bold tracking-wider">${sp.subtitle ? sp.subtitle.toUpperCase() : ''}</span>
-                <span class="text-slate-500 font-bold">ALL SESSIONS INCLUDED</span>
+                <span class="text-white font-bold tracking-wider truncate max-w-[130px]">${sp.subtitle ? sp.subtitle.toUpperCase() : ''}</span>
+                <span class="text-slate-500 font-bold flex-shrink-0">ALL SESSIONS</span>
               </div>
             </div>
+    
           </div>
         `;
       }).join('');
     }
-
+    
+    // ==============================================================
+    // 2. LEVELED TEAM CARDS (ALL BADGES & NAMES AT EXACT SAME HEIGHT)
+    // ==============================================================
     function renderTeam(team) {
       const container = document.getElementById("teamContainer");
       if (!team || team.length === 0) return;
-
+    
       container.innerHTML = team.map(tm => {
         return `
-          <div class="w-72 sm:w-auto flex-shrink-0 snap-center group relative rounded-3xl overflow-hidden border border-white/10 hover:border-amber-400/60 shadow-2xl transition-all duration-500 hover:-translate-y-2 h-[380px] sm:h-[420px] flex flex-col justify-end p-5 bg-slate-950">
+          <div class="w-72 sm:w-auto flex-shrink-0 snap-center group relative rounded-3xl overflow-hidden border border-white/10 hover:border-amber-400/60 shadow-2xl transition-all duration-500 hover:-translate-y-2 h-[400px] sm:h-[430px] flex flex-col justify-end p-5 bg-slate-950">
+            
+            <!-- Photo -->
             <div class="absolute inset-0 z-0">
               ${tm.photoUrl ? `
                 <img src="${tm.photoUrl}" alt="${tm.name}" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700" />
@@ -775,24 +795,35 @@
                   </svg>
                 </div>
               `}
-              <div class="absolute inset-x-0 bottom-0 h-[48%] bg-gradient-to-t from-slate-950 via-slate-950/85 to-transparent pointer-events-none"></div>
+              <div class="absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent pointer-events-none"></div>
             </div>
-
-            <div class="relative z-10 text-left">
-              <span class="inline-block bg-amber-400 text-slate-950 font-mono-code font-black text-[9px] sm:text-[10px] uppercase px-2.5 py-1 rounded-md tracking-wider mb-2 shadow-md">
-                ${tm.roleBadge}
-              </span>
-
-              <h3 class="font-bebas text-2xl sm:text-3xl text-white tracking-wide leading-tight drop-shadow-md">
-                ${tm.name}
-              </h3>
-
-              <div class="flex items-center gap-2 text-[10px] text-slate-300 font-mono-code mt-1">
-                <span class="text-blue-400 font-bold">${tm.department}</span>
-                <span class="text-slate-600">•</span>
-                <span>GGen Movement</span>
+    
+            <!-- Content Container -->
+            <div class="relative z-10 text-left w-full">
+              
+              <!-- FIXED-HEIGHT ROLE BADGE: Forces every badge onto the exact same horizontal line -->
+              <div class="h-7 flex items-center mb-1">
+                <span class="inline-block bg-amber-400 text-slate-950 font-mono-code font-black text-[9px] sm:text-[9.5px] uppercase px-2.5 py-0.5 rounded-md tracking-wider shadow-md truncate max-w-full">
+                  ${tm.roleBadge}
+                </span>
+              </div>
+    
+              <!-- FIXED-HEIGHT NAME CONTAINER: Prevents 1-line and 3-line names from misaligning the card -->
+              <div class="h-14 sm:h-16 flex items-center">
+                <h3 class="font-bebas text-2xl sm:text-[1.65rem] text-white tracking-wide leading-tight drop-shadow-md line-clamp-2">
+                  ${tm.name}
+                </h3>
+              </div>
+    
+              <!-- DEPARTMENT FOOTER: Prevents long church names from wrapping clumsily -->
+              <div class="mt-2 pt-2 border-t border-white/10 flex items-center justify-between text-[10px] font-mono-code text-slate-300">
+                <span class="text-blue-400 font-semibold truncate max-w-[140px] sm:max-w-[155px]" title="${tm.department}">
+                  ${tm.department}
+                </span>
+                <span class="text-slate-500 font-bold flex-shrink-0">• GGen</span>
               </div>
             </div>
+    
           </div>
         `;
       }).join('');
