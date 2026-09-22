@@ -94,13 +94,13 @@
   <!-- MAIN SCANNER CONTAINER -->
   <main class="max-w-md mx-auto w-full p-4 flex-1 flex flex-col justify-start">
 
-    <!-- CAMERA CONTAINER (Cleanly Framed, No Overlapping Reticle) -->
+    <!-- CAMERA CONTAINER -->
     <div class="bg-slate-950 rounded-3xl p-3 border border-white/10 shadow-2xl mb-4">
       
       <!-- Video Viewfinder Frame -->
       <div class="relative w-full aspect-square bg-slate-900 rounded-2xl overflow-hidden flex items-center justify-center">
         
-        <!-- Reticle corners frame the video area only -->
+        <!-- Reticle corners frame video only -->
         <div class="absolute top-3 left-3 w-6 h-6 border-t-2 border-l-2 border-amber-400 z-20 rounded-tl-lg pointer-events-none"></div>
         <div class="absolute top-3 right-3 w-6 h-6 border-t-2 border-r-2 border-amber-400 z-20 rounded-tr-lg pointer-events-none"></div>
         <div class="absolute bottom-3 left-3 w-6 h-6 border-b-2 border-l-2 border-amber-400 z-20 rounded-bl-lg pointer-events-none"></div>
@@ -112,46 +112,46 @@
         <!-- Video Target -->
         <div id="reader" class="w-full h-full"></div>
 
-        <!-- Fallback/Permission Overlay -->
+        <!-- Camera Permission / Request Overlay -->
         <div id="cameraPrompt" class="absolute inset-0 bg-slate-900/95 flex flex-col items-center justify-center p-6 text-center z-10">
           <div class="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-amber-400 mb-3 shadow-md">
             <i data-lucide="camera" class="w-6 h-6"></i>
           </div>
-          <h3 class="text-sm font-bold text-white mb-1">Camera Permission Needed</h3>
+          <h3 class="text-sm font-bold text-white mb-1">Camera Permission</h3>
           <p class="text-[11px] text-slate-400 mb-4 leading-relaxed">
-            Allow camera access to scan QR passes. If on desktop, test on your smartphone or use manual lookup below.
+            Allow camera access to scan QR passes. If on a PC without a webcam, use manual lookup below.
           </p>
-          <button onclick="requestCameraAccess()" class="bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-slate-950 text-xs font-extrabold uppercase tracking-wider px-5 py-2.5 rounded-full transition active:scale-95 shadow-md shadow-amber-400/20 flex items-center gap-1.5">
+          <button onclick="requestCameraAccess()" class="bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-slate-950 text-xs font-extrabold uppercase tracking-wider px-5 py-2.5 rounded-full transition active:scale-95 shadow-md shadow-amber-400/20 flex items-center gap-1.5 cursor-pointer">
             <i data-lucide="video" class="w-3.5 h-3.5"></i>
             <span>Enable Camera</span>
           </button>
         </div>
       </div>
 
-      <!-- Quick Controls: Flip Camera + Flashlight -->
+      <!-- Quick Controls -->
       <div class="mt-3 flex items-center justify-between gap-2 px-1">
-        <div class="text-[11px] font-mono-code text-slate-400 flex items-center gap-1.5">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span id="cameraStatusText">Rear Viewfinder Ready</span>
+        <div class="text-[11px] font-mono-code text-slate-400 flex items-center gap-1.5 truncate max-w-[210px]">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0"></span>
+          <span id="cameraStatusText" class="truncate">Scanner Standby</span>
         </div>
 
         <div class="flex items-center gap-2">
           <!-- Torch Toggle -->
-          <button type="button" onclick="toggleTorch()" id="torchBtn" title="Flashlight" class="bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 p-2 rounded-xl transition active:scale-95">
+          <button type="button" onclick="toggleTorch()" id="torchBtn" title="Flashlight" class="bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 p-2 rounded-xl transition active:scale-95 cursor-pointer">
             <i data-lucide="zap" class="w-4 h-4 text-amber-300"></i>
           </button>
 
           <!-- Flip Camera -->
-          <button type="button" onclick="flipCamera()" title="Switch Camera" class="bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 p-2 rounded-xl transition active:scale-95">
+          <button type="button" onclick="flipCamera()" title="Switch Camera" class="bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 p-2 rounded-xl transition active:scale-95 cursor-pointer">
             <i data-lucide="refresh-cw" class="w-4 h-4 text-blue-300"></i>
           </button>
         </div>
       </div>
     </div>
 
-    <!-- MANUAL LOOKUP (Supports Pass ID, Name, or Reg ID) -->
+    <!-- MANUAL LOOKUP (Supports Pass ID, Full Name, or Reg ID) -->
     <div class="bg-slate-900/70 border border-white/10 rounded-2xl p-3 backdrop-blur-md mb-4 shadow-lg">
-      <details class="group" id="manualDetailsAccordion">
+      <details class="group" id="manualDetailsAccordion" open>
         <summary class="flex justify-between items-center cursor-pointer list-none text-xs font-mono-code font-bold text-slate-300">
           <span class="flex items-center gap-2">
             <i data-lucide="keyboard" class="w-4 h-4 text-amber-400"></i>
@@ -162,11 +162,11 @@
 
         <form onsubmit="handleManualSearch(event)" class="mt-3 pt-3 border-t border-white/5 flex gap-2">
           <div class="relative flex-1">
-            <input type="text" id="manualCode" placeholder="e.g. EMPOWERED-0001 or Lawrence" required
+            <input type="text" id="manualCode" placeholder="e.g. EMPOWERED-0003 or Lawrence" required
               class="w-full bg-slate-800/80 border border-white/10 rounded-xl pl-3 pr-8 py-2 text-sm text-white font-mono-code placeholder:text-slate-500 focus:outline-none focus:border-amber-400 transition" />
-            <button type="button" onclick="document.getElementById('manualCode').value=''" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white text-xs">✕</button>
+            <button type="button" onclick="document.getElementById('manualCode').value=''" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white text-xs cursor-pointer">✕</button>
           </div>
-          <button type="submit" id="manualSearchBtn" class="bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs uppercase tracking-wider active:scale-95 transition flex items-center gap-1">
+          <button type="submit" id="manualSearchBtn" class="bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs uppercase tracking-wider active:scale-95 transition flex items-center gap-1 cursor-pointer">
             <span>Check</span>
           </button>
         </form>
@@ -180,7 +180,7 @@
           <i data-lucide="history" class="w-3 h-3 text-blue-400"></i>
           <span>Recently Admitted</span>
         </span>
-        <span id="recentCount" class="text-[9px] font-mono-code text-slate-600">Live</span>
+        <span id="recentCount" class="text-[9px] font-mono-code text-slate-600">Live Feed</span>
       </div>
 
       <div id="recentScansList" class="space-y-1.5">
@@ -192,9 +192,9 @@
 
   </main>
 
-  <!-- FOOTER BRANDING -->
+  <!-- FOOTER -->
   <footer class="text-center py-3 text-[10px] font-mono-code text-slate-500 border-t border-white/5">
-    Hope of Life Christian Ministries • GGen Movement
+    Hope of Life Christian Ministries • Acts 1:8
   </footer>
 
   <!-- ======================================================== -->
@@ -211,7 +211,7 @@
       
       <div id="modalDetails" class="my-4 bg-black/40 border border-white/10 rounded-2xl p-4 text-left font-mono-code text-xs space-y-1.5"></div>
 
-      <button type="button" onclick="closeModal()" id="modalBtn" class="w-full py-3 rounded-xl font-bebas text-2xl tracking-wider uppercase transition active:scale-95 flex items-center justify-center gap-2">
+      <button type="button" onclick="closeModal()" id="modalBtn" class="w-full py-3 rounded-xl font-bebas text-2xl tracking-wider uppercase transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer">
         <span>SCAN NEXT DELEGATE</span>
         <i data-lucide="arrow-right" class="w-5 h-5"></i>
       </button>
@@ -224,9 +224,9 @@
 
   <script>
     // ==============================================================
-    // CONFIGURATION: PASTE YOUR DEPLOYED APPS SCRIPT URL HERE
+    // LIVE DEPLOYED GOOGLE APPS SCRIPT WEB APP URL
     // ==============================================================
-    const APPS_SCRIPT_API_URL = "hhttps://script.google.com/macros/s/AKfycbxOB6MC6oCHNcOEMwf2KC8eTfhFED6WvRr5jnjL4yi50nRvmADrTi2TWapH3Q8ozg88Fw/exec";
+    const APPS_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbxOB6MC6oCHNcOEMwf2KC8eTfhFED6WvRr5jnjL4yi50nRvmADrTi2TWapH3Q8ozg88Fw/exec";
 
     lucide.createIcons();
 
@@ -240,7 +240,7 @@
     let countdownInterval = null;
     let recentAdmitted = [];
 
-    // Sound Synthesizer
+    // Synthesizer Audio Alerts
     function playBeep(type = 'success') {
       if (isSoundMuted) return;
       try {
@@ -284,7 +284,7 @@
       lucide.createIcons();
     }
 
-    // Camera Management
+    // Camera Init
     async function requestCameraAccess() {
       try {
         const devices = await Html5Qrcode.getCameras();
@@ -296,10 +296,19 @@
           document.getElementById("cameraPrompt").classList.add("hidden");
           startScanner(cameraList[currentCameraIndex].id);
         } else {
-          alert("No camera found on this device.");
+          document.getElementById("cameraPrompt").innerHTML = `
+            <div class="text-amber-400 text-sm font-bold mb-1">No Camera Found</div>
+            <p class="text-[11px] text-slate-400">Please use manual pass lookup below.</p>
+          `;
         }
       } catch (err) {
-        alert("Camera permission denied. Please allow camera access in browser settings.");
+        document.getElementById("cameraPrompt").innerHTML = `
+          <div class="text-amber-400 text-sm font-bold mb-1">Camera Inactive</div>
+          <p class="text-[11px] text-slate-400 mb-3 leading-relaxed">
+            Camera permission denied or opened over unsecure protocol. Open via HTTPS on GitHub Pages or use manual lookup.
+          </p>
+          <button onclick="requestCameraAccess()" class="bg-white/10 hover:bg-white/20 text-white text-xs px-4 py-1.5 rounded-lg">Try Again</button>
+        `;
       }
     }
 
@@ -340,7 +349,7 @@
           advanced: [{ torch: isTorchOn }]
         });
       } catch (e) {
-        alert("Torch/Flashlight not supported by this camera hardware.");
+        alert("Flashlight not supported by this camera hardware.");
       }
     }
 
@@ -352,7 +361,7 @@
       await processPassVerification(decodedText);
     }
 
-    // Manual Search Handler
+    // Manual Search
     async function handleManualSearch(e) {
       e.preventDefault();
       const code = document.getElementById("manualCode").value.trim();
@@ -361,74 +370,77 @@
       await processPassVerification(code);
     }
 
-    // Process Pass Verification
+    // Universal Dual-Protocol Verification (POST + GET fallback)
     async function processPassVerification(code) {
-      if (!APPS_SCRIPT_API_URL || APPS_SCRIPT_API_URL.includes("REPLACE_ME")) {
-        playBeep('success');
-        showModal('success', {
-          title: "PREVIEW: VERIFIED",
-          badge: "ADMISSION CONFIRMED",
-          name: "Lawrence Justine Maqui",
-          church: "Hope of Life Christian Ministries",
-          passId: code.toUpperCase(),
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        });
-        return;
-      }
-    
+      let result = null;
+
+      // Method 1: Standard POST request
       try {
-        // Uses GET request with redirect follow to bypass browser CORS blocking
-        const url = `${APPS_SCRIPT_API_URL}?action=checkIn&query=${encodeURIComponent(code)}`;
-        const response = await fetch(url, {
-          method: 'GET',
-          redirect: 'follow'
+        const response = await fetch(APPS_SCRIPT_API_URL, {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'checkIn',
+            query: code
+          })
         });
-    
-        const result = await response.json();
-    
-        if (result.success) {
-          playBeep('success');
-          addRecentScan(result.delegate);
-          showModal('success', {
-            title: "DELEGATE ADMITTED",
-            badge: "ENTRY VERIFIED ● PASS ACTIVE",
-            name: result.delegate.name,
-            church: result.delegate.church,
-            passId: result.delegate.passId,
-            time: result.delegate.checkInTime
+        result = await response.json();
+      } catch (postErr) {
+        console.warn("POST failed, trying GET fallback...", postErr);
+        // Method 2: GET fallback with redirect: follow
+        try {
+          const getUrl = `${APPS_SCRIPT_API_URL}?action=checkIn&query=${encodeURIComponent(code)}`;
+          const getResponse = await fetch(getUrl, {
+            method: 'GET',
+            redirect: 'follow'
           });
-          fetchStats();
-        } else if (result.errorType === 'ALREADY_CHECKED_IN') {
-          playBeep('error');
-          showModal('warning', {
-            title: "ALREADY CHECKED IN",
-            badge: "DUPLICATE ENTRY DETECTED",
-            name: result.delegate.name,
-            church: result.delegate.church,
-            passId: result.delegate.passId,
-            time: result.message
-          });
-        } else {
+          result = await getResponse.json();
+        } catch (getErr) {
+          console.error("All fetch methods failed:", getErr);
           playBeep('error');
           showModal('error', {
-            title: "PASS INVALID / DECLINED",
-            badge: "ACCESS DENIED",
-            name: "Unknown Delegate",
-            church: "N/A",
+            title: "CONNECTION ERROR",
+            badge: "NETWORK OFFLINE",
+            name: "Server Unreachable",
+            church: "Verify Apps Script Access",
             passId: code,
-            time: result.message
+            time: postErr.message || getErr.message
           });
+          return;
         }
-      } catch (err) {
-        console.error("Scanner fetch error:", err);
+      }
+
+      // Handle Verification Results
+      if (result && result.success) {
+        playBeep('success');
+        addRecentScan(result.delegate);
+        showModal('success', {
+          title: "DELEGATE ADMITTED",
+          badge: "ENTRY VERIFIED ● PASS ACTIVE",
+          name: result.delegate.name,
+          church: result.delegate.church,
+          passId: result.delegate.passId,
+          time: result.delegate.checkInTime
+        });
+        fetchStats();
+      } else if (result && result.errorType === 'ALREADY_CHECKED_IN') {
+        playBeep('error');
+        showModal('warning', {
+          title: "ALREADY CHECKED IN",
+          badge: "DUPLICATE ENTRY DETECTED",
+          name: result.delegate.name,
+          church: result.delegate.church,
+          passId: result.delegate.passId,
+          time: result.message
+        });
+      } else {
         playBeep('error');
         showModal('error', {
-          title: "CONNECTION ERROR",
-          badge: "NETWORK OFFLINE",
-          name: "Check Permission / HTTPS",
-          church: window.location.protocol === 'file:' ? 'Opened as file://' : 'Check Deployment Access',
+          title: "PASS INVALID / DECLINED",
+          badge: "ACCESS DENIED",
+          name: "Unknown Delegate",
+          church: "N/A",
           passId: code,
-          time: err.message
+          time: result ? result.message : "No matching record."
         });
       }
     }
@@ -534,21 +546,19 @@
     }
 
     async function fetchStats() {
-      if (!APPS_SCRIPT_API_URL || APPS_SCRIPT_API_URL.includes("REPLACE_ME")) return;
       try {
         const res = await fetch(APPS_SCRIPT_API_URL, {
           method: 'POST',
           body: JSON.stringify({ action: 'getScannerStats' })
         });
         const data = await res.json();
-        if (data.success) {
+        if (data && data.success) {
           document.getElementById("counterText").innerText = `${data.checkedIn} / ${data.totalApproved}`;
         }
       } catch (e) {}
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-      // Auto-trigger camera prompt on page load
       requestCameraAccess();
       fetchStats();
     });
