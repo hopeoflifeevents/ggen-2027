@@ -694,7 +694,7 @@
     }
 
     // ==============================================================
-    // 1. LEVELED PILLARS (KEYNOTE PLENARY LINEUP)
+    // LEVELED PILLARS (MAXIMIZED THEME SUBTITLES, NO CUT-OFFS)
     // ==============================================================
     function renderSpeakers(speakers) {
       const container = document.getElementById("speakersContainer");
@@ -704,6 +704,9 @@
         const themeKey = getPillarThemeKey(sp);
         const theme = colorConfig[themeKey] || colorConfig.blue;
         const isRevealed = (sp.status === 'REVEALED' && sp.photoUrl);
+    
+        // Clean pillar display name (e.g. "SPIRIT", "LIFE", "SOCIETY", "WITNESS") so top badge never cuts off into "EMPOWE..."
+        const pillarBadgeTitle = sp.title.replace(/EMPOWERED\s+/i, '');
     
         return `
           <div class="group relative rounded-3xl overflow-hidden border ${theme.border} shadow-2xl transition-all duration-500 hover:-translate-y-2 h-[440px] sm:h-[460px] flex flex-col justify-between p-5 bg-slate-950">
@@ -725,21 +728,21 @@
               <div class="absolute inset-x-0 bottom-0 h-[52%] bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent pointer-events-none"></div>
             </div>
     
-            <!-- 1. TOP HEADER: FIXED HEIGHT TO KEEP ALL PILLARS 100% LEVEL -->
-            <div class="relative z-10 flex items-center justify-between gap-2 h-9 w-full">
-              <div class="${theme.badge} border text-xs sm:text-[13px] font-bebas tracking-wide px-3 py-1 rounded-xl uppercase shadow-lg flex items-center gap-1.5 whitespace-nowrap overflow-hidden max-w-[70%]">
+            <!-- 1. TOP HEADER: CLEAN PILLAR BADGE (NO ELLIPSIS / NO CUT-OFF) -->
+            <div class="relative z-10 flex items-center justify-between gap-1.5 h-8 w-full">
+              <div class="${theme.badge} border text-xs sm:text-[13px] font-bebas tracking-wider px-3 py-1 rounded-xl uppercase shadow-lg flex items-center gap-1.5 whitespace-nowrap">
                 <span class="w-2 h-2 rounded-full ${theme.pulse} ${isRevealed ? '' : 'animate-ping'} flex-shrink-0"></span>
-                <span class="truncate">${sp.title}</span>
+                <span>${pillarBadgeTitle}</span>
               </div>
               <span class="bg-slate-950/90 border border-white/15 text-[9px] font-mono-code font-bold ${theme.subColor} px-2.5 py-1 rounded-xl uppercase shadow-sm whitespace-nowrap flex-shrink-0">
                 PLENARY ${sp.pillarNum}
               </span>
             </div>
     
-            <!-- 2. BOTTOM CONTENT: STRUCTURED SLOTS TO PREVENT JUMPING -->
+            <!-- 2. BOTTOM CONTENT -->
             <div class="relative z-10 text-left w-full">
               
-              <!-- Reveal Slot (Keeps same height whether revealed or not) -->
+              <!-- Reveal Slot (Locks vertical baseline across all cards) -->
               <div class="h-6 flex items-center mb-1">
                 ${!isRevealed ? `
                   <span class="bg-amber-400 text-slate-950 font-mono-code font-black text-[9px] uppercase px-2 py-0.5 rounded tracking-wider shadow-md inline-block">
@@ -748,22 +751,23 @@
                 ` : ''}
               </div>
     
-              <!-- Speaker / Plenary Name (Fixed height box) -->
+              <!-- Speaker / Plenary Name -->
               <div class="h-14 sm:h-16 flex items-center">
                 <h3 class="font-bebas text-2xl sm:text-[1.75rem] text-white tracking-wide leading-tight drop-shadow-md line-clamp-2">
                   ${isRevealed ? sp.speakerName : sp.title}
                 </h3>
               </div>
     
-              <!-- Title Subtitle -->
+              <!-- Church / Ministry / Title -->
               <p class="text-[11px] ${theme.subColor} font-semibold uppercase tracking-wider font-mono-code truncate">
                 ${isRevealed ? sp.speakerTitle : sp.subtitle}
               </p>
     
-              <!-- Footer Metadata Bar -->
-              <div class="mt-3 pt-2.5 border-t border-white/10 flex items-center justify-between text-[9px] text-slate-400 font-mono-code">
-                <span class="text-white font-bold tracking-wider truncate max-w-[130px]">${sp.subtitle ? sp.subtitle.toUpperCase() : ''}</span>
-                <span class="text-slate-500 font-bold flex-shrink-0">ALL SESSIONS</span>
+              <!-- 3. FOOTER: 100% WIDTH DEDICATED TO THEME SUBTITLE -->
+              <div class="mt-3 pt-2.5 border-t border-white/10 flex items-center justify-between text-[10px] sm:text-[11px] font-mono-code">
+                <span class="text-white font-bold tracking-wider uppercase block text-left truncate w-full">
+                  ${sp.subtitle ? sp.subtitle.toUpperCase() : ''}
+                </span>
               </div>
             </div>
     
