@@ -301,13 +301,13 @@
       </div>
 
       <div class="flex items-center gap-2 w-full md:w-auto">
-        <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=GGEN+2027%3A+EMPOWERED&dates=20270830T000000Z%2F20270830T120000Z&details=A+Generation+Empowered+for+a+Greater+Tomorrow.+Acts+1%3A8+Conference+at+JIA+CMNV%2C+Quezon+City.&location=JIA+CMNV%2C+Quezon+City" target="_blank"
+        <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=GGEN+2027%3A+EMPOWERED&dates=20270830T000000Z%2F20270830T120000Z&details=A+Generation+Empowered+for+a+Greater+Tomorrow.+Acts+1%3A8+Conference+at+JIA+CMNV%2C+Quezon+City.&location=JIA+CMNV%2C+Quezon+City" target="_blank" rel="noopener noreferrer"
           class="flex-1 md:flex-none text-center bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 hover:text-white font-semibold text-[11px] tracking-wider uppercase px-3.5 py-2 rounded-xl transition flex items-center justify-center gap-1.5 active:scale-95">
           <i data-lucide="calendar-plus" class="w-3.5 h-3.5 text-amber-400"></i>
           <span>Add to Calendar</span>
         </a>
 
-        <a href="https://www.google.com/maps/search/JIA+CMNV+Quezon+City" target="_blank"
+        <a href="https://www.google.com/maps/search/JIA+CMNV+Quezon+City" target="_blank" rel="noopener noreferrer"
           class="flex-1 md:flex-none text-center bg-white/10 hover:bg-white/15 border border-white/15 text-white font-semibold text-[11px] tracking-wider uppercase px-3.5 py-2 rounded-xl transition flex items-center justify-center gap-1.5 active:scale-95">
           <span>Open Maps</span>
           <i data-lucide="external-link" class="w-3 h-3"></i>
@@ -519,7 +519,8 @@
       <p class="font-street text-base text-slate-300 mb-5">More Than A Conference, A Movement</p>
 
       <div class="flex flex-wrap items-center justify-center gap-3 mb-6">
-        <a href="https://facebook.com" target="_blank"
+        <!-- Official Facebook Link -->
+        <a href="https://www.facebook.com/hopeoflifecm" target="_blank" rel="noopener noreferrer"
           class="inline-flex items-center gap-2 bg-slate-900/80 hover:bg-blue-600/20 border border-white/15 hover:border-blue-400/60 text-slate-200 hover:text-white px-4 py-2 rounded-full font-mono-code text-[11px] transition shadow-md">
           <svg class="w-3.5 h-3.5 fill-[#1877F2]" viewBox="0 0 24 24">
             <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
@@ -527,7 +528,8 @@
           <span>Facebook Page</span>
         </a>
 
-        <a href="https://tiktok.com" target="_blank"
+        <!-- Official TikTok Link -->
+        <a href="https://www.tiktok.com/@hopeoflifecm" target="_blank" rel="noopener noreferrer"
           class="inline-flex items-center gap-2 bg-slate-900/80 hover:bg-cyan-500/20 border border-white/15 hover:border-cyan-400/60 text-slate-200 hover:text-cyan-300 px-4 py-2 rounded-full font-mono-code text-[11px] transition shadow-md">
           <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
             <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.24 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
@@ -547,7 +549,7 @@
     // ==============================================================
     // CONFIGURATION: PASTE YOUR DEPLOYED GOOGLE APPS SCRIPT URL HERE
     // ==============================================================
-    const APPS_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbxOB6MC6oCHNcOEMwf2KC8eTfhFED6WvRr5jnjL4yi50nRvmADrTi2TWapH3Q8ozg88Fw/exec";
+    const APPS_SCRIPT_API_URL = "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
 
     lucide.createIcons();
 
@@ -883,7 +885,6 @@
         affiliation: document.getElementById("affiliation").value.trim()
       };
 
-      // Fallback for preview mode without backend configured
       if (!APPS_SCRIPT_API_URL || APPS_SCRIPT_API_URL.includes("YOUR_APPS_SCRIPT_WEB_APP_URL_HERE")) {
         setTimeout(() => {
           btn.disabled = false;
@@ -900,7 +901,6 @@
       }
 
       try {
-        // Send as text/plain body to avoid CORS OPTIONS preflight failures on Apps Script
         const response = await fetch(APPS_SCRIPT_API_URL, {
           method: 'POST',
           body: JSON.stringify(payload)
@@ -942,12 +942,12 @@
                   Stay updated on speaker drops & event schedules:
                 </span>
                 <div class="flex items-center justify-center gap-2">
-                  <a href="https://facebook.com" target="_blank"
+                  <a href="https://www.facebook.com/hopeoflifecm" target="_blank" rel="noopener noreferrer"
                     class="bg-blue-600/30 hover:bg-blue-600/50 border border-blue-400/50 text-blue-200 text-[10px] font-mono-code font-bold px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 transition">
                     <span>Facebook</span>
                     <i data-lucide="external-link" class="w-3 h-3"></i>
                   </a>
-                  <a href="https://tiktok.com" target="_blank"
+                  <a href="https://www.tiktok.com/@hopeoflifecm" target="_blank" rel="noopener noreferrer"
                     class="bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/50 text-cyan-200 text-[10px] font-mono-code font-bold px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 transition">
                     <span>TikTok</span>
                     <i data-lucide="external-link" class="w-3 h-3"></i>
