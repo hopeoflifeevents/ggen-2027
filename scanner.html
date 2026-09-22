@@ -363,35 +363,29 @@
 
     // Process Pass Verification
     async function processPassVerification(code) {
-      // Preview Fallback
       if (!APPS_SCRIPT_API_URL || APPS_SCRIPT_API_URL.includes("REPLACE_ME")) {
         playBeep('success');
-        const demoData = {
+        showModal('success', {
+          title: "PREVIEW: VERIFIED",
+          badge: "ADMISSION CONFIRMED",
           name: "Lawrence Justine Maqui",
           church: "Hope of Life Christian Ministries",
           passId: code.toUpperCase(),
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-        addRecentScan(demoData);
-        showModal('success', {
-          title: "PREVIEW: VERIFIED",
-          badge: "ADMISSION CONFIRMED",
-          ...demoData
         });
         return;
       }
-
+    
       try {
-        const response = await fetch(APPS_SCRIPT_API_URL, {
-          method: 'POST',
-          body: JSON.stringify({
-            action: 'checkIn',
-            query: code
-          })
+        // Uses GET request with redirect follow to bypass browser CORS blocking
+        const url = `${APPS_SCRIPT_API_URL}?action=checkIn&query=${encodeURIComponent(code)}`;
+        const response = await fetch(url, {
+          method: 'GET',
+          redirect: 'follow'
         });
-
+    
         const result = await response.json();
-
+    
         if (result.success) {
           playBeep('success');
           addRecentScan(result.delegate);
@@ -426,14 +420,15 @@
           });
         }
       } catch (err) {
+        console.error("Scanner fetch error:", err);
         playBeep('error');
         showModal('error', {
           title: "CONNECTION ERROR",
           badge: "NETWORK OFFLINE",
-          name: "Scan Failed",
-          church: "Server Unreachable",
+          name: "Check Permission / HTTPS",
+          church: window.location.protocol === 'file:' ? 'Opened as file://' : 'Check Deployment Access',
           passId: code,
-          time: "Check Wi-Fi or mobile data."
+          time: err.message
         });
       }
     }
