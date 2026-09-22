@@ -486,10 +486,17 @@
               </label>
               <div class="relative">
                 <i data-lucide="mail" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-                <input type="email" id="email" required inputmode="email" placeholder="name@domain.com"
+                <input type="email" id="email" required inputmode="email" autocomplete="email" placeholder="name@domain.com"
+                  onblur="checkEmailField()"
+                  oninput="clearEmailErrors()"
                   class="w-full bg-slate-800/60 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-base sm:text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition" />
               </div>
-              <span class="text-[9px] text-slate-400 mt-1 block">Your verified pass will be dispatched here.</span>
+              
+              <!-- Helper subtext -->
+              <span id="emailHelp" class="text-[9px] text-slate-400 mt-1 block">Your verified pass will be dispatched here.</span>
+              
+              <!-- Error & Typo Alert Box -->
+              <div id="emailFeedback" class="hidden mt-1.5 text-[11px] font-mono-code font-bold"></div>
             </div>
 
             <div>
@@ -885,12 +892,103 @@
     }
     animate();
 
+    // Known common domain typos and their corrections
+    const DOMAIN_TYPOS = {
+      'gnail.com': 'gmail.com',
+      'gamil.com': 'gmail.com',
+      'gmial.com': 'gmail.com',
+      'gmai.com': 'gmail.com',
+      'gmaill.com': 'gmail.com',
+      'gmal.com': 'gmail.com',
+      'gmeil.com': 'gmail.com',
+      'yaho.com': 'yahoo.com',
+      'yahooo.com': 'yahoo.com',
+      'yaho.co': 'yahoo.com',
+      'hotmial.com': 'hotmail.com',
+      'hotmai.com': 'hotmail.com',
+      'outlok.com': 'outlook.com',
+      'iclod.com': 'icloud.com'
+    };
+    
+    function cleanEmail(rawEmail) {
+      // Strip all whitespace (including mobile autofill trailing spaces)
+      return (rawEmail || '').replace(/\s+/g, '').toLowerCase();
+    }
+    
+    function checkEmailField() {
+      const emailInput = document.getElementById("email");
+      const feedback = document.getElementById("emailFeedback");
+      const cleaned = cleanEmail(emailInput.value);
+      emailInput.value = cleaned; // Put cleaned email back in input
+    
+      if (!cleaned) return true;
+    
+      // 1. Strict regex check: user@domain.tld (TLD must be at least 2 letters, no consecutive dots)
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(cleaned) || cleaned.includes("..")) {
+        showEmailError("⚠️ Please enter a complete, valid email address (e.g. name@domain.com).");
+        return false;
+      }
+    
+      // 2. Typo detector
+      const domain = cleaned.split('@')[1];
+      if (DOMAIN_TYPOS[domain]) {
+        const suggestedDomain = DOMAIN_TYPOS[domain];
+        const suggestedEmail = cleaned.split('@')[0] + '@' + suggestedDomain;
+        
+        feedback.className = "mt-1.5 text-[11px] font-mono-code font-bold text-amber-300 bg-amber-950/40 border border-amber-500/40 rounded-lg p-2 flex items-center justify-between";
+        feedback.innerHTML = `
+          <span>Did you mean <u>${suggestedEmail}</u>?</span>
+          <button type="button" onclick="applyEmailSuggestion('${suggestedEmail}')" class="bg-amber-400 hover:bg-amber-300 text-slate-950 px-2 py-0.5 rounded text-[10px] uppercase font-extrabold ml-2">
+            Fix
+          </button>
+        `;
+        feedback.classList.remove("hidden");
+        return false; // Prevent submit until fixed or confirmed
+      }
+    
+      clearEmailErrors();
+      return true;
+    }
+    
+    function applyEmailSuggestion(fixedEmail) {
+      const emailInput = document.getElementById("email");
+      emailInput.value = fixedEmail;
+      clearEmailErrors();
+      emailInput.focus();
+    }
+    
+    function showEmailError(msg) {
+      const emailInput = document.getElementById("email");
+      const feedback = document.getElementById("emailFeedback");
+    
+      emailInput.classList.add("border-rose-500", "focus:border-rose-500", "focus:ring-rose-500");
+      feedback.className = "mt-1.5 text-[11px] font-mono-code font-bold text-rose-400 flex items-center gap-1.5";
+      feedback.innerHTML = `<span>${msg}</span>`;
+      feedback.classList.remove("hidden");
+    }
+    
+    function clearEmailErrors() {
+      const emailInput = document.getElementById("email");
+      const feedback = document.getElementById("emailFeedback");
+      emailInput.classList.remove("border-rose-500", "focus:border-rose-500", "focus:ring-rose-500");
+      feedback.classList.add("hidden");
+      feedback.innerHTML = "";
+    }
+
     // ==========================================
     // ASYNC FORM SUBMIT TO GOOGLE SHEETS API
     // ==========================================
     async function handleFormSubmit(e) {
       e.preventDefault();
-
+    
+      // Run email validation check first
+      const isEmailValid = checkEmailField();
+      if (!isEmailValid) {
+        document.getElementById("email").focus();
+        return;
+      }
+    
       const btn = document.getElementById("submitBtn");
       const feedback = document.getElementById("feedback");
 
