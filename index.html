@@ -866,6 +866,7 @@
 
         return `
           <div onclick="${isAvailable ? `selectTier('${tier.tierId}', '${tier.name}', ${tier.price}, this)` : ''}"
+          data-qr-url="${tier.qrUrl || ''}"
             class="tier-card group relative p-3.5 sm:p-4 rounded-2xl border transition-all duration-300 flex items-center justify-between gap-3 select-none ${
               !isAvailable 
                 ? 'opacity-40 border-white/5 bg-slate-950/40 cursor-not-allowed' 
