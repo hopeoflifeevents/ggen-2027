@@ -554,48 +554,136 @@
               </div>
             </div>
 
-            <!-- 3. PAYMENT INSTRUCTIONS CARD -->
+            <!-- 3. GCASH QR PAYMENT SECTION -->
             <div class="pt-2 border-t border-white/10">
-              <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-2">
-                3. Payment Details
-              </label>
+              <div class="flex items-center justify-between mb-2">
+                <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider">
+                  3. Pay via GCash QR <span class="text-amber-400">*</span>
+                </label>
+                <span class="text-[9.5px] font-mono-code text-amber-400 font-bold" id="qrTierNotice">
+                  TIER: EARLY BIRD PASS (₱350)
+                </span>
+              </div>
 
-              <div class="bg-slate-950/80 border border-white/10 rounded-xl p-3.5 space-y-3">
+              <!-- GCASH QR CONTAINER CARD -->
+              <div class="bg-gradient-to-b from-slate-900/95 to-slate-950 border border-blue-500/30 rounded-2xl p-4 shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-blue-600/10 rounded-full blur-2xl pointer-events-none"></div>
+
+                <div class="flex flex-col sm:flex-row items-center gap-4">
+                  
+                  <!-- QR Code Frame -->
+                  <div class="relative bg-white p-2.5 rounded-2xl shadow-lg flex-shrink-0 text-center">
+                    <img id="gcashQrImage" 
+                      src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=HOPE+OF+LIFE+GCASH+DEMO" 
+                      alt="GCash Payment QR Code" 
+                      class="w-36 h-36 object-contain rounded-lg" />
+                    
+                    <div class="mt-1.5 flex items-center justify-center gap-1 text-[9px] font-mono-code font-black text-slate-800 uppercase">
+                      <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                      <span>OFFICIAL GCASH QR</span>
+                    </div>
+                  </div>
+
+                  <!-- Details & Download Action -->
+                  <div class="flex-1 text-left w-full">
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="bg-blue-500/20 text-blue-300 border border-blue-400/40 text-[9px] font-mono-code font-bold uppercase px-2 py-0.5 rounded">
+                        MERCHANT
+                      </span>
+                      <span class="text-xs font-bold text-white tracking-wide">HOPE OF LIFE CHRISTIAN MINISTRIES</span>
+                    </div>
+
+                    <div class="my-2 bg-slate-950/80 border border-white/5 rounded-xl p-2.5 font-mono-code text-[11px] space-y-1">
+                      <div class="flex justify-between text-slate-400">
+                        <span>PASS TIER:</span>
+                        <span id="qrTierDisplay" class="text-white font-bold">Early Bird Pass</span>
+                      </div>
+                      <div class="flex justify-between text-slate-400">
+                        <span>AMOUNT TO PAY:</span>
+                        <span id="qrAmountDisplay" class="text-amber-400 font-bold text-sm">₱350.00</span>
+                      </div>
+                    </div>
+
+                    <!-- DOWNLOAD QR BUTTON -->
+                    <button type="button" onclick="downloadCurrentQr()"
+                      class="w-full bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white font-mono-code text-xs font-bold py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 shadow-md shadow-blue-500/25 cursor-pointer">
+                      <i data-lucide="download" class="w-4 h-4"></i>
+                      <span>SAVE QR TO PHOTOS</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- 3-Step Quick Guide for Mobile -->
+                <div class="mt-3 pt-3 border-t border-white/10 grid grid-cols-3 gap-2 text-center font-mono-code text-[9px]">
+                  <div class="bg-white/[0.03] p-1.5 rounded-lg border border-white/5">
+                    <span class="text-amber-400 font-bold block mb-0.5">STEP 1</span>
+                    <span class="text-slate-400">Save QR to phone</span>
+                  </div>
+                  <div class="bg-white/[0.03] p-1.5 rounded-lg border border-white/5">
+                    <span class="text-amber-400 font-bold block mb-0.5">STEP 2</span>
+                    <span class="text-slate-400">GCash ➜ Upload QR</span>
+                  </div>
+                  <div class="bg-white/[0.03] p-1.5 rounded-lg border border-white/5">
+                    <span class="text-amber-400 font-bold block mb-0.5">STEP 3</span>
+                    <span class="text-slate-400">Take receipt photo</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- 4. UPLOAD PROOF OF PAYMENT -->
+            <div class="pt-2 border-t border-white/10">
+              <div class="flex items-center justify-between mb-2">
+                <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider">
+                  4. Upload GCash Receipt Screenshot <span class="text-amber-400">*</span>
+                </label>
+                <span class="text-[9.5px] font-mono-code text-slate-400">JPG, PNG, or WebP</span>
+              </div>
+
+              <!-- Hidden native file input -->
+              <input type="file" id="receiptInput" accept="image/*" class="hidden" onchange="handleReceiptSelected(event)" />
+
+              <!-- Upload Dropzone (Tapping opens phone gallery/camera) -->
+              <div id="uploadDropzone" onclick="document.getElementById('receiptInput').click()"
+                class="border-2 border-dashed border-white/15 hover:border-amber-400/60 bg-slate-950/60 hover:bg-slate-900/60 rounded-2xl p-5 text-center cursor-pointer transition-all duration-300 flex flex-col items-center justify-center gap-2 group">
                 
-                <!-- Account Box -->
-                <div class="flex items-center justify-between bg-white/[0.03] border border-white/5 rounded-lg p-2.5">
-                  <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 rounded-lg bg-blue-600/30 border border-blue-400/40 text-blue-400 flex items-center justify-center font-black text-[10px]">
-                      ₱
-                    </div>
-                    <div>
-                      <div class="text-[10px] text-slate-400 uppercase font-mono-code">Send Payment to (GCash / Maya)</div>
-                      <div class="text-xs font-bold text-white">09XX XXX XXXX <span class="text-slate-400 font-normal">• HOPE OF LIFE</span></div>
-                    </div>
-                  </div>
-                  <span class="text-xs font-mono-code font-black text-amber-400" id="displayAmountDue">₱350.00</span>
+                <div class="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-amber-400 group-hover:scale-110 group-hover:bg-amber-400 group-hover:text-slate-950 transition-all duration-300 shadow-md">
+                  <i data-lucide="upload-cloud" class="w-5 h-5"></i>
                 </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <div>
-                    <label class="block text-[10px] font-mono-code text-slate-400 uppercase mb-1">Payment Method</label>
-                    <select id="paymentMethod" class="w-full bg-slate-800 border border-white/10 rounded-lg px-2.5 py-2 text-xs text-white focus:outline-none focus:border-amber-400">
-                      <option value="GCash">GCash</option>
-                      <option value="Maya">Maya</option>
-                      <option value="Bank Transfer">Bank Transfer (BDO / BPI)</option>
-                    </select>
+                <div>
+                  <div class="text-xs font-bold text-white group-hover:text-amber-300 transition-colors">
+                    Tap to Select Receipt Screenshot
                   </div>
+                  <p class="text-[10px] text-slate-400 mt-0.5">
+                    Attach your GCash transaction confirmation screen
+                  </p>
+                </div>
+              </div>
 
-                  <div>
-                    <label class="block text-[10px] font-mono-code text-slate-400 uppercase mb-1">Reference Number *</label>
-                    <input type="text" id="referenceNo" required placeholder="e.g. 1002 9384 1928"
-                      class="w-full bg-slate-800 border border-white/10 rounded-lg px-2.5 py-2 text-xs text-white font-mono-code uppercase focus:outline-none focus:border-amber-400" />
+              <!-- Live Image Thumbnail Preview (Hidden until image selected) -->
+              <div id="receiptPreviewContainer" class="hidden mt-2 bg-slate-950 border border-emerald-500/40 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-lg">
+                <div class="flex items-center gap-3 min-w-0">
+                  <img id="receiptPreviewImg" src="" alt="Receipt Preview" class="w-12 h-12 object-cover rounded-xl border border-white/10 flex-shrink-0" />
+                  <div class="min-w-0">
+                    <div class="text-xs font-bold text-white truncate" id="receiptFileName">receipt.jpg</div>
+                    <div class="text-[10px] font-mono-code text-emerald-400 flex items-center gap-1 mt-0.5">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                      <span id="receiptFileSize">Ready to upload</span>
+                    </div>
                   </div>
                 </div>
+                
+                <!-- Remove / Change Button -->
+                <button type="button" onclick="removeReceipt(event)" class="bg-white/5 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-white/10 p-2 rounded-xl text-xs transition cursor-pointer" title="Remove Receipt">
+                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+              </div>
 
-                <p class="text-[9.5px] text-slate-400 leading-normal font-mono-code">
-                  ⚠️ Please ensure your reference number matches your transfer receipt for prompt approval.
-                </p>
+              <!-- Optional Reference Number (Auto-populated or manual fallback) -->
+              <div class="mt-2.5">
+                <input type="text" id="referenceNo" placeholder="GCash Reference No. (Optional if clear on receipt)"
+                  class="w-full bg-slate-800/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono-code uppercase focus:outline-none focus:border-amber-400 transition" />
               </div>
             </div>
 
@@ -842,54 +930,68 @@
     }
 
     function selectTier(id, name, price, cardEl) {
-      document.getElementById("selectedTierId").value = id;
-      document.getElementById("selectedTierName").value = name;
-      document.getElementById("selectedTierPrice").value = price;
-      document.getElementById("displayAmountDue").innerText = `₱${price}.00`;
+      // 1. Update hidden form fields for submission
+      const tierIdInput = document.getElementById("selectedTierId");
+      const tierNameInput = document.getElementById("selectedTierName");
+      const tierPriceInput = document.getElementById("selectedTierPrice");
 
-      // Reset all cards
+      if (tierIdInput) tierIdInput.value = id;
+      if (tierNameInput) tierNameInput.value = name;
+      if (tierPriceInput) tierPriceInput.value = price;
+
+      // 2. Update visible amount displays if they exist
+      const displayAmountDue = document.getElementById("displayAmountDue");
+      if (displayAmountDue) {
+        displayAmountDue.innerText = `₱${price}.00`;
+      }
+
+      // 3. Extract the GCash QR URL attached to this card element
+      const qrUrl = cardEl ? (cardEl.getAttribute("data-qr-url") || "") : "";
+
+      // 4. Update the Section 3 GCash QR card to match this tier
+      if (typeof updateQrForTier === "function") {
+        updateQrForTier({
+          tierId: id,
+          name: name,
+          price: price,
+          qrUrl: qrUrl
+        });
+      }
+
+      // 5. Reset all available cards back to their unselected styling
       document.querySelectorAll(".tier-card").forEach(el => {
         if (!el.classList.contains("cursor-not-allowed")) {
+          // Reset card container styles
           el.className = "tier-card group relative p-3.5 sm:p-4 rounded-2xl border border-white/10 hover:border-white/20 bg-slate-900/50 hover:bg-slate-900/80 cursor-pointer transition-all duration-300 flex items-center justify-between gap-3 select-none";
           
+          // Reset custom radio button ring
           const radio = el.querySelector(".tier-radio");
-          const dot = el.querySelector(".tier-dot");
           if (radio) {
             radio.className = "tier-radio w-5 h-5 rounded-full border-2 border-slate-600 bg-transparent flex items-center justify-center flex-shrink-0 transition-colors";
           }
+          
+          // Reset center radio dot
+          const dot = el.querySelector(".tier-dot");
           if (dot) {
-            dot.className = "tier-dot w-2 h-2 rounded-full bg-transparent";
+            dot.className = "tier-dot w-2 h-2 rounded-full bg-transparent transition-colors";
           }
         }
       });
 
-      // Highlight selected card
-      cardEl.className = "tier-card group relative p-3.5 sm:p-4 rounded-2xl border border-amber-400 bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-slate-900/80 shadow-[0_0_25px_rgba(245,158,11,0.2)] cursor-pointer transition-all duration-300 flex items-center justify-between gap-3 select-none";
-      
-      const activeRadio = cardEl.querySelector(".tier-radio");
-      const activeDot = cardEl.querySelector(".tier-dot");
-      if (activeRadio) {
-        activeRadio.className = "tier-radio w-5 h-5 rounded-full border-2 border-amber-400 bg-amber-400/20 flex items-center justify-center flex-shrink-0 transition-colors";
+      // 6. Highlight the selected card with gold border and glowing aura
+      if (cardEl) {
+        cardEl.className = "tier-card group relative p-3.5 sm:p-4 rounded-2xl border border-amber-400 bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-slate-900/80 shadow-[0_0_25px_rgba(245,158,11,0.2)] cursor-pointer transition-all duration-300 flex items-center justify-between gap-3 select-none";
+
+        const activeRadio = cardEl.querySelector(".tier-radio");
+        if (activeRadio) {
+          activeRadio.className = "tier-radio w-5 h-5 rounded-full border-2 border-amber-400 bg-amber-400/20 flex items-center justify-center flex-shrink-0 transition-colors";
+        }
+
+        const activeDot = cardEl.querySelector(".tier-dot");
+        if (activeDot) {
+          activeDot.className = "tier-dot w-2 h-2 rounded-full bg-amber-400 transition-colors";
+        }
       }
-      if (activeDot) {
-        activeDot.className = "tier-dot w-2 h-2 rounded-full bg-amber-400";
-      }
-    }
-
-    function selectTier(id, name, price, cardEl) {
-      document.getElementById("selectedTierId").value = id;
-      document.getElementById("selectedTierName").value = name;
-      document.getElementById("selectedTierPrice").value = price;
-      document.getElementById("displayAmountDue").innerText = `₱${price}.00`;
-
-      // Update card styling
-      document.querySelectorAll(".tier-card").forEach(el => {
-        el.classList.remove("border-amber-400", "bg-amber-500/10", "shadow-[0_0_20px_rgba(245,158,11,0.25)]");
-        el.classList.add("border-white/10", "bg-slate-900/60");
-      });
-
-      cardEl.classList.remove("border-white/10", "bg-slate-900/60");
-      cardEl.classList.add("border-amber-400", "bg-amber-500/10", "shadow-[0_0_20px_rgba(245,158,11,0.25)]");
     }
 
     const colorConfig = {
@@ -1263,19 +1365,26 @@
     // ==========================================
     async function handleFormSubmit(e) {
       e.preventDefault();
-    
-      // Run email validation check first
+
+      // 1. Validate email syntax
       const isEmailValid = checkEmailField();
       if (!isEmailValid) {
         document.getElementById("email").focus();
         return;
       }
-    
+
+      // 2. Validate that receipt screenshot is attached
+      if (!currentReceiptBase64) {
+        alert("⚠️ Please upload your GCash payment receipt screenshot before submitting.");
+        document.getElementById("receiptInput").click();
+        return;
+      }
+
       const btn = document.getElementById("submitBtn");
       const feedback = document.getElementById("feedback");
 
       btn.disabled = true;
-      btn.innerHTML = `<span>SUBMITTING...</span>`;
+      btn.innerHTML = `<span>UPLOADING & VERIFYING...</span>`;
       feedback.classList.add("hidden");
 
       const payload = {
@@ -1286,24 +1395,9 @@
         tierId: document.getElementById("selectedTierId").value,
         tierName: document.getElementById("selectedTierName").value,
         amount: Number(document.getElementById("selectedTierPrice").value),
-        paymentMethod: document.getElementById("paymentMethod").value,
-        referenceNo: document.getElementById("referenceNo").value.trim()
+        referenceNo: document.getElementById("referenceNo").value.trim(),
+        receiptBase64: currentReceiptBase64 // Base64 receipt data sent directly to Drive
       };
-
-      if (!APPS_SCRIPT_API_URL || APPS_SCRIPT_API_URL.includes("YOUR_APPS_SCRIPT_WEB_APP_URL_HERE")) {
-        setTimeout(() => {
-          btn.disabled = false;
-          btn.innerHTML = `<span>SUBMIT FOR VERIFICATION</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>`;
-          feedback.classList.remove("hidden");
-          feedback.innerHTML = `
-            <div class="bg-amber-950/40 border border-amber-500/50 rounded-2xl p-3.5 text-amber-200 text-xs">
-              Preview Mode: Connect your deployed Apps Script URL in index.html to save directly to Google Sheets.
-            </div>
-          `;
-          lucide.createIcons();
-        }, 800);
-        return;
-      }
 
       try {
         const response = await fetch(APPS_SCRIPT_API_URL, {
@@ -1314,9 +1408,8 @@
         const result = await response.json();
 
         btn.disabled = false;
-        btn.innerHTML = `<span>SUBMIT FOR VERIFICATION</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>`;
+        btn.innerHTML = `<span>SUBMIT REGISTRATION & PAYMENT</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>`;
         lucide.createIcons();
-
         feedback.classList.remove("hidden");
 
         if (result.success) {
@@ -1331,38 +1424,21 @@
             <div class="bg-amber-950/40 border border-amber-500/50 rounded-2xl p-4 text-amber-200 shadow-xl">
               <div class="flex items-center gap-1.5 text-amber-400 font-bold text-[11px] uppercase tracking-wider mb-1">
                 <i data-lucide="clock" class="w-3.5 h-3.5"></i>
-                <span>STATUS: PENDING VERIFICATION</span>
+                <span>STATUS: PAYMENT VERIFICATION IN PROGRESS</span>
               </div>
-              <div class="font-bebas text-2xl sm:text-3xl text-white">REGISTRATION RECEIVED!</div>
+              <div class="font-bebas text-2xl sm:text-3xl text-white">REGISTRATION & RECEIPT SUBMITTED!</div>
               <p class="text-xs text-slate-300 mt-1">
-                Thank you, <strong class="text-white">${result.fullName}</strong>. Reference ID: 
-                <span class="font-mono-code bg-black/40 text-amber-300 px-1.5 py-0.5 rounded font-bold">${result.regId}</span>.
+                Thank you, <strong class="text-white">${result.fullName}</strong>. Pass Tier: 
+                <span class="font-mono-code bg-black/40 text-amber-300 px-1.5 py-0.5 rounded font-bold">${result.tierName} (₱${result.amount})</span>.
               </p>
               <p class="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
-                Our team is reviewing your registration. Your official pass will be sent to <strong>${payload.email}</strong> once approved.
+                Ref ID: <strong class="text-white">${result.regId}</strong>. Your payment receipt has been uploaded to our verification queue. Your official pass will be emailed once our finance committee verifies the transfer.
               </p>
-
-              <div class="mt-4 pt-3 border-t border-amber-500/20 text-center">
-                <span class="text-[10px] font-mono-code uppercase tracking-wider text-slate-400 block mb-2">
-                  Stay updated on speaker drops & event schedules:
-                </span>
-                <div class="flex items-center justify-center gap-2">
-                  <a href="https://www.facebook.com/hopeoflifecm" target="_blank" rel="noopener noreferrer"
-                    class="bg-blue-600/30 hover:bg-blue-600/50 border border-blue-400/50 text-blue-200 text-[10px] font-mono-code font-bold px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 transition">
-                    <span>Facebook</span>
-                    <i data-lucide="external-link" class="w-3 h-3"></i>
-                  </a>
-                  <a href="https://www.tiktok.com/@hopeoflifecm" target="_blank" rel="noopener noreferrer"
-                    class="bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/50 text-cyan-200 text-[10px] font-mono-code font-bold px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 transition">
-                    <span>TikTok</span>
-                    <i data-lucide="external-link" class="w-3 h-3"></i>
-                  </a>
-                </div>
-              </div>
             </div>
           `;
           lucide.createIcons();
           document.getElementById("regForm").reset();
+          removeReceipt();
           feedback.scrollIntoView({ behavior: 'smooth' });
         } else {
           feedback.innerHTML = `
@@ -1373,7 +1449,7 @@
         }
       } catch (err) {
         btn.disabled = false;
-        btn.innerHTML = `<span>SUBMIT FOR VERIFICATION</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>`;
+        btn.innerHTML = `<span>SUBMIT REGISTRATION & PAYMENT</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>`;
         feedback.classList.remove("hidden");
         feedback.innerHTML = `
           <div class="bg-rose-950/60 border border-rose-500/50 rounded-2xl p-3.5 text-rose-300 text-xs">
@@ -1381,6 +1457,115 @@
           </div>
         `;
       }
+    }
+
+    function updateQrForTier(tier) {
+      const qrImg = document.getElementById("gcashQrImage");
+      const qrTierNotice = document.getElementById("qrTierNotice");
+      const qrTierDisplay = document.getElementById("qrTierDisplay");
+      const qrAmountDisplay = document.getElementById("qrAmountDisplay");
+
+      if (qrTierNotice) qrTierNotice.innerText = `TIER: ${tier.name.toUpperCase()} (₱${tier.price})`;
+      if (qrTierDisplay) qrTierDisplay.innerText = tier.name;
+      if (qrAmountDisplay) qrAmountDisplay.innerText = `₱${tier.price}.00`;
+
+      // If the spreadsheet has a custom QR URL for this tier, use it; otherwise show demo placeholder
+      if (qrImg) {
+        if (tier.qrUrl && tier.qrUrl.trim() !== "") {
+          qrImg.src = tier.qrUrl;
+        } else {
+          qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=GCASH+PAYMENT+FOR+${encodeURIComponent(tier.name)}+AMOUNT+PHP+${tier.price}`;
+        }
+      }
+    }
+
+    async function downloadCurrentQr() {
+      const qrImg = document.getElementById("gcashQrImage");
+      const tierName = document.getElementById("selectedTierName").value || "Pass";
+      const src = qrImg.src;
+
+      if (!src) return;
+
+      try {
+        const response = await fetch(src);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = `GCash_QR_${tierName.replace(/\s+/g, '_')}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+      } catch (err) {
+        // Fallback for cross-origin or restricted images
+        window.open(src, '_blank');
+      }
+    }
+
+    // Global receipt storage
+    let currentReceiptBase64 = "";
+
+    // Handles receipt selection & optimizes mobile screenshot before upload
+    function handleReceiptSelected(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert("Please upload an image file (JPG, PNG, or WebP).");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          // Compress & resize image (Max 1280px dimension, 80% JPEG quality)
+          // Reduces typical 6MB camera screenshots down to ~200KB for instant transmission
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const maxDim = 1280;
+
+          if (width > height && width > maxDim) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else if (height > maxDim) {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          currentReceiptBase64 = canvas.toDataURL('image/jpeg', 0.82);
+
+          // Update UI with preview thumbnail
+          document.getElementById('receiptPreviewImg').src = currentReceiptBase64;
+          document.getElementById('receiptFileName').innerText = file.name;
+          document.getElementById('receiptFileSize').innerText = `Optimized (${Math.round(currentReceiptBase64.length * 0.75 / 1024)} KB)`;
+          
+          document.getElementById('uploadDropzone').classList.add('hidden');
+          document.getElementById('receiptPreviewContainer').classList.remove('hidden');
+          lucide.createIcons();
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Removes selected receipt
+    function removeReceipt(event) {
+      if (event) event.stopPropagation();
+      currentReceiptBase64 = "";
+      document.getElementById('receiptInput').value = "";
+      document.getElementById('receiptPreviewContainer').classList.add('hidden');
+      document.getElementById('uploadDropzone').classList.remove('hidden');
+      lucide.createIcons();
     }
   </script>
 </body>
