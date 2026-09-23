@@ -492,6 +492,15 @@
         <div class="lg:col-span-7 bg-gradient-to-b from-slate-900/95 via-slate-900/80 to-slate-950 border border-white/10 border-t-white/25 rounded-2xl p-5 sm:p-7 shadow-2xl backdrop-blur-xl flex flex-col justify-between">
           <form id="regForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
 
+            <!-- AUTO-RESTORE DRAFT NOTICE (Appears only if tab was reloaded) -->
+            <div id="draftNotice" class="hidden bg-amber-500/10 border border-amber-400/30 rounded-xl px-3 py-2 flex items-center justify-between text-[11px] font-mono-code text-amber-300">
+              <span class="flex items-center gap-1.5">
+                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-amber-400"></i>
+                <span>Your information was restored from before!</span>
+              </span>
+              <button type="button" onclick="clearDraft()" class="text-[10px] text-slate-400 hover:text-white underline ml-2">Clear</button>
+            </div>
+
             <!-- 1. POLISHED TICKET TIER SELECTOR -->
             <div>
               <div class="flex items-center justify-between mb-2.5">
@@ -871,16 +880,16 @@
 
       const now = new Date();
 
-      // 1. Evaluate Date Validity for each tier
+      // 1. Evaluate Date Validity and Status for each tier
       const evaluatedTiers = tiers.map(tier => {
         let isAvailable = true;
-        let statusType = "ACTIVE";
+        let statusType = "ACTIVE"; // ACTIVE, OPENS_SOON, EXPIRED, SOLD_OUT
         let dateBadgeText = "";
 
-        // Build human-friendly date range string
+        // Build human-friendly date range string (e.g. "Sep 1, 2026 – Jan 31, 2027")
         const coverageText = buildCoverageDateText(tier.startDate, tier.endDate);
 
-        // Check manual override
+        // Check manual override from Google Sheet
         if (tier.status === "SOLD_OUT") {
           isAvailable = false;
           statusType = "SOLD_OUT";
@@ -895,10 +904,9 @@
             }
           }
 
-          // Check End Date
+          // Check End Date (Active through 23:59:59 of that day)
           if (isAvailable && tier.endDate) {
             const end = new Date(tier.endDate);
-            // End of that day
             end.setHours(23, 59, 59, 999);
             if (!isNaN(end.getTime())) {
               if (now > end) {
@@ -921,14 +929,19 @@
         };
       });
 
-      // 2. Select first available active tier by default
-      const defaultActiveIndex = evaluatedTiers.findIndex(t => t.isAvailable);
-      const defaultIdx = defaultActiveIndex !== -1 ? defaultActiveIndex : 0;
+      // 2. Select default tier: prioritize saved draft tier if available, else first active tier
+      let defaultIdx = evaluatedTiers.findIndex(t => t.isAvailable);
+      if (window._savedDraftTierId) {
+        const draftIdx = evaluatedTiers.findIndex(t => t.tierId === window._savedDraftTierId && t.isAvailable);
+        if (draftIdx !== -1) defaultIdx = draftIdx;
+      }
+      if (defaultIdx === -1) defaultIdx = 0;
 
+      // 3. Render HTML Cards
       container.innerHTML = evaluatedTiers.map((tier, idx) => {
         const isSelected = idx === defaultIdx && tier.isAvailable;
 
-        // Sync form & QR card with default selection
+        // Synchronize hidden form fields and Section 3 QR card on initial render
         if (isSelected) {
           const tierIdInput = document.getElementById("selectedTierId");
           const tierNameInput = document.getElementById("selectedTierName");
@@ -945,7 +958,7 @@
           }
         }
 
-        // Status Pill Badge (Top Right)
+        // Build Status Pill Badge
         let statusBadgeHtml = '';
         if (tier.statusType === 'ACTIVE') {
           statusBadgeHtml = `
@@ -984,10 +997,10 @@
                   : 'border-white/10 hover:border-white/20 bg-slate-900/50 hover:bg-slate-900/80 cursor-pointer'
             }">
             
-            <!-- LEFT: Radio Ring + Tier Info -->
+            <!-- LEFT: Radio Indicator + Tier Details -->
             <div class="flex items-start gap-3 min-w-0">
               
-              <!-- Radio Button -->
+              <!-- Custom Radio Button -->
               <div class="tier-radio w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors mt-0.5 ${
                 !tier.isAvailable ? 'border-slate-800' : isSelected ? 'border-amber-400 bg-amber-400/20' : 'border-slate-600'
               }">
@@ -1009,10 +1022,11 @@
                     </span>
                   ` : ''}
 
+                  <!-- Live Date Status Pill -->
                   ${statusBadgeHtml}
                 </div>
 
-                <!-- POLISHED COVERAGE DATE BADGE -->
+                <!-- Polished Coverage Date Range with Calendar Icon -->
                 ${tier.coverageText ? `
                   <div class="mt-1 flex items-center gap-1.5 font-mono-code text-[10px] text-amber-300/90 font-semibold">
                     <i data-lucide="calendar" class="w-3 h-3 text-amber-400 flex-shrink-0"></i>
@@ -1020,7 +1034,7 @@
                   </div>
                 ` : ''}
 
-                <!-- Tier Description -->
+                <!-- Tier Description (Safeguarded against raw timestamp text) -->
                 ${tier.description && !tier.description.includes("T") ? `
                   <p class="text-[10px] sm:text-[11px] text-slate-400 leading-tight mt-0.5 truncate">
                     ${tier.description}
@@ -1049,6 +1063,7 @@
     }
 
     function selectTier(id, name, price, cardEl) {
+      saveFormDraft(); // Save tier choice to draft
       // 1. Update hidden form fields for submission
       const tierIdInput = document.getElementById("selectedTierId");
       const tierNameInput = document.getElementById("selectedTierName");
@@ -1301,7 +1316,11 @@
       }).join('');
     }
 
-    document.addEventListener("DOMContentLoaded", loadDynamicContent);
+    document.addEventListener("DOMContentLoaded", () => {
+      loadDynamicContent();
+      attachDraftListeners();
+      restoreFormDraft(); // Hydrate immediately
+    });
 
     // ==========================================
     // HOLY SPIRIT EMBERS ENGINE
@@ -1479,26 +1498,29 @@
       feedback.innerHTML = "";
     }
 
-    // ==========================================
-    // ASYNC FORM SUBMIT TO GOOGLE SHEETS API
-    // ==========================================
+    // ==============================================================
+    // COMPLETE FORM SUBMISSION ENGINE (ANIMATED & HIGH CONCURRENCY)
+    // ==============================================================
     async function handleFormSubmit(e) {
       e.preventDefault();
 
-      // 1. Email check
+      // 1. Validate email address format & typos
       const isEmailValid = checkEmailField();
       if (!isEmailValid) {
         document.getElementById("email").focus();
         return;
       }
 
-      // 2. Receipt check
+      // 2. Validate receipt screenshot attachment
       if (!currentReceiptBase64) {
         const dropzone = document.getElementById("uploadDropzone");
-        dropzone.classList.add("btn-shake", "border-rose-500");
-        setTimeout(() => dropzone.classList.remove("btn-shake", "border-rose-500"), 600);
+        if (dropzone) {
+          dropzone.classList.add("btn-shake", "border-rose-500");
+          setTimeout(() => dropzone.classList.remove("btn-shake", "border-rose-500"), 600);
+        }
         alert("⚠️ Please upload your GCash payment receipt screenshot before submitting.");
-        document.getElementById("receiptInput").click();
+        const receiptInput = document.getElementById("receiptInput");
+        if (receiptInput) receiptInput.click();
         return;
       }
 
@@ -1506,13 +1528,13 @@
       const feedback = document.getElementById("feedback");
 
       // ========================================================
-      // STAGE 1: ANIMATED LOADING STATE INITIATED
+      // STAGE 1: INITIATE ANIMATED LOADING & PROGRESSIVE TIMERS
       // ========================================================
       btn.disabled = true;
       btn.classList.add("btn-loading", "cursor-wait");
       feedback.classList.add("hidden");
 
-      // Animated Spinner SVG
+      // High-speed smooth animated spinner SVG
       const spinnerSvg = `
         <svg class="animate-spin h-5 w-5 text-slate-950 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -1522,7 +1544,7 @@
 
       btn.innerHTML = `${spinnerSvg} <span>OPTIMIZING RECEIPT...</span>`;
 
-      // Dynamic Progressive Status Timer (keeps user assured it's working!)
+      // Reassuring progressive status timer as Drive processes the image
       const progressTimer1 = setTimeout(() => {
         if (btn.disabled) btn.innerHTML = `${spinnerSvg} <span>UPLOADING TO DRIVE...</span>`;
       }, 900);
@@ -1531,15 +1553,16 @@
         if (btn.disabled) btn.innerHTML = `${spinnerSvg} <span>SECURING ALLOCATION...</span>`;
       }, 2200);
 
+      // Build structured submission payload
       const payload = {
-        fullName: document.getElementById("fullName").value.trim(),
-        email: document.getElementById("email").value.trim(),
-        contact: document.getElementById("contact").value.trim(),
-        affiliation: document.getElementById("affiliation").value.trim(),
-        tierId: document.getElementById("selectedTierId").value,
-        tierName: document.getElementById("selectedTierName").value,
-        amount: Number(document.getElementById("selectedTierPrice").value),
-        referenceNo: document.getElementById("referenceNo").value.trim(),
+        fullName: (document.getElementById("fullName")?.value || "").trim(),
+        email: (document.getElementById("email")?.value || "").trim(),
+        contact: (document.getElementById("contact")?.value || "").trim(),
+        affiliation: (document.getElementById("affiliation")?.value || "").trim(),
+        tierId: document.getElementById("selectedTierId")?.value || "EARLY",
+        tierName: document.getElementById("selectedTierName")?.value || "Pass",
+        amount: Number(document.getElementById("selectedTierPrice")?.value) || 0,
+        referenceNo: (document.getElementById("referenceNo")?.value || "").trim(),
         receiptBase64: currentReceiptBase64
       };
 
@@ -1551,6 +1574,7 @@
 
         const result = await response.json();
 
+        // Clear timers immediately once server responds
         clearTimeout(progressTimer1);
         clearTimeout(progressTimer2);
         btn.classList.remove("btn-loading", "cursor-wait");
@@ -1567,15 +1591,20 @@
             <span>SUBMISSION VERIFIED!</span>
           `;
 
-          // Confetti explosion
-          confetti({
-            particleCount: 120,
-            spread: 80,
-            origin: { y: 0.6 },
-            colors: ['#2563EB', '#FACC15', '#10B981', '#F59E0B']
-          });
+          // Fire celebratory confetti blast
+          if (typeof confetti === "function") {
+            confetti({
+              particleCount: 120,
+              spread: 80,
+              origin: { y: 0.6 },
+              colors: ['#2563EB', '#FACC15', '#10B981', '#F59E0B']
+            });
+          }
 
-          // Show confirmation card smoothly
+          // Clear mobile auto-draft from localStorage
+          localStorage.removeItem("GGEN_REG_DRAFT_2027");
+
+          // Display confirmation details card smoothly
           setTimeout(() => {
             feedback.classList.remove("hidden");
             feedback.innerHTML = `
@@ -1590,16 +1619,22 @@
                   <span class="font-mono-code bg-black/40 text-amber-300 px-1.5 py-0.5 rounded font-bold">${result.tierName} (₱${result.amount})</span>.
                 </p>
                 <p class="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
-                  Ref ID: <strong class="text-white">${result.regId}</strong>. Your payment receipt is in our verification queue. Your official admission pass will be emailed once our finance committee approves the transfer.
+                  Ref ID: <strong class="text-white">${result.regId}</strong>. Your payment receipt has been uploaded directly to our verification queue. Your official admission pass will be emailed once our finance committee verifies the transfer.
                 </p>
               </div>
             `;
             lucide.createIcons();
-            document.getElementById("regForm").reset();
-            removeReceipt();
-            feedback.scrollIntoView({ behavior: 'smooth' });
 
-            // Reset button back to normal state after 3.5s
+            // Reset form fields and remove preview
+            document.getElementById("regForm").reset();
+            if (typeof removeReceipt === "function") {
+              removeReceipt();
+            }
+
+            // Smooth scroll to confirmation
+            feedback.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // Restore button back to normal state after 3.5s
             setTimeout(() => {
               btn.disabled = false;
               btn.className = "group w-full mt-3 min-h-[50px] bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-400 active:scale-[0.98] text-slate-950 font-bebas text-2xl py-2.5 rounded-xl tracking-wider uppercase transition shadow-xl shadow-amber-400/20 flex items-center justify-center gap-2 cursor-pointer";
@@ -1611,7 +1646,7 @@
 
         } else {
           // ========================================================
-          // STAGE 3: ERROR ANIMATION
+          // STAGE 3: ERROR STATE HANDLING
           // ========================================================
           btn.disabled = false;
           btn.classList.add("btn-shake");
@@ -1623,7 +1658,7 @@
           feedback.classList.remove("hidden");
           feedback.innerHTML = `
             <div class="bg-rose-950/60 border border-rose-500/50 rounded-2xl p-3.5 text-rose-300 text-xs">
-              ${result.message}
+              ${result.message || "An error occurred during submission."}
             </div>
           `;
         }
@@ -1642,7 +1677,7 @@
         feedback.classList.remove("hidden");
         feedback.innerHTML = `
           <div class="bg-rose-950/60 border border-rose-500/50 rounded-2xl p-3.5 text-rose-300 text-xs">
-            Server connection error. Please try again.
+            Server connection error. Please verify your connection and try again.
           </div>
         `;
       }
@@ -1757,6 +1792,91 @@
       document.getElementById('receiptPreviewContainer').classList.add('hidden');
       document.getElementById('uploadDropzone').classList.remove('hidden');
       lucide.createIcons();
+    }
+
+    // ==============================================================
+    // MOBILE TAB-RELOAD RECOVERY ENGINE (localStorage Auto-Draft)
+    // ==============================================================
+
+    const DRAFT_STORAGE_KEY = "GGEN_REG_DRAFT_2027";
+
+    // Saves inputs in real-time as delegate types
+    function saveFormDraft() {
+      const draft = {
+        fullName: document.getElementById("fullName")?.value || "",
+        email: document.getElementById("email")?.value || "",
+        contact: document.getElementById("contact")?.value || "",
+        affiliation: document.getElementById("affiliation")?.value || "",
+        referenceNo: document.getElementById("referenceNo")?.value || "",
+        tierId: document.getElementById("selectedTierId")?.value || "",
+        timestamp: Date.now()
+      };
+      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
+    }
+
+    // Automatically restores fields if phone reloads tab after GCash
+    function restoreFormDraft() {
+      try {
+        const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+        if (!raw) return;
+
+        const draft = JSON.parse(raw);
+        // Expire drafts older than 24 hours
+        if (Date.now() - (draft.timestamp || 0) > 86400000) {
+          localStorage.removeItem(DRAFT_STORAGE_KEY);
+          return;
+        }
+
+        let restoredAny = false;
+        const fieldIds = ["fullName", "email", "contact", "affiliation", "referenceNo"];
+        
+        fieldIds.forEach(id => {
+          const el = document.getElementById(id);
+          if (el && draft[id] && draft[id].trim() !== "") {
+            el.value = draft[id];
+            restoredAny = true;
+          }
+        });
+
+        // Remember saved tier to highlight once tiers finish loading
+        if (draft.tierId) {
+          window._savedDraftTierId = draft.tierId;
+        }
+
+        // Show reassuring visual badge
+        if (restoredAny) {
+          const notice = document.getElementById("draftNotice");
+          if (notice) {
+            notice.classList.remove("hidden");
+            lucide.createIcons();
+            setTimeout(() => {
+              notice.classList.add("transition-opacity", "duration-1000", "opacity-0");
+              setTimeout(() => notice.classList.add("hidden"), 1000);
+            }, 6000);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not restore draft:", err);
+      }
+    }
+
+    function clearDraft() {
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+      const notice = document.getElementById("draftNotice");
+      if (notice) notice.classList.add("hidden");
+      document.getElementById("regForm").reset();
+    }
+
+    // Attach real-time keystroke listeners to all form fields
+    function attachDraftListeners() {
+      const inputs = ["fullName", "email", "contact", "affiliation", "referenceNo"];
+      inputs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener("input", saveFormDraft);
+          el.addEventListener("change", saveFormDraft);
+        }
+      });
     }
   </script>
 </body>
