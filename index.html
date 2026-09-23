@@ -826,7 +826,7 @@
       const container = document.getElementById("pricingTiersContainer");
       if (!tiers || tiers.length === 0) return;
 
-      // Find first available tier to select by default
+      // Find first available active tier to select by default
       const firstActiveIndex = tiers.findIndex(t => t.status === 'ACTIVE');
       const defaultIdx = firstActiveIndex !== -1 ? firstActiveIndex : 0;
 
@@ -834,12 +834,22 @@
         const isSelected = idx === defaultIdx && tier.status === 'ACTIVE';
         const isAvailable = tier.status === 'ACTIVE';
 
-        // Set default hidden values
+        // Set default hidden values safely with null checks
         if (isSelected) {
-          document.getElementById("selectedTierId").value = tier.tierId;
-          document.getElementById("selectedTierName").value = tier.name;
-          document.getElementById("selectedTierPrice").value = tier.price;
-          document.getElementById("displayAmountDue").innerText = `₱${tier.price}.00`;
+          const tierIdInput = document.getElementById("selectedTierId");
+          const tierNameInput = document.getElementById("selectedTierName");
+          const tierPriceInput = document.getElementById("selectedTierPrice");
+          const displayAmountDue = document.getElementById("displayAmountDue");
+
+          if (tierIdInput) tierIdInput.value = tier.tierId;
+          if (tierNameInput) tierNameInput.value = tier.name;
+          if (tierPriceInput) tierPriceInput.value = tier.price;
+          if (displayAmountDue) displayAmountDue.innerText = `₱${tier.price}.00`;
+
+          // Synchronize Section 3 QR code with default tier
+          if (typeof updateQrForTier === "function") {
+            updateQrForTier(tier);
+          }
         }
 
         // Status pill badge logic
@@ -866,7 +876,7 @@
 
         return `
           <div onclick="${isAvailable ? `selectTier('${tier.tierId}', '${tier.name}', ${tier.price}, this)` : ''}"
-          data-qr-url="${tier.qrUrl || ''}"
+            data-qr-url="${tier.qrUrl || ''}"
             class="tier-card group relative p-3.5 sm:p-4 rounded-2xl border transition-all duration-300 flex items-center justify-between gap-3 select-none ${
               !isAvailable 
                 ? 'opacity-40 border-white/5 bg-slate-950/40 cursor-not-allowed' 
@@ -877,8 +887,6 @@
             
             <!-- LEFT: Radio button + Tier Details -->
             <div class="flex items-center gap-3 min-w-0">
-              
-              <!-- Custom Interactive Radio Ring -->
               <div class="tier-radio w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
                 isSelected ? 'border-amber-400 bg-amber-400/20' : 'border-slate-600 bg-transparent'
               }">
@@ -891,7 +899,6 @@
                     ${tier.name}
                   </span>
 
-                  <!-- Promotional Tag (e.g. LIMITED SLOTS / MIN 5 PAX) -->
                   ${tier.badge ? `
                     <span class="whitespace-nowrap font-mono-code font-extrabold text-[8.5px] sm:text-[9px] uppercase px-2 py-0.5 rounded-md shadow-sm ${
                       isSelected 
