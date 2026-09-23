@@ -71,6 +71,23 @@
       opacity: 1;
       transform: translateY(0);
     }
+
+    @keyframes btn-shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+    .btn-shake {
+      animation: btn-shake 0.4s ease-in-out;
+    }
+
+    @keyframes pulse-subtle {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.88; transform: scale(0.99); }
+    }
+    .btn-loading {
+      animation: pulse-subtle 1.5s ease-in-out infinite;
+    }
   </style>
 </head>
 <body class="text-slate-100 min-h-screen relative selection:bg-amber-400 selection:text-black">
@@ -1468,15 +1485,18 @@
     async function handleFormSubmit(e) {
       e.preventDefault();
 
-      // 1. Validate email syntax
+      // 1. Email check
       const isEmailValid = checkEmailField();
       if (!isEmailValid) {
         document.getElementById("email").focus();
         return;
       }
 
-      // 2. Validate that receipt screenshot is attached
+      // 2. Receipt check
       if (!currentReceiptBase64) {
+        const dropzone = document.getElementById("uploadDropzone");
+        dropzone.classList.add("btn-shake", "border-rose-500");
+        setTimeout(() => dropzone.classList.remove("btn-shake", "border-rose-500"), 600);
         alert("⚠️ Please upload your GCash payment receipt screenshot before submitting.");
         document.getElementById("receiptInput").click();
         return;
@@ -1485,9 +1505,31 @@
       const btn = document.getElementById("submitBtn");
       const feedback = document.getElementById("feedback");
 
+      // ========================================================
+      // STAGE 1: ANIMATED LOADING STATE INITIATED
+      // ========================================================
       btn.disabled = true;
-      btn.innerHTML = `<span>UPLOADING & VERIFYING...</span>`;
+      btn.classList.add("btn-loading", "cursor-wait");
       feedback.classList.add("hidden");
+
+      // Animated Spinner SVG
+      const spinnerSvg = `
+        <svg class="animate-spin h-5 w-5 text-slate-950 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-85" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      `;
+
+      btn.innerHTML = `${spinnerSvg} <span>OPTIMIZING RECEIPT...</span>`;
+
+      // Dynamic Progressive Status Timer (keeps user assured it's working!)
+      const progressTimer1 = setTimeout(() => {
+        if (btn.disabled) btn.innerHTML = `${spinnerSvg} <span>UPLOADING TO DRIVE...</span>`;
+      }, 900);
+
+      const progressTimer2 = setTimeout(() => {
+        if (btn.disabled) btn.innerHTML = `${spinnerSvg} <span>SECURING ALLOCATION...</span>`;
+      }, 2200);
 
       const payload = {
         fullName: document.getElementById("fullName").value.trim(),
@@ -1498,7 +1540,7 @@
         tierName: document.getElementById("selectedTierName").value,
         amount: Number(document.getElementById("selectedTierPrice").value),
         referenceNo: document.getElementById("referenceNo").value.trim(),
-        receiptBase64: currentReceiptBase64 // Base64 receipt data sent directly to Drive
+        receiptBase64: currentReceiptBase64
       };
 
       try {
@@ -1509,49 +1551,94 @@
 
         const result = await response.json();
 
-        btn.disabled = false;
-        btn.innerHTML = `<span>SUBMIT REGISTRATION & PAYMENT</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>`;
-        lucide.createIcons();
-        feedback.classList.remove("hidden");
+        clearTimeout(progressTimer1);
+        clearTimeout(progressTimer2);
+        btn.classList.remove("btn-loading", "cursor-wait");
 
         if (result.success) {
+          // ========================================================
+          // STAGE 2: FLASH SUCCESS STATE ON BUTTON
+          // ========================================================
+          btn.className = "w-full mt-3 min-h-[50px] bg-emerald-400 text-slate-950 font-bebas text-2xl py-2.5 rounded-xl tracking-wider uppercase shadow-xl shadow-emerald-400/30 flex items-center justify-center gap-2 transition-all duration-300";
+          btn.innerHTML = `
+            <svg class="w-6 h-6 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span>SUBMISSION VERIFIED!</span>
+          `;
+
+          // Confetti explosion
           confetti({
-            particleCount: 100,
-            spread: 70,
+            particleCount: 120,
+            spread: 80,
             origin: { y: 0.6 },
-            colors: ['#2563EB', '#FACC15', '#7C3AED', '#10B981']
+            colors: ['#2563EB', '#FACC15', '#10B981', '#F59E0B']
           });
 
-          feedback.innerHTML = `
-            <div class="bg-amber-950/40 border border-amber-500/50 rounded-2xl p-4 text-amber-200 shadow-xl">
-              <div class="flex items-center gap-1.5 text-amber-400 font-bold text-[11px] uppercase tracking-wider mb-1">
-                <i data-lucide="clock" class="w-3.5 h-3.5"></i>
-                <span>STATUS: PAYMENT VERIFICATION IN PROGRESS</span>
+          // Show confirmation card smoothly
+          setTimeout(() => {
+            feedback.classList.remove("hidden");
+            feedback.innerHTML = `
+              <div class="bg-amber-950/40 border border-amber-500/50 rounded-2xl p-4 text-amber-200 shadow-xl">
+                <div class="flex items-center gap-1.5 text-amber-400 font-bold text-[11px] uppercase tracking-wider mb-1">
+                  <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                  <span>STATUS: PAYMENT VERIFICATION IN PROGRESS</span>
+                </div>
+                <div class="font-bebas text-2xl sm:text-3xl text-white">REGISTRATION & RECEIPT SUBMITTED!</div>
+                <p class="text-xs text-slate-300 mt-1">
+                  Thank you, <strong class="text-white">${result.fullName}</strong>. Pass Tier: 
+                  <span class="font-mono-code bg-black/40 text-amber-300 px-1.5 py-0.5 rounded font-bold">${result.tierName} (₱${result.amount})</span>.
+                </p>
+                <p class="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+                  Ref ID: <strong class="text-white">${result.regId}</strong>. Your payment receipt is in our verification queue. Your official admission pass will be emailed once our finance committee approves the transfer.
+                </p>
               </div>
-              <div class="font-bebas text-2xl sm:text-3xl text-white">REGISTRATION & RECEIPT SUBMITTED!</div>
-              <p class="text-xs text-slate-300 mt-1">
-                Thank you, <strong class="text-white">${result.fullName}</strong>. Pass Tier: 
-                <span class="font-mono-code bg-black/40 text-amber-300 px-1.5 py-0.5 rounded font-bold">${result.tierName} (₱${result.amount})</span>.
-              </p>
-              <p class="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
-                Ref ID: <strong class="text-white">${result.regId}</strong>. Your payment receipt has been uploaded to our verification queue. Your official pass will be emailed once our finance committee verifies the transfer.
-              </p>
-            </div>
-          `;
-          lucide.createIcons();
-          document.getElementById("regForm").reset();
-          removeReceipt();
-          feedback.scrollIntoView({ behavior: 'smooth' });
+            `;
+            lucide.createIcons();
+            document.getElementById("regForm").reset();
+            removeReceipt();
+            feedback.scrollIntoView({ behavior: 'smooth' });
+
+            // Reset button back to normal state after 3.5s
+            setTimeout(() => {
+              btn.disabled = false;
+              btn.className = "group w-full mt-3 min-h-[50px] bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-400 active:scale-[0.98] text-slate-950 font-bebas text-2xl py-2.5 rounded-xl tracking-wider uppercase transition shadow-xl shadow-amber-400/20 flex items-center justify-center gap-2 cursor-pointer";
+              btn.innerHTML = `<span>SUBMIT REGISTRATION & PAYMENT</span> <i data-lucide="arrow-right" class="w-5 h-5 transition-transform group-hover:translate-x-1"></i>`;
+              lucide.createIcons();
+            }, 3500);
+
+          }, 600);
+
         } else {
+          // ========================================================
+          // STAGE 3: ERROR ANIMATION
+          // ========================================================
+          btn.disabled = false;
+          btn.classList.add("btn-shake");
+          setTimeout(() => btn.classList.remove("btn-shake"), 500);
+
+          btn.innerHTML = `<span>SUBMIT REGISTRATION & PAYMENT</span> <i data-lucide="arrow-right" class="w-5 h-5"></i>`;
+          lucide.createIcons();
+
+          feedback.classList.remove("hidden");
           feedback.innerHTML = `
             <div class="bg-rose-950/60 border border-rose-500/50 rounded-2xl p-3.5 text-rose-300 text-xs">
               ${result.message}
             </div>
           `;
         }
+
       } catch (err) {
+        clearTimeout(progressTimer1);
+        clearTimeout(progressTimer2);
         btn.disabled = false;
-        btn.innerHTML = `<span>SUBMIT REGISTRATION & PAYMENT</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>`;
+        btn.classList.remove("btn-loading", "cursor-wait");
+        btn.classList.add("btn-shake");
+        setTimeout(() => btn.classList.remove("btn-shake"), 500);
+
+        btn.innerHTML = `<span>SUBMIT REGISTRATION & PAYMENT</span> <i data-lucide="arrow-right" class="w-5 h-5"></i>`;
+        lucide.createIcons();
+
         feedback.classList.remove("hidden");
         feedback.innerHTML = `
           <div class="bg-rose-950/60 border border-rose-500/50 rounded-2xl p-3.5 text-rose-300 text-xs">
