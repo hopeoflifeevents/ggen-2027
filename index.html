@@ -604,19 +604,31 @@
     }, { threshold: 0.08 });
     document.querySelectorAll('.reveal-on-scroll').forEach(el => observer.observe(el));
 
-    // Countdown Timer (Aug 30, 2027)
-    const targetDate = new Date("August 30, 2027 08:00:00").getTime();
+    // ==============================================================
+    // COUNTDOWN TIMER (Explicit Philippine Standard Time: GMT+8)
+    // ==============================================================
+    // Check-in booths open at 7:30 AM PHT on August 30, 2027
+    const targetDate = new Date("2027-08-30T07:30:00+08:00").getTime();
+
     function updateCountdown() {
       const now = new Date().getTime();
       const diff = targetDate - now;
 
       if (diff > 0) {
-        document.getElementById("days").innerText = Math.floor(diff / (1000 * 60 * 60 * 24));
-        document.getElementById("hours").innerText = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        document.getElementById("minutes").innerText = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        document.getElementById("seconds").innerText = Math.floor((diff % (1000 * 60)) / 1000);
+        document.getElementById("days").innerText = String(Math.floor(diff / (1000 * 60 * 60 * 24))).padStart(2, '0');
+        document.getElementById("hours").innerText = String(Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
+        document.getElementById("minutes").innerText = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+        document.getElementById("seconds").innerText = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, '0');
+      } else {
+        // Event is Live!
+        document.getElementById("days").innerText = "00";
+        document.getElementById("hours").innerText = "00";
+        document.getElementById("minutes").innerText = "00";
+        document.getElementById("seconds").innerText = "00";
       }
     }
+    setInterval(updateCountdown, 1000);
+    updateCountdown();
     setInterval(updateCountdown, 1000);
     updateCountdown();
 
