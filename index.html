@@ -819,6 +819,35 @@
       }
     }
 
+    // Formats any raw ISO date (e.g. 2026-08-31T16:00:00.000Z) to "Sep 1, 2026" in Philippine Time
+    function formatPrettyDate(rawDate) {
+      if (!rawDate) return "";
+      const d = new Date(rawDate);
+      if (isNaN(d.getTime())) return rawDate;
+
+      return d.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        timeZone: 'Asia/Manila'
+      });
+    }
+
+    // Creates a sleek "Sep 1, 2026 – Jan 31, 2027" badge
+    function buildCoverageDateText(startDate, endDate) {
+      const prettyStart = formatPrettyDate(startDate);
+      const prettyEnd = formatPrettyDate(endDate);
+
+      if (prettyStart && prettyEnd) {
+        return `${prettyStart} – ${prettyEnd}`;
+      } else if (prettyEnd) {
+        return `Until ${prettyEnd}`;
+      } else if (prettyStart) {
+        return `Starts ${prettyStart}`;
+      }
+      return "";
+    }
+
     function renderPricingTiers(tiers) {
       const container = document.getElementById("pricingTiersContainer");
       if (!tiers || tiers.length === 0) return;
@@ -828,38 +857,39 @@
       // 1. Evaluate Date Validity for each tier
       const evaluatedTiers = tiers.map(tier => {
         let isAvailable = true;
+        let statusType = "ACTIVE";
         let dateBadgeText = "";
-        let statusType = "ACTIVE"; // ACTIVE, OPENS_SOON, EXPIRED, SOLD_OUT
 
-        // Check manual override first
+        // Build human-friendly date range string
+        const coverageText = buildCoverageDateText(tier.startDate, tier.endDate);
+
+        // Check manual override
         if (tier.status === "SOLD_OUT") {
           isAvailable = false;
           statusType = "SOLD_OUT";
         } else {
-          // Parse Start Date (Set to 00:00:00 of that day)
+          // Check Start Date
           if (tier.startDate) {
-            const start = new Date(tier.startDate + "T00:00:00+08:00");
+            const start = new Date(tier.startDate);
             if (!isNaN(start.getTime()) && now < start) {
               isAvailable = false;
               statusType = "OPENS_SOON";
-              const formattedOpen = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-              dateBadgeText = `Opens ${formattedOpen}`;
+              dateBadgeText = `Opens ${formatPrettyDate(tier.startDate)}`;
             }
           }
 
-          // Parse End Date (Set to 23:59:59 of that day)
+          // Check End Date
           if (isAvailable && tier.endDate) {
-            const end = new Date(tier.endDate + "T23:59:59+08:00");
+            const end = new Date(tier.endDate);
+            // End of that day
+            end.setHours(23, 59, 59, 999);
             if (!isNaN(end.getTime())) {
               if (now > end) {
                 isAvailable = false;
                 statusType = "EXPIRED";
-                const formattedClosed = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                dateBadgeText = `Ended ${formattedClosed}`;
+                dateBadgeText = `Ended ${formatPrettyDate(tier.endDate)}`;
               } else {
-                // Currently Open & Active! Show "Ends [Date]"
-                const formattedEnd = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                dateBadgeText = `Until ${formattedEnd}`;
+                dateBadgeText = `Until ${formatPrettyDate(tier.endDate)}`;
               }
             }
           }
@@ -869,6 +899,7 @@
           ...tier,
           isAvailable,
           statusType,
+          coverageText,
           dateBadgeText
         };
       });
@@ -897,7 +928,7 @@
           }
         }
 
-        // Build Status Pill Badge
+        // Status Pill Badge (Top Right)
         let statusBadgeHtml = '';
         if (tier.statusType === 'ACTIVE') {
           statusBadgeHtml = `
@@ -936,21 +967,23 @@
                   : 'border-white/10 hover:border-white/20 bg-slate-900/50 hover:bg-slate-900/80 cursor-pointer'
             }">
             
-            <!-- LEFT: Radio Ring + Details -->
-            <div class="flex items-center gap-3 min-w-0">
-              <div class="tier-radio w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+            <!-- LEFT: Radio Ring + Tier Info -->
+            <div class="flex items-start gap-3 min-w-0">
+              
+              <!-- Radio Button -->
+              <div class="tier-radio w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors mt-0.5 ${
                 !tier.isAvailable ? 'border-slate-800' : isSelected ? 'border-amber-400 bg-amber-400/20' : 'border-slate-600'
               }">
                 <div class="tier-dot w-2 h-2 rounded-full ${isSelected ? 'bg-amber-400' : 'bg-transparent'}"></div>
               </div>
 
               <div class="min-w-0">
+                <!-- Title + Badges Row -->
                 <div class="flex items-center gap-2 flex-wrap">
                   <span class="font-bebas text-lg sm:text-xl tracking-wider text-white leading-tight">
                     ${tier.name}
                   </span>
 
-                  <!-- Promo Tag (e.g. LIMITED SLOTS) -->
                   ${tier.badge ? `
                     <span class="whitespace-nowrap font-mono-code font-extrabold text-[8.5px] sm:text-[9px] uppercase px-2 py-0.5 rounded-md ${
                       isSelected ? 'bg-amber-400 text-slate-950' : 'bg-white/10 text-slate-300 border border-white/10'
@@ -959,19 +992,23 @@
                     </span>
                   ` : ''}
 
-                  <!-- Live Date Status Pill -->
                   ${statusBadgeHtml}
                 </div>
 
-                <!-- Description + Validity Date Subtext -->
-                <div class="flex items-center gap-2 text-[10px] sm:text-[11px] text-slate-400 leading-tight mt-0.5">
-                  <span class="truncate">${tier.description}</span>
-                  ${tier.isAvailable && tier.dateBadgeText ? `
-                    <span class="hidden sm:inline text-amber-300/80 font-mono-code font-semibold flex-shrink-0">
-                      • ${tier.dateBadgeText}
-                    </span>
-                  ` : ''}
-                </div>
+                <!-- POLISHED COVERAGE DATE BADGE -->
+                ${tier.coverageText ? `
+                  <div class="mt-1 flex items-center gap-1.5 font-mono-code text-[10px] text-amber-300/90 font-semibold">
+                    <i data-lucide="calendar" class="w-3 h-3 text-amber-400 flex-shrink-0"></i>
+                    <span>${tier.coverageText}</span>
+                  </div>
+                ` : ''}
+
+                <!-- Tier Description -->
+                ${tier.description && !tier.description.includes("T") ? `
+                  <p class="text-[10px] sm:text-[11px] text-slate-400 leading-tight mt-0.5 truncate">
+                    ${tier.description}
+                  </p>
+                ` : ''}
               </div>
             </div>
 
