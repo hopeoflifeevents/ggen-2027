@@ -939,10 +939,12 @@
       return "";
     }
 
+    // ==============================================================
+    // COMPLETE ERROR-FREE RENDER PRICING TIERS
+    // ==============================================================
     function renderPricingTiers(tiers) {
-      activeTiersList = evaluatedTiers; // Save to global variable
       const container = document.getElementById("pricingTiersContainer");
-      if (!tiers || tiers.length === 0) return;
+      if (!container || !tiers || tiers.length === 0) return;
 
       const now = new Date();
 
@@ -952,8 +954,10 @@
         let statusType = "ACTIVE"; // ACTIVE, OPENS_SOON, EXPIRED, SOLD_OUT
         let dateBadgeText = "";
 
-        // Build human-friendly date range string (e.g. "Sep 1, 2026 – Jan 31, 2027")
-        const coverageText = buildCoverageDateText(tier.startDate, tier.endDate);
+        // Build human-friendly date range string
+        const coverageText = (typeof buildCoverageDateText === "function") 
+          ? buildCoverageDateText(tier.startDate, tier.endDate) 
+          : "";
 
         // Check manual override from Google Sheet
         if (tier.status === "SOLD_OUT") {
@@ -966,7 +970,7 @@
             if (!isNaN(start.getTime()) && now < start) {
               isAvailable = false;
               statusType = "OPENS_SOON";
-              dateBadgeText = `Opens ${formatPrettyDate(tier.startDate)}`;
+              dateBadgeText = `Opens ${typeof formatPrettyDate === "function" ? formatPrettyDate(tier.startDate) : tier.startDate}`;
             }
           }
 
@@ -978,9 +982,9 @@
               if (now > end) {
                 isAvailable = false;
                 statusType = "EXPIRED";
-                dateBadgeText = `Ended ${formatPrettyDate(tier.endDate)}`;
+                dateBadgeText = `Ended ${typeof formatPrettyDate === "function" ? formatPrettyDate(tier.endDate) : tier.endDate}`;
               } else {
-                dateBadgeText = `Until ${formatPrettyDate(tier.endDate)}`;
+                dateBadgeText = `Until ${typeof formatPrettyDate === "function" ? formatPrettyDate(tier.endDate) : tier.endDate}`;
               }
             }
           }
@@ -995,7 +999,10 @@
         };
       });
 
-      // 2. Select default tier: prioritize saved draft tier if available, else first active tier
+      // 2. STORE GLOBALLY (AFTER initialization to prevent ReferenceError)
+      activeTiersList = evaluatedTiers;
+
+      // 3. Select default tier: prioritize saved draft tier if available, else first active tier
       let defaultIdx = evaluatedTiers.findIndex(t => t.isAvailable);
       if (window._savedDraftTierId) {
         const draftIdx = evaluatedTiers.findIndex(t => t.tierId === window._savedDraftTierId && t.isAvailable);
@@ -1003,25 +1010,24 @@
       }
       if (defaultIdx === -1) defaultIdx = 0;
 
-      // 3. Render HTML Cards
+      // Initialize global selected tier object
+      if (evaluatedTiers[defaultIdx] && evaluatedTiers[defaultIdx].isAvailable) {
+        currentSelectedTierObj = evaluatedTiers[defaultIdx];
+      }
+
+      // 4. Render HTML Cards
       container.innerHTML = evaluatedTiers.map((tier, idx) => {
         const isSelected = idx === defaultIdx && tier.isAvailable;
 
-        // Synchronize hidden form fields and Section 3 QR card on initial render
+        // Synchronize hidden inputs and Section 3 QR card on initial render
         if (isSelected) {
           const tierIdInput = document.getElementById("selectedTierId");
           const tierNameInput = document.getElementById("selectedTierName");
           const tierPriceInput = document.getElementById("selectedTierPrice");
-          const displayAmountDue = document.getElementById("displayAmountDue");
 
           if (tierIdInput) tierIdInput.value = tier.tierId;
           if (tierNameInput) tierNameInput.value = tier.name;
           if (tierPriceInput) tierPriceInput.value = tier.price;
-          if (displayAmountDue) displayAmountDue.innerText = `₱${tier.price}.00`;
-
-          if (typeof updateQrForTier === "function") {
-            updateQrForTier(tier);
-          }
         }
 
         // Build Status Pill Badge
@@ -1065,8 +1071,6 @@
             
             <!-- LEFT: Radio Indicator + Tier Details -->
             <div class="flex items-start gap-3 min-w-0">
-              
-              <!-- Custom Radio Button -->
               <div class="tier-radio w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors mt-0.5 ${
                 !tier.isAvailable ? 'border-slate-800' : isSelected ? 'border-amber-400 bg-amber-400/20' : 'border-slate-600'
               }">
@@ -1074,7 +1078,6 @@
               </div>
 
               <div class="min-w-0">
-                <!-- Title + Badges Row -->
                 <div class="flex items-center gap-2 flex-wrap">
                   <span class="font-bebas text-lg sm:text-xl tracking-wider text-white leading-tight">
                     ${tier.name}
@@ -1088,11 +1091,9 @@
                     </span>
                   ` : ''}
 
-                  <!-- Live Date Status Pill -->
                   ${statusBadgeHtml}
                 </div>
 
-                <!-- Polished Coverage Date Range with Calendar Icon -->
                 ${tier.coverageText ? `
                   <div class="mt-1 flex items-center gap-1.5 font-mono-code text-[10px] text-amber-300/90 font-semibold">
                     <i data-lucide="calendar" class="w-3 h-3 text-amber-400 flex-shrink-0"></i>
@@ -1100,7 +1101,6 @@
                   </div>
                 ` : ''}
 
-                <!-- Tier Description (Safeguarded against raw timestamp text) -->
                 ${tier.description && !tier.description.includes("T") ? `
                   <p class="text-[10px] sm:text-[11px] text-slate-400 leading-tight mt-0.5 truncate">
                     ${tier.description}
@@ -1124,6 +1124,11 @@
           </div>
         `;
       }).join('');
+
+      // 5. Synchronize Batch Stepper & GCash Card immediately
+      if (typeof updateBatchUI === "function") {
+        updateBatchUI();
+      }
 
       lucide.createIcons();
     }
