@@ -542,44 +542,88 @@
               <input type="hidden" id="selectedTierPrice" value="350" />
             </div>
 
-            <!-- 2. DELEGATE PERSONAL DETAILS -->
+            <!-- QUANTITY SELECTOR (1 TO 5 PAX) -->
+            <div class="mt-3 bg-slate-950/80 border border-white/10 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-3">
+              <div>
+                <div class="text-[10px] font-mono-code font-bold uppercase text-slate-300 flex items-center gap-1.5">
+                  <i data-lucide="users" class="w-3.5 h-3.5 text-amber-400"></i>
+                  <span>NUMBER OF DELEGATES</span>
+                </div>
+                <div class="text-[10.5px] text-slate-400 mt-0.5" id="paxNoticeText">
+                  Group registration (Up to 5 pax max)
+                </div>
+              </div>
+
+              <!-- Interactive Stepper -->
+              <div class="flex items-center gap-2 flex-shrink-0">
+                <button type="button" onclick="changePaxCount(-1)" id="decrementBtn"
+                  class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 border border-white/10 text-white flex items-center justify-center font-bold text-base transition cursor-pointer">
+                  –
+                </button>
+                <div class="w-8 text-center font-mono-code font-black text-lg text-amber-300" id="paxCountDisplay">
+                  1
+                </div>
+                <button type="button" onclick="changePaxCount(1)" id="incrementBtn"
+                  class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 border border-white/10 text-white flex items-center justify-center font-bold text-base transition cursor-pointer">
+                  +
+                </button>
+              </div>
+            </div>
+
+            <!-- 2. DELEGATE INFORMATION (LEAD + GROUP MEMBERS) -->
             <div class="pt-2 border-t border-white/10 space-y-3.5">
-              <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider">
-                2. Delegate Information
-              </label>
+              <div class="flex items-center justify-between">
+                <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider">
+                  2. Delegate Information
+                </label>
+                <span class="text-[9.5px] font-mono-code text-amber-400 font-bold" id="leadBadge">
+                  PRIMARY CONTACT (DELEGATE 1)
+                </span>
+              </div>
 
-              <div>
-                <div class="relative">
-                  <i data-lucide="user" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-                  <input type="text" id="fullName" required placeholder="Full Name (e.g. Lawrence Justine Maqui)"
-                    class="w-full bg-slate-800/60 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400 transition" />
+              <!-- PRIMARY DELEGATE (LEAD) -->
+              <div class="bg-slate-900/50 border border-white/10 rounded-2xl p-3.5 space-y-3">
+                <div class="text-[10px] font-mono-code text-slate-400 uppercase font-bold flex items-center gap-1.5">
+                  <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                  <span>Delegate #1 (Lead / Contact Person)</span>
+                </div>
+
+                <div>
+                  <div class="relative">
+                    <i data-lucide="user" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                    <input type="text" id="fullName" required placeholder="Full Name (Lead Delegate)"
+                      class="w-full bg-slate-800/60 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400 transition" />
+                  </div>
+                </div>
+
+                <div>
+                  <div class="relative">
+                    <i data-lucide="mail" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                    <input type="email" id="email" required inputmode="email" autocomplete="email" placeholder="Email Address (Pass delivered here)"
+                      onblur="checkEmailField()"
+                      oninput="clearEmailErrors()"
+                      class="w-full bg-slate-800/60 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400 transition" />
+                  </div>
+                  <div id="emailFeedback" class="hidden mt-1.5 text-[11px] font-mono-code font-bold"></div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div class="relative">
+                    <i data-lucide="phone" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                    <input type="tel" id="contact" required inputmode="tel" placeholder="Mobile Number"
+                      class="w-full bg-slate-800/60 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400 transition" />
+                  </div>
+
+                  <div class="relative">
+                    <i data-lucide="church" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                    <input type="text" id="affiliation" required placeholder="Campus / Church / Org"
+                      class="w-full bg-slate-800/60 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400 transition" />
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <div class="relative">
-                  <i data-lucide="mail" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-                  <input type="email" id="email" required inputmode="email" autocomplete="email" placeholder="Email Address (name@domain.com)"
-                    onblur="checkEmailField()"
-                    oninput="clearEmailErrors()"
-                    class="w-full bg-slate-800/60 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400 transition" />
-                </div>
-                <div id="emailFeedback" class="hidden mt-1.5 text-[11px] font-mono-code font-bold"></div>
-              </div>
-
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <div class="relative">
-                  <i data-lucide="phone" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-                  <input type="tel" id="contact" required inputmode="tel" placeholder="Mobile (09XX XXX XXXX)"
-                    class="w-full bg-slate-800/60 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400 transition" />
-                </div>
-
-                <div class="relative">
-                  <i data-lucide="church" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-                  <input type="text" id="affiliation" required placeholder="Church / Campus / Org"
-                    class="w-full bg-slate-800/60 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400 transition" />
-                </div>
-              </div>
+              <!-- DYNAMIC CONTAINER FOR ADDITIONAL DELEGATES (DELEGATES 2 TO 5) -->
+              <div id="additionalMembersContainer" class="space-y-3"></div>
             </div>
 
             <!-- 3. MOBILE-FIRST GCASH ACTION CARD (COMPACT & NO DISTORTION) -->
@@ -896,6 +940,7 @@
     }
 
     function renderPricingTiers(tiers) {
+      activeTiersList = evaluatedTiers; // Save to global variable
       const container = document.getElementById("pricingTiersContainer");
       if (!tiers || tiers.length === 0) return;
 
@@ -1084,69 +1129,49 @@
     }
 
     function selectTier(id, name, price, cardEl) {
-      saveFormDraft(); // Save tier choice to draft
-      // 1. Update hidden form fields for submission
+      // Find tier object from active list
+      const matchedTier = activeTiersList.find(t => t.tierId === id) || {
+        tierId: id,
+        name: name,
+        price: price,
+        qrUrls: {}
+      };
+      currentSelectedTierObj = matchedTier;
+
+      // Update hidden inputs
       const tierIdInput = document.getElementById("selectedTierId");
       const tierNameInput = document.getElementById("selectedTierName");
-      const tierPriceInput = document.getElementById("selectedTierPrice");
-
       if (tierIdInput) tierIdInput.value = id;
       if (tierNameInput) tierNameInput.value = name;
-      if (tierPriceInput) tierPriceInput.value = price;
 
-      // 2. Update visible amount displays if they exist
-      const displayAmountDue = document.getElementById("displayAmountDue");
-      if (displayAmountDue) {
-        displayAmountDue.innerText = `₱${price}.00`;
+      // If Delegation Pass, force pax count to 5
+      const isDelegationPass = (id || "").toUpperCase().includes("SQUAD") || (name || "").toUpperCase().includes("DELEGATION");
+      if (isDelegationPass) {
+        currentPaxCount = 5;
       }
 
-      // 3. Extract the GCash QR URL attached to this card element
-      const qrUrl = cardEl ? (cardEl.getAttribute("data-qr-url") || "") : "";
-
-      // 4. Update the Section 3 GCash QR card to match this tier
-      if (typeof updateQrForTier === "function") {
-        updateQrForTier({
-          tierId: id,
-          name: name,
-          price: price,
-          qrUrl: qrUrl
-        });
-      }
-
-      // 5. Reset all available cards back to their unselected styling
+      // Update cards UI
       document.querySelectorAll(".tier-card").forEach(el => {
         if (!el.classList.contains("cursor-not-allowed")) {
-          // Reset card container styles
           el.className = "tier-card group relative p-3.5 sm:p-4 rounded-2xl border border-white/10 hover:border-white/20 bg-slate-900/50 hover:bg-slate-900/80 cursor-pointer transition-all duration-300 flex items-center justify-between gap-3 select-none";
-          
-          // Reset custom radio button ring
           const radio = el.querySelector(".tier-radio");
-          if (radio) {
-            radio.className = "tier-radio w-5 h-5 rounded-full border-2 border-slate-600 bg-transparent flex items-center justify-center flex-shrink-0 transition-colors";
-          }
-          
-          // Reset center radio dot
           const dot = el.querySelector(".tier-dot");
-          if (dot) {
-            dot.className = "tier-dot w-2 h-2 rounded-full bg-transparent transition-colors";
-          }
+          if (radio) radio.className = "tier-radio w-5 h-5 rounded-full border-2 border-slate-600 bg-transparent flex items-center justify-center flex-shrink-0 transition-colors";
+          if (dot) dot.className = "tier-dot w-2 h-2 rounded-full bg-transparent";
         }
       });
 
-      // 6. Highlight the selected card with gold border and glowing aura
       if (cardEl) {
         cardEl.className = "tier-card group relative p-3.5 sm:p-4 rounded-2xl border border-amber-400 bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-slate-900/80 shadow-[0_0_25px_rgba(245,158,11,0.2)] cursor-pointer transition-all duration-300 flex items-center justify-between gap-3 select-none";
-
         const activeRadio = cardEl.querySelector(".tier-radio");
-        if (activeRadio) {
-          activeRadio.className = "tier-radio w-5 h-5 rounded-full border-2 border-amber-400 bg-amber-400/20 flex items-center justify-center flex-shrink-0 transition-colors";
-        }
-
         const activeDot = cardEl.querySelector(".tier-dot");
-        if (activeDot) {
-          activeDot.className = "tier-dot w-2 h-2 rounded-full bg-amber-400 transition-colors";
-        }
+        if (activeRadio) activeRadio.className = "tier-radio w-5 h-5 rounded-full border-2 border-amber-400 bg-amber-400/20 flex items-center justify-center flex-shrink-0 transition-colors";
+        if (activeDot) activeDot.className = "tier-dot w-2 h-2 rounded-full bg-amber-400";
       }
+
+      renderAdditionalMemberFields();
+      updateBatchUI();
+      if (typeof saveFormDraft === "function") saveFormDraft();
     }
 
     const colorConfig = {
@@ -1520,19 +1545,22 @@
     }
 
     // ==============================================================
-    // COMPLETE FORM SUBMISSION ENGINE (ANIMATED & HIGH CONCURRENCY)
+    // COMPLETE BATCH-AWARE FORM SUBMISSION ENGINE
     // ==============================================================
     async function handleFormSubmit(e) {
       e.preventDefault();
 
-      // 1. Validate email address format & typos
+      const btn = document.getElementById("submitBtn");
+      const feedback = document.getElementById("feedback");
+
+      // 1. Validate Lead Delegate Email
       const isEmailValid = checkEmailField();
       if (!isEmailValid) {
-        document.getElementById("email").focus();
+        document.getElementById("email")?.focus();
         return;
       }
 
-      // 2. Validate receipt screenshot attachment
+      // 2. Validate Receipt Screenshot Attachment
       if (!currentReceiptBase64) {
         const dropzone = document.getElementById("uploadDropzone");
         if (dropzone) {
@@ -1540,22 +1568,70 @@
           setTimeout(() => dropzone.classList.remove("btn-shake", "border-rose-500"), 600);
         }
         alert("⚠️ Please upload your GCash payment receipt screenshot before submitting.");
-        const receiptInput = document.getElementById("receiptInput");
-        if (receiptInput) receiptInput.click();
+        document.getElementById("receiptInput")?.click();
         return;
       }
 
-      const btn = document.getElementById("submitBtn");
-      const feedback = document.getElementById("feedback");
+      // 3. Compile & Validate All Batch Members (1 to 5 Pax)
+      const leadName = (document.getElementById("fullName")?.value || "").trim();
+      const leadEmail = (document.getElementById("email")?.value || "").trim().toLowerCase();
+      const leadContact = (document.getElementById("contact")?.value || "").trim();
+      const affiliation = (document.getElementById("affiliation")?.value || "").trim();
+      const referenceNo = (document.getElementById("referenceNo")?.value || "").trim();
+
+      if (!leadName) {
+        alert("Please enter the Full Name of Delegate #1.");
+        document.getElementById("fullName")?.focus();
+        return;
+      }
+
+      const members = [
+        {
+          fullName: leadName,
+          email: leadEmail,
+          contact: leadContact,
+          isLead: true
+        }
+      ];
+
+      // Validate Additional Group Members (Delegates 2 through N)
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      for (let i = 2; i <= currentPaxCount; i++) {
+        const mNameInput = document.getElementById(`member_name_${i}`);
+        const mEmailInput = document.getElementById(`member_email_${i}`);
+        const mName = (mNameInput?.value || "").trim();
+        let mEmail = (mEmailInput?.value || "").trim().toLowerCase();
+
+        if (!mName) {
+          alert(`⚠️ Please provide the Full Name for Delegate #${i}.`);
+          mNameInput?.focus();
+          return;
+        }
+
+        // If member email is left blank, fallback to Lead email so tickets aren't lost
+        if (!mEmail) {
+          mEmail = leadEmail;
+        } else if (!emailRegex.test(mEmail)) {
+          alert(`⚠️ Invalid email address format for Delegate #${i}.`);
+          mEmailInput?.focus();
+          return;
+        }
+
+        members.push({
+          fullName: mName,
+          email: mEmail,
+          contact: "",
+          isLead: false
+        });
+      }
 
       // ========================================================
-      // STAGE 1: INITIATE ANIMATED LOADING & PROGRESSIVE TIMERS
+      // STAGE 1: ANIMATED LOADING & PROGRESSIVE TIMERS
       // ========================================================
       btn.disabled = true;
       btn.classList.add("btn-loading", "cursor-wait");
       feedback.classList.add("hidden");
 
-      // High-speed smooth animated spinner SVG
       const spinnerSvg = `
         <svg class="animate-spin h-5 w-5 text-slate-950 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -1565,26 +1641,30 @@
 
       btn.innerHTML = `${spinnerSvg} <span>OPTIMIZING RECEIPT...</span>`;
 
-      // Reassuring progressive status timer as Drive processes the image
       const progressTimer1 = setTimeout(() => {
         if (btn.disabled) btn.innerHTML = `${spinnerSvg} <span>UPLOADING TO DRIVE...</span>`;
       }, 900);
 
       const progressTimer2 = setTimeout(() => {
-        if (btn.disabled) btn.innerHTML = `${spinnerSvg} <span>SECURING ALLOCATION...</span>`;
+        if (btn.disabled) btn.innerHTML = `${spinnerSvg} <span>SECURING GROUP PASSES...</span>`;
       }, 2200);
 
-      // Build structured submission payload
+      // Resolve Active Tier details
+      const tierId = currentSelectedTierObj?.tierId || document.getElementById("selectedTierId")?.value || "EARLY";
+      const tierName = currentSelectedTierObj?.name || document.getElementById("selectedTierName")?.value || "Pass";
+      const pricePerPax = currentSelectedTierObj?.price || Number(document.getElementById("selectedTierPrice")?.value) || 0;
+      const totalAmount = pricePerPax * currentPaxCount;
+
       const payload = {
-        fullName: (document.getElementById("fullName")?.value || "").trim(),
-        email: (document.getElementById("email")?.value || "").trim(),
-        contact: (document.getElementById("contact")?.value || "").trim(),
-        affiliation: (document.getElementById("affiliation")?.value || "").trim(),
-        tierId: document.getElementById("selectedTierId")?.value || "EARLY",
-        tierName: document.getElementById("selectedTierName")?.value || "Pass",
-        amount: Number(document.getElementById("selectedTierPrice")?.value) || 0,
-        referenceNo: (document.getElementById("referenceNo")?.value || "").trim(),
-        receiptBase64: currentReceiptBase64
+        tierId: tierId,
+        tierName: tierName,
+        amountPerPax: pricePerPax,
+        totalAmount: totalAmount,
+        paxCount: currentPaxCount,
+        affiliation: affiliation,
+        referenceNo: referenceNo,
+        receiptBase64: currentReceiptBase64,
+        members: members
       };
 
       try {
@@ -1595,14 +1675,13 @@
 
         const result = await response.json();
 
-        // Clear timers immediately once server responds
         clearTimeout(progressTimer1);
         clearTimeout(progressTimer2);
         btn.classList.remove("btn-loading", "cursor-wait");
 
         if (result.success) {
           // ========================================================
-          // STAGE 2: FLASH SUCCESS STATE ON BUTTON
+          // STAGE 2: FLASH SUCCESS STATE
           // ========================================================
           btn.className = "w-full mt-3 min-h-[50px] bg-emerald-400 text-slate-950 font-bebas text-2xl py-2.5 rounded-xl tracking-wider uppercase shadow-xl shadow-emerald-400/30 flex items-center justify-center gap-2 transition-all duration-300";
           btn.innerHTML = `
@@ -1612,62 +1691,80 @@
             <span>SUBMISSION VERIFIED!</span>
           `;
 
-          // Fire celebratory confetti blast
+          // Confetti celebration
           if (typeof confetti === "function") {
             confetti({
-              particleCount: 120,
-              spread: 80,
+              particleCount: 130,
+              spread: 85,
               origin: { y: 0.6 },
-              colors: ['#2563EB', '#FACC15', '#10B981', '#F59E0B']
+              colors: ['#2563EB', '#FACC15', '#10B981', '#38BDF8']
             });
           }
 
           // Clear mobile auto-draft from localStorage
           localStorage.removeItem("GGEN_REG_DRAFT_2027");
 
-          // Display confirmation details card smoothly
+          // Build member summary pills for confirmation screen
+          const membersPills = (result.registeredMembers || members).map((m, idx) => `
+            <div class="flex justify-between items-center text-[11px] py-1 border-b border-white/5 font-mono-code">
+              <span class="text-white font-bold">${idx + 1}. ${m.fullName}</span>
+              <span class="text-sky-300 font-semibold">${m.email}</span>
+            </div>
+          `).join('');
+
           setTimeout(() => {
             feedback.classList.remove("hidden");
             feedback.innerHTML = `
-              <div class="bg-amber-950/40 border border-amber-500/50 rounded-2xl p-4 text-amber-200 shadow-xl">
+              <div class="bg-amber-950/40 border border-amber-500/50 rounded-2xl p-4 sm:p-5 text-amber-200 shadow-2xl">
                 <div class="flex items-center gap-1.5 text-amber-400 font-bold text-[11px] uppercase tracking-wider mb-1">
                   <i data-lucide="clock" class="w-3.5 h-3.5"></i>
                   <span>STATUS: PAYMENT VERIFICATION IN PROGRESS</span>
                 </div>
-                <div class="font-bebas text-2xl sm:text-3xl text-white">REGISTRATION & RECEIPT SUBMITTED!</div>
+                <div class="font-bebas text-2xl sm:text-3xl text-white">GROUP REGISTRATION SUBMITTED!</div>
                 <p class="text-xs text-slate-300 mt-1">
-                  Thank you, <strong class="text-white">${result.fullName}</strong>. Pass Tier: 
-                  <span class="font-mono-code bg-black/40 text-amber-300 px-1.5 py-0.5 rounded font-bold">${result.tierName} (₱${result.amount})</span>.
+                  Thank you, <strong class="text-white">${result.leadName || leadName}</strong>. Batch ID: 
+                  <span class="font-mono-code bg-black/50 text-amber-300 px-2 py-0.5 rounded font-bold">${result.batchId || "BATCH"}</span>
                 </p>
-                <p class="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
-                  Ref ID: <strong class="text-white">${result.regId}</strong>. Your payment receipt has been uploaded directly to our verification queue. Your official admission pass will be emailed once our finance committee verifies the transfer.
+
+                <!-- Registered Delegates Breakdown -->
+                <div class="my-3 bg-slate-950/70 border border-white/10 rounded-xl p-3">
+                  <div class="text-[9px] font-mono-code uppercase text-slate-400 font-bold mb-1">
+                    Registered Delegates (${result.paxCount || currentPaxCount} Pax • Total ₱${result.totalAmount || totalAmount}):
+                  </div>
+                  ${membersPills}
+                </div>
+
+                <p class="text-[11px] text-slate-400 leading-relaxed">
+                  Your payment receipt has been received in our verification queue. Once our finance committee approves the transfer, <strong>individual admission passes with unique QR barcodes</strong> will be emailed to each registered delegate!
                 </p>
               </div>
             `;
             lucide.createIcons();
 
-            // Reset form fields and remove preview
-            document.getElementById("regForm").reset();
-            if (typeof removeReceipt === "function") {
-              removeReceipt();
-            }
+            // Reset form fields, remove receipt preview & reset stepper
+            document.getElementById("regForm")?.reset();
+            if (typeof removeReceipt === "function") removeReceipt();
 
-            // Smooth scroll to confirmation
+            currentPaxCount = 1;
+            renderAdditionalMemberFields();
+            updateBatchUI();
+
+            // Smooth scroll to confirmation screen
             feedback.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-            // Restore button back to normal state after 3.5s
+            // Restore submit button back to normal state after 4 seconds
             setTimeout(() => {
               btn.disabled = false;
               btn.className = "group w-full mt-3 min-h-[50px] bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-400 active:scale-[0.98] text-slate-950 font-bebas text-2xl py-2.5 rounded-xl tracking-wider uppercase transition shadow-xl shadow-amber-400/20 flex items-center justify-center gap-2 cursor-pointer";
               btn.innerHTML = `<span>SUBMIT REGISTRATION & PAYMENT</span> <i data-lucide="arrow-right" class="w-5 h-5 transition-transform group-hover:translate-x-1"></i>`;
               lucide.createIcons();
-            }, 3500);
+            }, 4000);
 
           }, 600);
 
         } else {
           // ========================================================
-          // STAGE 3: ERROR STATE HANDLING
+          // STAGE 3: SERVER ERROR
           // ========================================================
           btn.disabled = false;
           btn.classList.add("btn-shake");
@@ -1698,7 +1795,7 @@
         feedback.classList.remove("hidden");
         feedback.innerHTML = `
           <div class="bg-rose-950/60 border border-rose-500/50 rounded-2xl p-3.5 text-rose-300 text-xs">
-            Server connection error. Please verify your connection and try again.
+            Server connection error. Please check your internet connection and try again.
           </div>
         `;
       }
@@ -1898,6 +1995,156 @@
           el.addEventListener("change", saveFormDraft);
         }
       });
+    }
+
+    // ==============================================================
+    // BATCH REGISTRATION & 5-QR SWITCHER STATE
+    // ==============================================================
+    let currentPaxCount = 1;
+    let activeTiersList = [];
+    let currentSelectedTierObj = null;
+
+    // Handles [+] and [-] button clicks
+    function changePaxCount(delta) {
+      if (!currentSelectedTierObj) return;
+
+      // If Delegation Pass (SQUAD / MIN 5 PAX), lock to 5
+      const isDelegationPass = (currentSelectedTierObj.tierId || "").toUpperCase().includes("SQUAD") || 
+                               (currentSelectedTierObj.name || "").toUpperCase().includes("DELEGATION");
+
+      if (isDelegationPass) {
+        currentPaxCount = 5;
+        renderAdditionalMemberFields();
+        updateBatchUI();
+        return;
+      }
+
+      const newCount = currentPaxCount + delta;
+      if (newCount >= 1 && newCount <= 5) {
+        currentPaxCount = newCount;
+        renderAdditionalMemberFields();
+        updateBatchUI();
+        if (typeof saveFormDraft === "function") saveFormDraft();
+      }
+    }
+
+    // Updates price, button text, and swaps the exact GCash QR image (Option B)
+    function updateBatchUI() {
+      if (!currentSelectedTierObj) return;
+
+      const countEl = document.getElementById("paxCountDisplay");
+      const decBtn = document.getElementById("decrementBtn");
+      const incBtn = document.getElementById("incrementBtn");
+      const paxNotice = document.getElementById("paxNoticeText");
+
+      if (countEl) countEl.innerText = currentPaxCount;
+
+      const isDelegationPass = (currentSelectedTierObj.tierId || "").toUpperCase().includes("SQUAD") || 
+                               (currentSelectedTierObj.name || "").toUpperCase().includes("DELEGATION");
+
+      if (isDelegationPass) {
+        currentPaxCount = 5;
+        if (countEl) countEl.innerText = 5;
+        if (decBtn) decBtn.disabled = true;
+        if (incBtn) incBtn.disabled = true;
+        if (paxNotice) paxNotice.innerText = "Fixed delegation bundle (5 pax)";
+      } else {
+        if (decBtn) decBtn.disabled = (currentPaxCount <= 1);
+        if (incBtn) incBtn.disabled = (currentPaxCount >= 5);
+        if (paxNotice) paxNotice.innerText = currentPaxCount === 1 ? "Single delegate registration" : `Group pass (${currentPaxCount} delegates)`;
+      }
+
+      // Calculate dynamic total
+      const totalAmount = currentSelectedTierObj.price * currentPaxCount;
+
+      // Update hidden submission inputs
+      const tierPriceInput = document.getElementById("selectedTierPrice");
+      if (tierPriceInput) tierPriceInput.value = totalAmount;
+
+      // Update Section 3 GCash QR Action Card
+      const qrTierNotice = document.getElementById("qrTierNotice");
+      const qrTierDisplay = document.getElementById("qrTierDisplay");
+      const qrAmountDisplay = document.getElementById("qrAmountDisplay");
+      const downloadBtnText = document.getElementById("downloadBtnText");
+      const qrImg = document.getElementById("gcashQrImage");
+
+      if (qrTierNotice) {
+        qrTierNotice.innerText = `TIER: ${currentSelectedTierObj.name.toUpperCase()} • ${currentPaxCount} PAX (₱${totalAmount})`;
+      }
+      if (qrTierDisplay) {
+        qrTierDisplay.innerText = `${currentSelectedTierObj.name} (${currentPaxCount} Pax)`;
+      }
+      if (qrAmountDisplay) {
+        qrAmountDisplay.innerText = `₱${totalAmount.toLocaleString()}.00`;
+      }
+      if (downloadBtnText) {
+        downloadBtnText.innerText = `SAVE GCASH QR (₱${totalAmount.toLocaleString()} • ${currentPaxCount} PAX)`;
+      }
+
+      // OPTION B: SWAP THE EXACT GCASH QR FOR THIS PAX COUNT
+      if (qrImg) {
+        const qrMatrix = currentSelectedTierObj.qrUrls || {};
+        const specificQrUrl = qrMatrix[currentPaxCount] || currentSelectedTierObj.qrUrl;
+
+        if (specificQrUrl && specificQrUrl.trim() !== "") {
+          qrImg.src = specificQrUrl;
+        } else {
+          // Fallback if specific QR is not yet uploaded for this count in Google Sheets
+          qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=GCASH+PAYMENT+FOR+${encodeURIComponent(currentSelectedTierObj.name)}+PAX+${currentPaxCount}+TOTAL+PHP+${totalAmount}`;
+        }
+      }
+    }
+
+    // Dynamically builds input cards for Delegates 2 to 5
+    function renderAdditionalMemberFields() {
+      const container = document.getElementById("additionalMembersContainer");
+      if (!container) return;
+
+      // Save currently typed values before re-rendering
+      const existingValues = [];
+      for (let i = 2; i <= 5; i++) {
+        existingValues[i] = {
+          name: document.getElementById(`member_name_${i}`)?.value || "",
+          email: document.getElementById(`member_email_${i}`)?.value || ""
+        };
+      }
+
+      let html = "";
+      for (let i = 2; i <= currentPaxCount; i++) {
+        const prevName = existingValues[i]?.name || "";
+        const prevEmail = existingValues[i]?.email || "";
+
+        html += `
+          <div class="bg-slate-900/40 border border-white/10 rounded-2xl p-3.5 space-y-2.5 transition-all">
+            <div class="flex items-center justify-between text-[10px] font-mono-code text-slate-400 uppercase font-bold">
+              <span class="flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                <span>Delegate #${i} (Group Member)</span>
+              </span>
+              <span class="text-slate-500">Unique Pass Issued</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div class="relative">
+                <i data-lucide="user" class="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                <input type="text" id="member_name_${i}" required value="${prevName}" placeholder="Full Name (Delegate #${i})"
+                  oninput="saveFormDraft()"
+                  class="w-full bg-slate-800/60 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400 transition" />
+              </div>
+
+              <div class="relative">
+                <i data-lucide="mail" class="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                <input type="email" id="member_email_${i}" required value="${prevEmail}" placeholder="Email (Pass delivered here)"
+                  oninput="saveFormDraft()"
+                  class="w-full bg-slate-800/60 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400 transition" />
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      container.innerHTML = html;
+      lucide.createIcons();
     }
   </script>
 </body>
