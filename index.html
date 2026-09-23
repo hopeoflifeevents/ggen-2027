@@ -823,18 +823,39 @@
     updateCountdown();
 
     // ==============================================================
-    // FETCH DATA FROM GOOGLE SHEETS VIA APPS SCRIPT API
+    // BROWSER-LEVEL MICRO-CACHE (0ms INSTANT RE-RENDERING)
     // ==============================================================
     async function loadDynamicContent() {
       if (!APPS_SCRIPT_API_URL || APPS_SCRIPT_API_URL.includes("YOUR_APPS_SCRIPT_WEB_APP_URL_HERE")) {
         return;
       }
 
+      const CLIENT_CACHE_KEY = "GGEN_CONTENT_SESSION_CACHE";
+
+      // 1. Check if browser session already has the content
+      const cached = sessionStorage.getItem(CLIENT_CACHE_KEY);
+      if (cached) {
+        try {
+          const cachedData = JSON.parse(cached);
+          if (cachedData && cachedData.pricing) renderPricingTiers(cachedData.pricing);
+          if (cachedData && cachedData.speakers) renderSpeakers(cachedData.speakers);
+          if (cachedData && cachedData.team) renderTeam(cachedData.team);
+          lucide.createIcons();
+          return; // Instant render complete! Zero server calls.
+        } catch (e) {
+          sessionStorage.removeItem(CLIENT_CACHE_KEY);
+        }
+      }
+
+      // 2. Fetch fresh content from Apps Script
       try {
         const response = await fetch(`${APPS_SCRIPT_API_URL}?action=getContent`);
         const data = await response.json();
 
         if (data.success) {
+          // Save in browser session
+          sessionStorage.setItem(CLIENT_CACHE_KEY, JSON.stringify(data));
+
           if (data.pricing) renderPricingTiers(data.pricing);
           renderSpeakers(data.speakers);
           renderTeam(data.team);
