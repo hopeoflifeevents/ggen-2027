@@ -400,7 +400,7 @@
       </div>
     </div>
 
-    <!-- REGISTRATION SECTION -->
+    <!-- REGISTRATION & PAYMENT SECTION -->
     <div id="register" class="my-10 pt-4 scroll-mt-6 reveal-on-scroll">
       <div class="text-center mb-6">
         <span class="font-street text-amber-400 text-lg sm:text-xl block -rotate-1">Delegate Admission</span>
@@ -408,6 +408,8 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+        
+        <!-- LEFT: HOW REGISTRATION WORKS -->
         <div class="lg:col-span-5 bg-gradient-to-b from-slate-900/90 via-slate-900/70 to-slate-950/90 border border-white/10 border-t-white/25 rounded-2xl p-5 sm:p-6 backdrop-blur-xl shadow-xl flex flex-col justify-between">
           <div>
             <h3 class="font-bebas text-2xl text-white tracking-wider flex items-center gap-2 mb-5">
@@ -419,37 +421,37 @@
               <div class="absolute left-5 top-3 bottom-3 w-[2px] bg-gradient-to-b from-blue-500 via-amber-400 to-emerald-400 opacity-30"></div>
 
               <div class="relative flex items-start gap-3.5 z-10">
-                <div class="w-7 h-7 rounded-full bg-blue-500/20 border border-blue-400/60 text-blue-300 font-mono-code font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-[0_0_12px_rgba(59,130,246,0.3)] bg-slate-950">
+                <div class="w-7 h-7 rounded-full bg-blue-500/20 border border-blue-400/60 text-blue-300 font-mono-code font-bold text-xs flex items-center justify-center flex-shrink-0 bg-slate-950">
                   1
                 </div>
                 <div>
-                  <h4 class="text-xs sm:text-sm font-bold text-white tracking-wide">Submit Details</h4>
+                  <h4 class="text-xs sm:text-sm font-bold text-white tracking-wide">Select Pass & Transfer</h4>
                   <p class="text-[11px] text-slate-400 leading-relaxed mt-0.5">
-                    Fill in your contact and church or campus ministry affiliation.
+                    Choose your ticket tier and send registration fees via GCash, Maya, or Bank.
                   </p>
                 </div>
               </div>
 
               <div class="relative flex items-start gap-3.5 z-10">
-                <div class="w-7 h-7 rounded-full bg-amber-500/20 border border-amber-400/60 text-amber-300 font-mono-code font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-[0_0_12px_rgba(245,158,11,0.3)] bg-slate-950">
+                <div class="w-7 h-7 rounded-full bg-amber-500/20 border border-amber-400/60 text-amber-300 font-mono-code font-bold text-xs flex items-center justify-center flex-shrink-0 bg-slate-950">
                   2
                 </div>
                 <div>
-                  <h4 class="text-xs sm:text-sm font-bold text-white tracking-wide">Delegate Verification</h4>
+                  <h4 class="text-xs sm:text-sm font-bold text-white tracking-wide">Payment Verification</h4>
                   <p class="text-[11px] text-slate-400 leading-relaxed mt-0.5">
-                    The GGen committee verifies your registration and allocates your venue seat.
+                    Our finance team cross-verifies your transfer reference and confirms your slot.
                   </p>
                 </div>
               </div>
 
               <div class="relative flex items-start gap-3.5 z-10">
-                <div class="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-400/60 text-emerald-300 font-mono-code font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-[0_0_12px_rgba(16,185,129,0.3)] bg-slate-950">
+                <div class="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-400/60 text-emerald-300 font-mono-code font-bold text-xs flex items-center justify-center flex-shrink-0 bg-slate-950">
                   3
                 </div>
                 <div>
-                  <h4 class="text-xs sm:text-sm font-bold text-white tracking-wide">Official Pass via Email</h4>
+                  <h4 class="text-xs sm:text-sm font-bold text-white tracking-wide">Pass Dispatched via Email</h4>
                   <p class="text-[11px] text-slate-400 leading-relaxed mt-0.5">
-                    Your confirmed pass with your unique pass reference will be delivered directly to your inbox.
+                    Your official pass with QR admission barcode is emailed right to your inbox.
                   </p>
                 </div>
               </div>
@@ -460,70 +462,126 @@
             <div class="bg-black/30 rounded-xl p-3 border border-white/5 flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span class="text-[10px] font-mono-code font-bold uppercase tracking-wider text-slate-300">STATUS: SLOTS OPEN</span>
+                <span class="text-[10px] font-mono-code font-bold uppercase tracking-wider text-slate-300">REGISTRATION ACTIVE</span>
               </div>
               <span class="text-[9px] font-mono-code text-slate-500 uppercase">QUEUE: ~24H</span>
             </div>
           </div>
         </div>
 
+        <!-- RIGHT: REGISTRATION + PAYMENT FORM -->
         <div class="lg:col-span-7 bg-gradient-to-b from-slate-900/95 via-slate-900/80 to-slate-950 border border-white/10 border-t-white/25 rounded-2xl p-5 sm:p-7 shadow-2xl backdrop-blur-xl flex flex-col justify-between">
           <form id="regForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
+
+            <!-- 1. DYNAMIC TICKET TIER SELECTOR -->
             <div>
-              <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-                Full Name <span class="text-amber-400">*</span>
+              <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-2">
+                1. Select Pass Tier <span class="text-amber-400">*</span>
               </label>
-              <div class="relative">
-                <i data-lucide="user" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-                <input type="text" id="fullName" required placeholder="e.g. Lawrence Justine Maqui"
-                  class="w-full bg-slate-800/60 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-base sm:text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition" />
+              <div id="pricingTiersContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <!-- Fallback/Loading Tier -->
+                <div class="p-3 rounded-xl border border-amber-400/50 bg-amber-500/10 text-left cursor-pointer">
+                  <div class="flex justify-between items-center">
+                    <span class="font-bebas text-lg text-white">EARLY BIRD PASS</span>
+                    <span class="text-xs font-mono-code font-bold text-amber-300">₱350</span>
+                  </div>
+                  <p class="text-[10px] text-slate-400">Loading live tiers from Google Sheets...</p>
+                </div>
+              </div>
+              <input type="hidden" id="selectedTierId" value="EARLY" />
+              <input type="hidden" id="selectedTierName" value="Early Bird Pass" />
+              <input type="hidden" id="selectedTierPrice" value="350" />
+            </div>
+
+            <!-- 2. DELEGATE PERSONAL DETAILS -->
+            <div class="pt-2 border-t border-white/10 space-y-3.5">
+              <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider">
+                2. Delegate Information
+              </label>
+
+              <div>
+                <div class="relative">
+                  <i data-lucide="user" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                  <input type="text" id="fullName" required placeholder="Full Name (e.g. Lawrence Justine Maqui)"
+                    class="w-full bg-slate-800/60 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400 transition" />
+                </div>
+              </div>
+
+              <div>
+                <div class="relative">
+                  <i data-lucide="mail" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                  <input type="email" id="email" required inputmode="email" autocomplete="email" placeholder="Email Address (name@domain.com)"
+                    onblur="checkEmailField()"
+                    oninput="clearEmailErrors()"
+                    class="w-full bg-slate-800/60 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400 transition" />
+                </div>
+                <div id="emailFeedback" class="hidden mt-1.5 text-[11px] font-mono-code font-bold"></div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div class="relative">
+                  <i data-lucide="phone" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                  <input type="tel" id="contact" required inputmode="tel" placeholder="Mobile (09XX XXX XXXX)"
+                    class="w-full bg-slate-800/60 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400 transition" />
+                </div>
+
+                <div class="relative">
+                  <i data-lucide="church" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                  <input type="text" id="affiliation" required placeholder="Church / Campus / Org"
+                    class="w-full bg-slate-800/60 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400 transition" />
+                </div>
               </div>
             </div>
 
-            <div>
-              <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-                Email Address <span class="text-amber-400">*</span>
+            <!-- 3. PAYMENT INSTRUCTIONS CARD -->
+            <div class="pt-2 border-t border-white/10">
+              <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-2">
+                3. Payment Details
               </label>
-              <div class="relative">
-                <i data-lucide="mail" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-                <input type="email" id="email" required inputmode="email" autocomplete="email" placeholder="name@domain.com"
-                  onblur="checkEmailField()"
-                  oninput="clearEmailErrors()"
-                  class="w-full bg-slate-800/60 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-base sm:text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition" />
+
+              <div class="bg-slate-950/80 border border-white/10 rounded-xl p-3.5 space-y-3">
+                
+                <!-- Account Box -->
+                <div class="flex items-center justify-between bg-white/[0.03] border border-white/5 rounded-lg p-2.5">
+                  <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-lg bg-blue-600/30 border border-blue-400/40 text-blue-400 flex items-center justify-center font-black text-[10px]">
+                      ₱
+                    </div>
+                    <div>
+                      <div class="text-[10px] text-slate-400 uppercase font-mono-code">Send Payment to (GCash / Maya)</div>
+                      <div class="text-xs font-bold text-white">09XX XXX XXXX <span class="text-slate-400 font-normal">• HOPE OF LIFE</span></div>
+                    </div>
+                  </div>
+                  <span class="text-xs font-mono-code font-black text-amber-400" id="displayAmountDue">₱350.00</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div>
+                    <label class="block text-[10px] font-mono-code text-slate-400 uppercase mb-1">Payment Method</label>
+                    <select id="paymentMethod" class="w-full bg-slate-800 border border-white/10 rounded-lg px-2.5 py-2 text-xs text-white focus:outline-none focus:border-amber-400">
+                      <option value="GCash">GCash</option>
+                      <option value="Maya">Maya</option>
+                      <option value="Bank Transfer">Bank Transfer (BDO / BPI)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label class="block text-[10px] font-mono-code text-slate-400 uppercase mb-1">Reference Number *</label>
+                    <input type="text" id="referenceNo" required placeholder="e.g. 1002 9384 1928"
+                      class="w-full bg-slate-800 border border-white/10 rounded-lg px-2.5 py-2 text-xs text-white font-mono-code uppercase focus:outline-none focus:border-amber-400" />
+                  </div>
+                </div>
+
+                <p class="text-[9.5px] text-slate-400 leading-normal font-mono-code">
+                  ⚠️ Please ensure your reference number matches your transfer receipt for prompt approval.
+                </p>
               </div>
-              
-              <!-- Helper subtext -->
-              <span id="emailHelp" class="text-[9px] text-slate-400 mt-1 block">Your verified pass will be dispatched here.</span>
-              
-              <!-- Error & Typo Alert Box -->
-              <div id="emailFeedback" class="hidden mt-1.5 text-[11px] font-mono-code font-bold"></div>
             </div>
 
-            <div>
-              <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-                Mobile / Contact Number <span class="text-amber-400">*</span>
-              </label>
-              <div class="relative">
-                <i data-lucide="phone" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-                <input type="tel" id="contact" required inputmode="tel" placeholder="09XX XXX XXXX"
-                  class="w-full bg-slate-800/60 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-base sm:text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition" />
-              </div>
-            </div>
-
-            <div>
-              <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-                Campus / Church / Organization <span class="text-amber-400">*</span>
-              </label>
-              <div class="relative">
-                <i data-lucide="church" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-                <input type="text" id="affiliation" required placeholder="e.g. Hope of Life Christian Ministries"
-                  class="w-full bg-slate-800/60 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-base sm:text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition" />
-              </div>
-            </div>
-
+            <!-- SUBMIT BUTTON -->
             <button type="submit" id="submitBtn"
-              class="group w-full mt-3 min-h-[52px] bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-400 active:scale-[0.98] text-slate-950 font-bebas text-2xl py-3 rounded-xl tracking-wider uppercase transition shadow-xl shadow-amber-400/20 flex items-center justify-center gap-2 cursor-pointer">
-              <span>SUBMIT FOR VERIFICATION</span>
+              class="group w-full mt-3 min-h-[50px] bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-400 active:scale-[0.98] text-slate-950 font-bebas text-2xl py-2.5 rounded-xl tracking-wider uppercase transition shadow-xl shadow-amber-400/20 flex items-center justify-center gap-2 cursor-pointer">
+              <span>SUBMIT REGISTRATION & PAYMENT</span>
               <i data-lucide="arrow-right" class="w-5 h-5 transition-transform group-hover:translate-x-1"></i>
             </button>
           </form>
@@ -637,7 +695,6 @@
     // ==============================================================
     async function loadDynamicContent() {
       if (!APPS_SCRIPT_API_URL || APPS_SCRIPT_API_URL.includes("YOUR_APPS_SCRIPT_WEB_APP_URL_HERE")) {
-        console.warn("Apps Script API URL not set. Using fallback demo preview.");
         return;
       }
 
@@ -646,15 +703,83 @@
         const data = await response.json();
 
         if (data.success) {
+          if (data.pricing) renderPricingTiers(data.pricing);
           renderSpeakers(data.speakers);
           renderTeam(data.team);
           lucide.createIcons();
-        } else {
-          console.error("Error fetching content:", data.message);
         }
       } catch (err) {
         console.error("Failed to load content from Google Sheets:", err);
       }
+    }
+
+    function renderPricingTiers(tiers) {
+      const container = document.getElementById("pricingTiersContainer");
+      if (!tiers || tiers.length === 0) return;
+
+      container.innerHTML = tiers.map((tier, idx) => {
+        const isSelected = idx === 0;
+        const isAvailable = tier.status === 'ACTIVE';
+
+        if (isSelected && isAvailable) {
+          document.getElementById("selectedTierId").value = tier.tierId;
+          document.getElementById("selectedTierName").value = tier.name;
+          document.getElementById("selectedTierPrice").value = tier.price;
+          document.getElementById("displayAmountDue").innerText = `₱${tier.price}.00`;
+        }
+
+        return `
+          <div onclick="${isAvailable ? `selectTier('${tier.tierId}', '${tier.name}', ${tier.price}, this)` : ''}"
+            class="tier-card p-3 rounded-xl border text-left transition-all relative ${
+              !isAvailable 
+                ? 'opacity-40 border-white/5 bg-slate-950 cursor-not-allowed' 
+                : isSelected 
+                  ? 'border-amber-400 bg-amber-500/10 shadow-[0_0_20px_rgba(245,158,11,0.25)] cursor-pointer' 
+                  : 'border-white/10 hover:border-white/20 bg-slate-900/60 cursor-pointer'
+            }">
+            
+            <div class="flex justify-between items-start mb-1">
+              <div>
+                <span class="font-bebas text-lg tracking-wider text-white">${tier.name}</span>
+                ${tier.badge ? `
+                  <span class="ml-1.5 text-[8.5px] font-mono-code font-black px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 uppercase">
+                    ${tier.badge}
+                  </span>
+                ` : ''}
+              </div>
+              <div class="text-right">
+                <span class="text-sm font-mono-code font-bold text-amber-300">₱${tier.price}</span>
+                ${tier.originalPrice > tier.price ? `
+                  <span class="block text-[9px] font-mono-code text-slate-500 line-through">₱${tier.originalPrice}</span>
+                ` : ''}
+              </div>
+            </div>
+
+            <p class="text-[10px] text-slate-400 leading-tight truncate">${tier.description}</p>
+            ${!isAvailable ? `
+              <span class="mt-1 inline-block text-[8px] font-mono-code text-rose-400 font-bold uppercase">
+                [${tier.status}]
+              </span>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectTier(id, name, price, cardEl) {
+      document.getElementById("selectedTierId").value = id;
+      document.getElementById("selectedTierName").value = name;
+      document.getElementById("selectedTierPrice").value = price;
+      document.getElementById("displayAmountDue").innerText = `₱${price}.00`;
+
+      // Update card styling
+      document.querySelectorAll(".tier-card").forEach(el => {
+        el.classList.remove("border-amber-400", "bg-amber-500/10", "shadow-[0_0_20px_rgba(245,158,11,0.25)]");
+        el.classList.add("border-white/10", "bg-slate-900/60");
+      });
+
+      cardEl.classList.remove("border-white/10", "bg-slate-900/60");
+      cardEl.classList.add("border-amber-400", "bg-amber-500/10", "shadow-[0_0_20px_rgba(245,158,11,0.25)]");
     }
 
     const colorConfig = {
@@ -1047,7 +1172,12 @@
         fullName: document.getElementById("fullName").value.trim(),
         email: document.getElementById("email").value.trim(),
         contact: document.getElementById("contact").value.trim(),
-        affiliation: document.getElementById("affiliation").value.trim()
+        affiliation: document.getElementById("affiliation").value.trim(),
+        tierId: document.getElementById("selectedTierId").value,
+        tierName: document.getElementById("selectedTierName").value,
+        amount: Number(document.getElementById("selectedTierPrice").value),
+        paymentMethod: document.getElementById("paymentMethod").value,
+        referenceNo: document.getElementById("referenceNo").value.trim()
       };
 
       if (!APPS_SCRIPT_API_URL || APPS_SCRIPT_API_URL.includes("YOUR_APPS_SCRIPT_WEB_APP_URL_HERE")) {
