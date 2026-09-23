@@ -240,6 +240,11 @@
     let countdownInterval = null;
     let recentAdmitted = [];
 
+    // Local In-Memory Fast Roster Map
+    let localRoster = new Map();
+    let pendingOfflineSync = [];
+    let isRosterLoaded = false;
+
     // Synthesizer Audio Alerts
     function playBeep(type = 'success') {
       if (isSoundMuted) return;
@@ -370,80 +375,143 @@
       await processPassVerification(code);
     }
 
-    // Universal Dual-Protocol Verification (POST + GET fallback)
     async function processPassVerification(code) {
-      let result = null;
+      if (!code) return;
 
-      // Method 1: Standard POST request
-      try {
-        const response = await fetch(APPS_SCRIPT_API_URL, {
-          method: 'POST',
-          body: JSON.stringify({
-            action: 'checkIn',
-            query: code
-          })
-        });
-        result = await response.json();
-      } catch (postErr) {
-        console.warn("POST failed, trying GET fallback...", postErr);
-        // Method 2: GET fallback with redirect: follow
-        try {
-          const getUrl = `${APPS_SCRIPT_API_URL}?action=checkIn&query=${encodeURIComponent(code)}`;
-          const getResponse = await fetch(getUrl, {
-            method: 'GET',
-            redirect: 'follow'
-          });
-          result = await getResponse.json();
-        } catch (getErr) {
-          console.error("All fetch methods failed:", getErr);
+      let cleanCode = code.toString().trim();
+      if (cleanCode.includes('|')) {
+        cleanCode = cleanCode.split('|')[0].trim();
+      }
+      cleanCode = cleanCode.toUpperCase();
+
+      // ========================================================
+      // 1. INSTANT LOCAL VALIDATION (0.05 SECONDS)
+      // ========================================================
+      if (isRosterLoaded && localRoster.has(cleanCode)) {
+        const delegate = localRoster.get(cleanCode);
+
+        // A. Already checked in?
+        if (delegate.checkedIn) {
           playBeep('error');
-          showModal('error', {
-            title: "CONNECTION ERROR",
-            badge: "NETWORK OFFLINE",
-            name: "Server Unreachable",
-            church: "Verify Apps Script Access",
-            passId: code,
-            time: postErr.message || getErr.message
+          showModal('warning', {
+            title: "ALREADY CHECKED IN",
+            badge: "DUPLICATE ENTRY DETECTED",
+            name: delegate.name,
+            church: delegate.church,
+            passId: delegate.passId,
+            time: `Admitted at ${delegate.checkInTime || "earlier"}`
           });
           return;
         }
-      }
 
-      // Handle Verification Results
-      if (result && result.success) {
+        // B. Valid & Admitted!
         playBeep('success');
-        addRecentScan(result.delegate);
+        const nowTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        delegate.checkedIn = true;
+        delegate.checkInTime = nowTime;
+
+        // Instant UI feedback
+        addRecentScan({
+          name: delegate.name,
+          church: delegate.church,
+          passId: delegate.passId,
+          tier: delegate.tier,
+          time: nowTime
+        });
+
         showModal('success', {
           title: "DELEGATE ADMITTED",
           badge: "ENTRY VERIFIED ● PASS ACTIVE",
-          name: result.delegate.name,
-          church: result.delegate.church,
-          passId: result.delegate.passId,
-          time: result.delegate.checkInTime
+          name: delegate.name,
+          church: delegate.church,
+          tier: delegate.tier,
+          passId: delegate.passId,
+          time: `Admitted at ${nowTime}`
         });
-        fetchStats();
-      } else if (result && result.errorType === 'ALREADY_CHECKED_IN') {
-        playBeep('error');
-        showModal('warning', {
-          title: "ALREADY CHECKED IN",
-          badge: "DUPLICATE ENTRY DETECTED",
-          name: result.delegate.name,
-          church: result.delegate.church,
-          passId: result.delegate.passId,
-          time: result.message
-        });
-      } else {
+
+        // Update counter immediately
+        const counter = document.getElementById("counterText");
+        const parts = counter.innerText.split('/');
+        if (parts.length === 2) {
+          const current = parseInt(parts[0].trim(), 10) || 0;
+          const total = parts[1].trim();
+          counter.innerText = `${current + 1} / ${total}`;
+        }
+
+        // ========================================================
+        // 2. BACKGROUND CLOUD SYNC (Doesn't block the next scan!)
+        // ========================================================
+        syncCheckInToCloud(delegate.passId);
+        return;
+      }
+
+      // ========================================================
+      // 3. FALLBACK TO CLOUD IF NOT FOUND LOCALLY
+      // ========================================================
+      try {
+        const response = await fetch(`${APPS_SCRIPT_API_URL}?action=checkIn&query=${encodeURIComponent(cleanCode)}`);
+        const result = await response.json();
+
+        if (result && result.success) {
+          playBeep('success');
+          addRecentScan(result.delegate);
+          showModal('success', {
+            title: "DELEGATE ADMITTED",
+            badge: "ENTRY VERIFIED ● PASS ACTIVE",
+            name: result.delegate.name,
+            church: result.delegate.church,
+            tier: result.delegate.tier,
+            passId: result.delegate.passId,
+            time: result.delegate.checkInTime
+          });
+          syncRosterFromCloud();
+        } else {
+          playBeep('error');
+          showModal('error', {
+            title: "PASS NOT FOUND / DECLINED",
+            badge: "ACCESS DENIED",
+            name: "Unknown Delegate",
+            church: "N/A",
+            passId: cleanCode,
+            time: result ? result.message : "Not in authorized roster."
+          });
+        }
+      } catch (networkErr) {
         playBeep('error');
         showModal('error', {
-          title: "PASS INVALID / DECLINED",
-          badge: "ACCESS DENIED",
-          name: "Unknown Delegate",
-          church: "N/A",
-          passId: code,
-          time: result ? result.message : "No matching record."
+          title: "PASS NOT FOUND",
+          badge: "NO MATCH IN ROSTER",
+          name: "Unknown Pass",
+          church: "Please check desk",
+          passId: cleanCode,
+          time: "Not in approved delegate database."
         });
       }
     }
+
+    // Fire-and-forget background sync
+    async function syncCheckInToCloud(passId) {
+      try {
+        await fetch(APPS_SCRIPT_API_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'checkIn', query: passId })
+        });
+      } catch (err) {
+        console.warn("⚠️ Background sync delayed. Queued for retry.");
+        pendingOfflineSync.push(passId);
+      }
+    }
+
+    // Auto-retry queued scans when internet reconnects
+    window.addEventListener('online', () => {
+      if (pendingOfflineSync.length > 0) {
+        console.log(`Flushing ${pendingOfflineSync.length} queued offline scans...`);
+        while (pendingOfflineSync.length > 0) {
+          const id = pendingOfflineSync.shift();
+          syncCheckInToCloud(id);
+        }
+      }
+    });
 
     function addRecentScan(delegate) {
       recentAdmitted.unshift(delegate);
@@ -559,9 +627,60 @@
       } catch (e) {}
     }
 
+    // Download and cache all approved delegates locally for 0.05s instant scans
+    async function syncRosterFromCloud() {
+      const statusText = document.getElementById("cameraStatusText");
+      if (statusText) statusText.innerText = "Syncing Roster...";
+
+      try {
+        const response = await fetch(`${APPS_SCRIPT_API_URL}?action=getRoster`);
+        const data = await response.json();
+
+        if (data && data.success && data.roster) {
+          localRoster.clear();
+          let admittedCount = 0;
+
+          data.roster.forEach(delegate => {
+            // Index by Pass ID, Reg ID, and uppercase Name for fast lookup
+            if (delegate.passId) localRoster.set(delegate.passId.toUpperCase(), delegate);
+            if (delegate.regId) localRoster.set(delegate.regId.toUpperCase(), delegate);
+            if (delegate.name) localRoster.set(delegate.name.toUpperCase().trim(), delegate);
+
+            if (delegate.checkedIn) admittedCount++;
+          });
+
+          isRosterLoaded = true;
+          document.getElementById("counterText").innerText = `${admittedCount} / ${data.totalApproved}`;
+          if (statusText) statusText.innerText = `Roster Ready (${data.totalApproved} Passes)`;
+          
+          // Save a backup snapshot to localStorage in case page is refreshed while offline
+          localStorage.setItem("GGEN_CACHED_ROSTER", JSON.stringify(data.roster));
+          console.log(`✅ Loaded ${data.totalApproved} delegates locally.`);
+        }
+      } catch (err) {
+        console.warn("⚠️ Network sync failed, checking offline cache...", err);
+        // Fallback to cached copy if internet is down
+        const cached = localStorage.getItem("GGEN_CACHED_ROSTER");
+        if (cached) {
+          const rosterArr = JSON.parse(cached);
+          localRoster.clear();
+          let admittedCount = 0;
+          rosterArr.forEach(delegate => {
+            if (delegate.passId) localRoster.set(delegate.passId.toUpperCase(), delegate);
+            if (delegate.regId) localRoster.set(delegate.regId.toUpperCase(), delegate);
+            if (delegate.name) localRoster.set(delegate.name.toUpperCase().trim(), delegate);
+            if (delegate.checkedIn) admittedCount++;
+          });
+          isRosterLoaded = true;
+          document.getElementById("counterText").innerText = `${admittedCount} / ${rosterArr.length}`;
+          if (statusText) statusText.innerText = `Offline Cache (${rosterArr.length} Passes)`;
+        }
+      }
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
       requestCameraAccess();
-      fetchStats();
+      syncRosterFromCloud(); // Auto-downloads approved roster instantly
     });
   </script>
 </body>
