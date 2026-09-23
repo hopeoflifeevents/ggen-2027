@@ -406,60 +406,66 @@
         <span class="font-street text-amber-400 text-lg sm:text-xl block -rotate-1">Delegate Admission</span>
         <h2 class="font-bebas text-4xl sm:text-5xl text-white tracking-wider">EVENT REGISTRATION</h2>
       </div>
-
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
         
-        <!-- LEFT: HOW REGISTRATION WORKS -->
-        <div class="lg:col-span-5 bg-gradient-to-b from-slate-900/90 via-slate-900/70 to-slate-950/90 border border-white/10 border-t-white/25 rounded-2xl p-5 sm:p-6 backdrop-blur-xl shadow-xl flex flex-col justify-between">
-          <div>
-            <h3 class="font-bebas text-2xl text-white tracking-wider flex items-center gap-2 mb-5">
-              <i data-lucide="shield-check" class="w-5 h-5 text-amber-400"></i>
-              <span>HOW REGISTRATION WORKS</span>
-            </h3>
+        <!-- TWO-COLUMN GRID: items-start allows sticky & auto-height -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        
+        <!-- LEFT COLUMN: STICKY, COMPACT & NO DEAD SPACE -->
+        <div class="lg:col-span-5 lg:sticky lg:top-6 lg:self-start bg-gradient-to-b from-slate-900/95 via-slate-900/80 to-slate-950/95 border border-white/10 border-t-white/25 rounded-2xl p-5 sm:p-6 backdrop-blur-xl shadow-xl flex flex-col">
+          
+          <!-- Header -->
+          <h3 class="font-bebas text-2xl text-white tracking-wider flex items-center gap-2 mb-4">
+            <i data-lucide="shield-check" class="w-5 h-5 text-amber-400"></i>
+            <span>HOW REGISTRATION WORKS</span>
+          </h3>
 
-            <div class="relative pl-2 space-y-6">
-              <div class="absolute left-5 top-3 bottom-3 w-[2px] bg-gradient-to-b from-blue-500 via-amber-400 to-emerald-400 opacity-30"></div>
+          <!-- Step Indicators -->
+          <div class="relative pl-1.5 space-y-5">
+            <div class="absolute left-[19px] top-3 bottom-3 w-[2px] bg-gradient-to-b from-blue-500 via-amber-400 to-emerald-400 opacity-30"></div>
 
-              <div class="relative flex items-start gap-3.5 z-10">
-                <div class="w-7 h-7 rounded-full bg-blue-500/20 border border-blue-400/60 text-blue-300 font-mono-code font-bold text-xs flex items-center justify-center flex-shrink-0 bg-slate-950">
-                  1
-                </div>
-                <div>
-                  <h4 class="text-xs sm:text-sm font-bold text-white tracking-wide">Select Pass & Transfer</h4>
-                  <p class="text-[11px] text-slate-400 leading-relaxed mt-0.5">
-                    Choose your ticket tier and send registration fees via GCash, Maya, or Bank.
-                  </p>
-                </div>
+            <!-- Step 1 -->
+            <div class="relative flex items-start gap-3.5 z-10">
+              <div class="w-7 h-7 rounded-full bg-blue-500/20 border border-blue-400/60 text-blue-300 font-mono-code font-bold text-xs flex items-center justify-center flex-shrink-0 bg-slate-950 shadow-[0_0_10px_rgba(59,130,246,0.2)]">
+                1
               </div>
-
-              <div class="relative flex items-start gap-3.5 z-10">
-                <div class="w-7 h-7 rounded-full bg-amber-500/20 border border-amber-400/60 text-amber-300 font-mono-code font-bold text-xs flex items-center justify-center flex-shrink-0 bg-slate-950">
-                  2
-                </div>
-                <div>
-                  <h4 class="text-xs sm:text-sm font-bold text-white tracking-wide">Payment Verification</h4>
-                  <p class="text-[11px] text-slate-400 leading-relaxed mt-0.5">
-                    Our finance team cross-verifies your transfer reference and confirms your slot.
-                  </p>
-                </div>
+              <div>
+                <h4 class="text-xs sm:text-sm font-bold text-white tracking-wide">Select Pass & Save QR</h4>
+                <p class="text-[11px] text-slate-400 leading-relaxed mt-0.5">
+                  Pick your ticket tier and download the official GCash QR to your phone.
+                </p>
               </div>
+            </div>
 
-              <div class="relative flex items-start gap-3.5 z-10">
-                <div class="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-400/60 text-emerald-300 font-mono-code font-bold text-xs flex items-center justify-center flex-shrink-0 bg-slate-950">
-                  3
-                </div>
-                <div>
-                  <h4 class="text-xs sm:text-sm font-bold text-white tracking-wide">Pass Dispatched via Email</h4>
-                  <p class="text-[11px] text-slate-400 leading-relaxed mt-0.5">
-                    Your official pass with QR admission barcode is emailed right to your inbox.
-                  </p>
-                </div>
+            <!-- Step 2 -->
+            <div class="relative flex items-start gap-3.5 z-10">
+              <div class="w-7 h-7 rounded-full bg-amber-500/20 border border-amber-400/60 text-amber-300 font-mono-code font-bold text-xs flex items-center justify-center flex-shrink-0 bg-slate-950 shadow-[0_0_10px_rgba(245,158,11,0.2)]">
+                2
+              </div>
+              <div>
+                <h4 class="text-xs sm:text-sm font-bold text-white tracking-wide">Pay & Attach Receipt</h4>
+                <p class="text-[11px] text-slate-400 leading-relaxed mt-0.5">
+                  Upload the QR in GCash to pay, then attach your screenshot receipt below.
+                </p>
+              </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="relative flex items-start gap-3.5 z-10">
+              <div class="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-400/60 text-emerald-300 font-mono-code font-bold text-xs flex items-center justify-center flex-shrink-0 bg-slate-950 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+                3
+              </div>
+              <div>
+                <h4 class="text-xs sm:text-sm font-bold text-white tracking-wide">Pass Dispatched via Email</h4>
+                <p class="text-[11px] text-slate-400 leading-relaxed mt-0.5">
+                  Once verified by finance, your official QR admission pass is delivered to your inbox.
+                </p>
               </div>
             </div>
           </div>
 
-          <div class="mt-6 pt-4 border-t border-white/10">
-            <div class="bg-black/30 rounded-xl p-3 border border-white/5 flex items-center justify-between">
+          <!-- Compact Status Footer -->
+          <div class="mt-5 pt-3.5 border-t border-white/10">
+            <div class="bg-black/30 rounded-xl p-2.5 border border-white/5 flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                 <span class="text-[10px] font-mono-code font-bold uppercase tracking-wider text-slate-300">REGISTRATION ACTIVE</span>
@@ -467,7 +473,10 @@
               <span class="text-[9px] font-mono-code text-slate-500 uppercase">QUEUE: ~24H</span>
             </div>
           </div>
+
         </div>
+
+        <!-- RIGHT COLUMN: THE REGISTRATION FORM (lg:col-span-7 stays as-is) -->
 
         <!-- RIGHT: REGISTRATION + PAYMENT FORM -->
         <div class="lg:col-span-7 bg-gradient-to-b from-slate-900/95 via-slate-900/80 to-slate-950 border border-white/10 border-t-white/25 rounded-2xl p-5 sm:p-7 shadow-2xl backdrop-blur-xl flex flex-col justify-between">
