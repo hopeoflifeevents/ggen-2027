@@ -823,15 +823,64 @@
       const container = document.getElementById("pricingTiersContainer");
       if (!tiers || tiers.length === 0) return;
 
-      // Find first available active tier to select by default
-      const firstActiveIndex = tiers.findIndex(t => t.status === 'ACTIVE');
-      const defaultIdx = firstActiveIndex !== -1 ? firstActiveIndex : 0;
+      const now = new Date();
 
-      container.innerHTML = tiers.map((tier, idx) => {
-        const isSelected = idx === defaultIdx && tier.status === 'ACTIVE';
-        const isAvailable = tier.status === 'ACTIVE';
+      // 1. Evaluate Date Validity for each tier
+      const evaluatedTiers = tiers.map(tier => {
+        let isAvailable = true;
+        let dateBadgeText = "";
+        let statusType = "ACTIVE"; // ACTIVE, OPENS_SOON, EXPIRED, SOLD_OUT
 
-        // Set default hidden values safely with null checks
+        // Check manual override first
+        if (tier.status === "SOLD_OUT") {
+          isAvailable = false;
+          statusType = "SOLD_OUT";
+        } else {
+          // Parse Start Date (Set to 00:00:00 of that day)
+          if (tier.startDate) {
+            const start = new Date(tier.startDate + "T00:00:00+08:00");
+            if (!isNaN(start.getTime()) && now < start) {
+              isAvailable = false;
+              statusType = "OPENS_SOON";
+              const formattedOpen = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+              dateBadgeText = `Opens ${formattedOpen}`;
+            }
+          }
+
+          // Parse End Date (Set to 23:59:59 of that day)
+          if (isAvailable && tier.endDate) {
+            const end = new Date(tier.endDate + "T23:59:59+08:00");
+            if (!isNaN(end.getTime())) {
+              if (now > end) {
+                isAvailable = false;
+                statusType = "EXPIRED";
+                const formattedClosed = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                dateBadgeText = `Ended ${formattedClosed}`;
+              } else {
+                // Currently Open & Active! Show "Ends [Date]"
+                const formattedEnd = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                dateBadgeText = `Until ${formattedEnd}`;
+              }
+            }
+          }
+        }
+
+        return {
+          ...tier,
+          isAvailable,
+          statusType,
+          dateBadgeText
+        };
+      });
+
+      // 2. Select first available active tier by default
+      const defaultActiveIndex = evaluatedTiers.findIndex(t => t.isAvailable);
+      const defaultIdx = defaultActiveIndex !== -1 ? defaultActiveIndex : 0;
+
+      container.innerHTML = evaluatedTiers.map((tier, idx) => {
+        const isSelected = idx === defaultIdx && tier.isAvailable;
+
+        // Sync form & QR card with default selection
         if (isSelected) {
           const tierIdInput = document.getElementById("selectedTierId");
           const tierNameInput = document.getElementById("selectedTierName");
@@ -843,24 +892,29 @@
           if (tierPriceInput) tierPriceInput.value = tier.price;
           if (displayAmountDue) displayAmountDue.innerText = `₱${tier.price}.00`;
 
-          // Synchronize Section 3 QR code with default tier
           if (typeof updateQrForTier === "function") {
             updateQrForTier(tier);
           }
         }
 
-        // Status pill badge logic
+        // Build Status Pill Badge
         let statusBadgeHtml = '';
-        if (tier.status === 'ACTIVE') {
+        if (tier.statusType === 'ACTIVE') {
           statusBadgeHtml = `
-            <span class="hidden sm:inline-flex items-center gap-1 text-[9px] font-mono-code font-bold uppercase text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded-md">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Available
+            <span class="inline-flex items-center gap-1 text-[9px] font-mono-code font-bold uppercase text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded-md">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Available
             </span>
           `;
-        } else if (tier.status === 'SOON') {
+        } else if (tier.statusType === 'OPENS_SOON') {
+          statusBadgeHtml = `
+            <span class="inline-flex items-center gap-1 text-[9px] font-mono-code font-bold uppercase text-amber-300 bg-amber-950/50 border border-amber-500/30 px-2 py-0.5 rounded-md">
+              <i data-lucide="clock" class="w-2.5 h-2.5 text-amber-300"></i> ${tier.dateBadgeText || 'Opens Soon'}
+            </span>
+          `;
+        } else if (tier.statusType === 'EXPIRED') {
           statusBadgeHtml = `
             <span class="inline-flex items-center gap-1 text-[9px] font-mono-code font-bold uppercase text-slate-400 bg-white/5 border border-white/10 px-2 py-0.5 rounded-md">
-              <i data-lucide="clock" class="w-2.5 h-2.5 text-slate-400"></i> Opens Soon
+              <i data-lucide="lock" class="w-2.5 h-2.5 text-slate-400"></i> ${tier.dateBadgeText || 'Closed'}
             </span>
           `;
         } else {
@@ -872,20 +926,20 @@
         }
 
         return `
-          <div onclick="${isAvailable ? `selectTier('${tier.tierId}', '${tier.name}', ${tier.price}, this)` : ''}"
+          <div onclick="${tier.isAvailable ? `selectTier('${tier.tierId}', '${tier.name}', ${tier.price}, this)` : ''}"
             data-qr-url="${tier.qrUrl || ''}"
             class="tier-card group relative p-3.5 sm:p-4 rounded-2xl border transition-all duration-300 flex items-center justify-between gap-3 select-none ${
-              !isAvailable 
+              !tier.isAvailable 
                 ? 'opacity-40 border-white/5 bg-slate-950/40 cursor-not-allowed' 
                 : isSelected 
                   ? 'border-amber-400 bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-slate-900/80 shadow-[0_0_25px_rgba(245,158,11,0.2)] cursor-pointer' 
                   : 'border-white/10 hover:border-white/20 bg-slate-900/50 hover:bg-slate-900/80 cursor-pointer'
             }">
             
-            <!-- LEFT: Radio button + Tier Details -->
+            <!-- LEFT: Radio Ring + Details -->
             <div class="flex items-center gap-3 min-w-0">
               <div class="tier-radio w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                isSelected ? 'border-amber-400 bg-amber-400/20' : 'border-slate-600 bg-transparent'
+                !tier.isAvailable ? 'border-slate-800' : isSelected ? 'border-amber-400 bg-amber-400/20' : 'border-slate-600'
               }">
                 <div class="tier-dot w-2 h-2 rounded-full ${isSelected ? 'bg-amber-400' : 'bg-transparent'}"></div>
               </div>
@@ -896,28 +950,34 @@
                     ${tier.name}
                   </span>
 
+                  <!-- Promo Tag (e.g. LIMITED SLOTS) -->
                   ${tier.badge ? `
-                    <span class="whitespace-nowrap font-mono-code font-extrabold text-[8.5px] sm:text-[9px] uppercase px-2 py-0.5 rounded-md shadow-sm ${
-                      isSelected 
-                        ? 'bg-amber-400 text-slate-950' 
-                        : 'bg-white/10 text-slate-300 border border-white/10'
+                    <span class="whitespace-nowrap font-mono-code font-extrabold text-[8.5px] sm:text-[9px] uppercase px-2 py-0.5 rounded-md ${
+                      isSelected ? 'bg-amber-400 text-slate-950' : 'bg-white/10 text-slate-300 border border-white/10'
                     }">
                       ${tier.badge}
                     </span>
                   ` : ''}
 
+                  <!-- Live Date Status Pill -->
                   ${statusBadgeHtml}
                 </div>
 
-                <p class="text-[10px] sm:text-[11px] text-slate-400 leading-tight mt-0.5 truncate">
-                  ${tier.description}
-                </p>
+                <!-- Description + Validity Date Subtext -->
+                <div class="flex items-center gap-2 text-[10px] sm:text-[11px] text-slate-400 leading-tight mt-0.5">
+                  <span class="truncate">${tier.description}</span>
+                  ${tier.isAvailable && tier.dateBadgeText ? `
+                    <span class="hidden sm:inline text-amber-300/80 font-mono-code font-semibold flex-shrink-0">
+                      • ${tier.dateBadgeText}
+                    </span>
+                  ` : ''}
+                </div>
               </div>
             </div>
 
             <!-- RIGHT: Price Stack -->
             <div class="text-right flex-shrink-0 font-mono-code pl-2">
-              <div class="text-base sm:text-xl font-black ${isAvailable ? 'text-amber-300' : 'text-slate-500'}">
+              <div class="text-base sm:text-xl font-black ${tier.isAvailable ? 'text-amber-300' : 'text-slate-500'}">
                 ₱${tier.price}
               </div>
               ${tier.originalPrice > tier.price ? `
