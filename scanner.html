@@ -385,12 +385,48 @@
       cleanCode = cleanCode.toUpperCase();
 
       // ========================================================
-      // 1. INSTANT LOCAL VALIDATION (0.05 SECONDS)
+      // 1. INSTANT LOCAL VALIDATION (EXACT OR PARTIAL NAME MATCH)
       // ========================================================
-      if (isRosterLoaded && localRoster.has(cleanCode)) {
-        const delegate = localRoster.get(cleanCode);
+      let delegate = isRosterLoaded ? localRoster.get(cleanCode) : null;
 
-        // A. Already checked in?
+      // 1B. Fallback: Search local memory for partial name / surname matches
+      if (!delegate && isRosterLoaded && cleanCode.length >= 3) {
+        const partialMatches = [];
+        const seenPasses = new Set();
+
+        localRoster.forEach((record) => {
+          if (record && record.passId && !seenPasses.has(record.passId)) {
+            seenPasses.add(record.passId);
+            const dName = (record.name || "").toUpperCase();
+            const dReg = (record.regId || "").toUpperCase();
+
+            if (dName.includes(cleanCode) || dReg.includes(cleanCode)) {
+              partialMatches.push(record);
+            }
+          }
+        });
+
+        if (partialMatches.length === 1) {
+          delegate = partialMatches[0];
+        } else if (partialMatches.length > 1) {
+          playBeep('error');
+          const sampleNames = partialMatches.slice(0, 3).map(m => m.name).join(", ");
+          showModal('warning', {
+            title: "MULTIPLE MATCHES",
+            badge: `${partialMatches.length} DELEGATES FOUND`,
+            name: sampleNames + (partialMatches.length > 3 ? "..." : ""),
+            church: "Multiple attendees match this query",
+            passId: "MULTIPLE",
+            tier: "PLEASE SPECIFY",
+            time: "Enter exact Full Name or Pass ID."
+          });
+          return;
+        }
+      }
+
+      // If resolved locally (either exact key or unique partial name match)
+      if (delegate) {
+        // A. Duplicate Check
         if (delegate.checkedIn) {
           playBeep('error');
           showModal('warning', {
@@ -399,6 +435,7 @@
             name: delegate.name,
             church: delegate.church,
             passId: delegate.passId,
+            tier: delegate.tier || "STANDARD",
             time: `Admitted at ${delegate.checkInTime || "earlier"}`
           });
           return;
@@ -410,7 +447,6 @@
         delegate.checkedIn = true;
         delegate.checkInTime = nowTime;
 
-        // Instant UI feedback
         addRecentScan({
           name: delegate.name,
           church: delegate.church,
@@ -429,18 +465,18 @@
           time: `Admitted at ${nowTime}`
         });
 
-        // Update counter immediately
+        // Update gate counter
         const counter = document.getElementById("counterText");
-        const parts = counter.innerText.split('/');
-        if (parts.length === 2) {
-          const current = parseInt(parts[0].trim(), 10) || 0;
-          const total = parts[1].trim();
-          counter.innerText = `${current + 1} / ${total}`;
+        if (counter) {
+          const parts = counter.innerText.split('/');
+          if (parts.length === 2) {
+            const current = parseInt(parts[0].trim(), 10) || 0;
+            const total = parts[1].trim();
+            counter.innerText = `${current + 1} / ${total}`;
+          }
         }
 
-        // ========================================================
-        // 2. BACKGROUND CLOUD SYNC (Doesn't block the next scan!)
-        // ========================================================
+        // Background cloud sync
         syncCheckInToCloud(delegate.passId);
         return;
       }
