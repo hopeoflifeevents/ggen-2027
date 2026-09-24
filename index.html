@@ -1974,8 +1974,17 @@
 
     const DRAFT_STORAGE_KEY = "GGEN_REG_DRAFT_2027";
 
-    // Saves inputs in real-time as delegate types
+    // Saves inputs in real-time as delegate types (including all group members)
     function saveFormDraft() {
+      // Harvest dynamically generated group members 2 to 5
+      const membersData = [];
+      for (let i = 2; i <= 5; i++) {
+        membersData.push({
+          name: document.getElementById(`member_name_${i}`)?.value || "",
+          email: document.getElementById(`member_email_${i}`)?.value || ""
+        });
+      }
+
       const draft = {
         fullName: document.getElementById("fullName")?.value || "",
         email: document.getElementById("email")?.value || "",
@@ -1983,12 +1992,14 @@
         affiliation: document.getElementById("affiliation")?.value || "",
         referenceNo: document.getElementById("referenceNo")?.value || "",
         tierId: document.getElementById("selectedTierId")?.value || "",
+        paxCount: currentPaxCount,
+        membersData: membersData,
         timestamp: Date.now()
       };
       localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
     }
 
-    // Automatically restores fields if phone reloads tab after GCash
+    // Automatically restores all fields and group members if phone reloads tab
     function restoreFormDraft() {
       try {
         const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
@@ -2012,12 +2023,30 @@
           }
         });
 
-        // Remember saved tier to highlight once tiers finish loading
+        // Remember saved tier to highlight once pricing tiers load
         if (draft.tierId) {
           window._savedDraftTierId = draft.tierId;
         }
 
-        // Show reassuring visual badge
+        // Restore Multi-Pax Stepper & Additional Delegates
+        if (draft.paxCount && draft.paxCount > 1) {
+          currentPaxCount = draft.paxCount;
+          renderAdditionalMemberFields();
+          updateBatchUI();
+
+          if (draft.membersData && Array.isArray(draft.membersData)) {
+            draft.membersData.forEach((m, idx) => {
+              const num = idx + 2;
+              const nameEl = document.getElementById(`member_name_${num}`);
+              const emailEl = document.getElementById(`member_email_${num}`);
+              if (nameEl && m.name) nameEl.value = m.name;
+              if (emailEl && m.email) emailEl.value = m.email;
+            });
+          }
+          restoredAny = true;
+        }
+
+        // Show reassuring visual notice
         if (restoredAny) {
           const notice = document.getElementById("draftNotice");
           if (notice) {
@@ -2039,6 +2068,11 @@
       const notice = document.getElementById("draftNotice");
       if (notice) notice.classList.add("hidden");
       document.getElementById("regForm").reset();
+
+      // Reset delegate count & extra member fields back to single pax
+      currentPaxCount = 1;
+      renderAdditionalMemberFields();
+      updateBatchUI();
     }
 
     // Attach real-time keystroke listeners to all form fields
