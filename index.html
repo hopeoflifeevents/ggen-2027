@@ -542,31 +542,34 @@
               <input type="hidden" id="selectedTierPrice" value="350" />
             </div>
 
-            <!-- QUANTITY SELECTOR (1 TO 5 PAX) -->
-            <div class="mt-3 bg-slate-950/80 border border-white/10 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-3">
+            <!-- QUANTITY SELECTOR (DYNAMIC: STEPPER FOR SINGLES, LOCKED BADGE FOR BUNDLES) -->
+            <div id="paxCardContainer" class="mt-3 bg-slate-950/80 border border-white/10 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-3 transition-all duration-300">
               <div>
                 <div class="text-[10px] font-mono-code font-bold uppercase text-slate-300 flex items-center gap-1.5">
-                  <i data-lucide="users" class="w-3.5 h-3.5 text-amber-400"></i>
-                  <span>NUMBER OF DELEGATES</span>
+                  <i data-lucide="users" id="paxIcon" class="w-3.5 h-3.5 text-amber-400"></i>
+                  <span id="paxTitleText">NUMBER OF DELEGATES</span>
                 </div>
                 <div class="text-[10.5px] text-slate-400 mt-0.5" id="paxNoticeText">
-                  Group registration (Up to 5 pax max)
+                  Single delegate registration
                 </div>
               </div>
 
-              <!-- Interactive Stepper -->
+              <!-- Interactive Stepper or Locked Bundle Pill -->
               <div class="flex items-center gap-2 flex-shrink-0">
                 <button type="button" onclick="changePaxCount(-1)" id="decrementBtn"
                   class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 border border-white/10 text-white flex items-center justify-center font-bold text-base transition cursor-pointer">
                   –
                 </button>
-                <div class="w-8 text-center font-mono-code font-black text-lg text-amber-300" id="paxCountDisplay">
+                <div class="min-w-8 px-1 text-center font-mono-code font-black text-lg text-amber-300" id="paxCountDisplay">
                   1
                 </div>
                 <button type="button" onclick="changePaxCount(1)" id="incrementBtn"
                   class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 border border-white/10 text-white flex items-center justify-center font-bold text-base transition cursor-pointer">
                   +
                 </button>
+                <div id="bundleLockedBadge" class="hidden font-mono-code text-[10px] font-black uppercase tracking-wider bg-amber-400 text-slate-950 px-2.5 py-1 rounded-lg">
+                  LOCKED 🔒
+                </div>
               </div>
             </div>
 
@@ -1141,52 +1144,6 @@
       lucide.createIcons();
     }
 
-    function selectTier(id, name, price, cardEl) {
-      // Find tier object from active list
-      const matchedTier = activeTiersList.find(t => t.tierId === id) || {
-        tierId: id,
-        name: name,
-        price: price,
-        qrUrls: {}
-      };
-      currentSelectedTierObj = matchedTier;
-
-      // Update hidden inputs
-      const tierIdInput = document.getElementById("selectedTierId");
-      const tierNameInput = document.getElementById("selectedTierName");
-      if (tierIdInput) tierIdInput.value = id;
-      if (tierNameInput) tierNameInput.value = name;
-
-      // If Delegation Pass, force pax count to 5
-      const isDelegationPass = (id || "").toUpperCase().includes("SQUAD") || (name || "").toUpperCase().includes("DELEGATION");
-      if (isDelegationPass) {
-        currentPaxCount = 5;
-      }
-
-      // Update cards UI
-      document.querySelectorAll(".tier-card").forEach(el => {
-        if (!el.classList.contains("cursor-not-allowed")) {
-          el.className = "tier-card group relative p-3.5 sm:p-4 rounded-2xl border border-white/10 hover:border-white/20 bg-slate-900/50 hover:bg-slate-900/80 cursor-pointer transition-all duration-300 flex items-center justify-between gap-3 select-none";
-          const radio = el.querySelector(".tier-radio");
-          const dot = el.querySelector(".tier-dot");
-          if (radio) radio.className = "tier-radio w-5 h-5 rounded-full border-2 border-slate-600 bg-transparent flex items-center justify-center flex-shrink-0 transition-colors";
-          if (dot) dot.className = "tier-dot w-2 h-2 rounded-full bg-transparent";
-        }
-      });
-
-      if (cardEl) {
-        cardEl.className = "tier-card group relative p-3.5 sm:p-4 rounded-2xl border border-amber-400 bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-slate-900/80 shadow-[0_0_25px_rgba(245,158,11,0.2)] cursor-pointer transition-all duration-300 flex items-center justify-between gap-3 select-none";
-        const activeRadio = cardEl.querySelector(".tier-radio");
-        const activeDot = cardEl.querySelector(".tier-dot");
-        if (activeRadio) activeRadio.className = "tier-radio w-5 h-5 rounded-full border-2 border-amber-400 bg-amber-400/20 flex items-center justify-center flex-shrink-0 transition-colors";
-        if (activeDot) activeDot.className = "tier-dot w-2 h-2 rounded-full bg-amber-400";
-      }
-
-      renderAdditionalMemberFields();
-      updateBatchUI();
-      if (typeof saveFormDraft === "function") saveFormDraft();
-    }
-
     const colorConfig = {
       blue: {
         border: "border-blue-500/40 hover:border-blue-400 hover:shadow-[0_0_30px_rgba(37,99,235,0.4)]",
@@ -1674,13 +1631,17 @@
       // Resolve Active Tier details
       const tierId = currentSelectedTierObj?.tierId || document.getElementById("selectedTierId")?.value || "EARLY";
       const tierName = currentSelectedTierObj?.name || document.getElementById("selectedTierName")?.value || "Pass";
+      const isBundle = isBundleTier(currentSelectedTierObj);
       const pricePerPax = currentSelectedTierObj?.price || Number(document.getElementById("selectedTierPrice")?.value) || 0;
-      const totalAmount = pricePerPax * currentPaxCount;
+      
+      // For bundle: totalAmount is the flat rate; for flexible: price * count
+      const totalAmount = isBundle ? pricePerPax : (pricePerPax * currentPaxCount);
 
       const payload = {
         tierId: tierId,
         tierName: tierName,
-        amountPerPax: pricePerPax,
+        pricingType: isBundle ? "BUNDLE" : "FLEXIBLE",
+        amountPerPax: isBundle ? (totalAmount / currentPaxCount) : pricePerPax,
         totalAmount: totalAmount,
         paxCount: currentPaxCount,
         affiliation: affiliation,
@@ -2111,22 +2072,90 @@
     let activeTiersList = [];
     let currentSelectedTierObj = null;
 
-    // Handles [+] and [-] button clicks
+    // Helper to check if a tier is a flat promo bundle
+    function isBundleTier(tier) {
+      if (!tier) return false;
+      if (tier.pricingType === "BUNDLE") return true;
+      const combined = ((tier.tierId || "") + " " + (tier.name || "")).toUpperCase();
+      return combined.includes("B1T1") || 
+             combined.includes("BUY 1 TAKE 1") || 
+             combined.includes("5+1") || 
+             combined.includes("2-FOR-1") ||
+             combined.includes("BUNDLE");
+    }
+
+    // Resolves how many delegates are included in a bundle
+    function getBundlePaxCount(tier) {
+      if (tier.bundlePax && tier.bundlePax > 1) return tier.bundlePax;
+      const combined = ((tier.tierId || "") + " " + (tier.name || "")).toUpperCase();
+      if (combined.includes("5+1") || combined.includes("6 PAX") || combined.includes("SQUAD6")) return 6;
+      if (combined.includes("B1T1") || combined.includes("BUY 1 TAKE 1") || combined.includes("2-FOR-1")) return 2;
+      return 2; // Default bundle fallback
+    }
+
+    function selectTier(id, name, price, cardEl) {
+      const matchedTier = activeTiersList.find(t => t.tierId === id) || {
+        tierId: id,
+        name: name,
+        price: price,
+        pricingType: "FLEXIBLE",
+        bundlePax: 1,
+        qrUrls: {}
+      };
+      currentSelectedTierObj = matchedTier;
+
+      // Update hidden inputs
+      const tierIdInput = document.getElementById("selectedTierId");
+      const tierNameInput = document.getElementById("selectedTierName");
+      if (tierIdInput) tierIdInput.value = id;
+      if (tierNameInput) tierNameInput.value = name;
+
+      // Check if this is a Bundle Promo
+      if (isBundleTier(matchedTier)) {
+        // Auto-lock to the bundle's included pax count (e.g., 2 for B1T1, 6 for 5+1)
+        currentPaxCount = getBundlePaxCount(matchedTier);
+      } else {
+        // Reset to 1 pax (or clamp to 1-5 for flexible passes)
+        if (currentPaxCount > 5) currentPaxCount = 1;
+      }
+
+      // Update visual selection borders on cards
+      document.querySelectorAll(".tier-card").forEach(el => {
+        if (!el.classList.contains("cursor-not-allowed")) {
+          el.className = "tier-card group relative p-3.5 sm:p-4 rounded-2xl border border-white/10 hover:border-white/20 bg-slate-900/50 hover:bg-slate-900/80 cursor-pointer transition-all duration-300 flex items-center justify-between gap-3 select-none";
+          const radio = el.querySelector(".tier-radio");
+          const dot = el.querySelector(".tier-dot");
+          if (radio) radio.className = "tier-radio w-5 h-5 rounded-full border-2 border-slate-600 bg-transparent flex items-center justify-center flex-shrink-0 transition-colors";
+          if (dot) dot.className = "tier-dot w-2 h-2 rounded-full bg-transparent";
+        }
+      });
+
+      if (cardEl) {
+        cardEl.className = "tier-card group relative p-3.5 sm:p-4 rounded-2xl border border-amber-400 bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-slate-900/80 shadow-[0_0_25px_rgba(245,158,11,0.2)] cursor-pointer transition-all duration-300 flex items-center justify-between gap-3 select-none";
+        const activeRadio = cardEl.querySelector(".tier-radio");
+        const activeDot = cardEl.querySelector(".tier-dot");
+        if (activeRadio) activeRadio.className = "tier-radio w-5 h-5 rounded-full border-2 border-amber-400 bg-amber-400/20 flex items-center justify-center flex-shrink-0 transition-colors";
+        if (activeDot) activeDot.className = "tier-dot w-2 h-2 rounded-full bg-amber-400";
+      }
+
+      renderAdditionalMemberFields();
+      updateBatchUI();
+      if (typeof saveFormDraft === "function") saveFormDraft();
+    }
+
     function changePaxCount(delta) {
       if (!currentSelectedTierObj) return;
 
-      // If Delegation Pass (SQUAD / MIN 5 PAX), lock to 5
-      const isDelegationPass = (currentSelectedTierObj.tierId || "").toUpperCase().includes("SQUAD") || 
-                               (currentSelectedTierObj.name || "").toUpperCase().includes("DELEGATION");
-
-      if (isDelegationPass) {
-        currentPaxCount = 5;
+      // If bundle, lock pax count
+      if (isBundleTier(currentSelectedTierObj)) {
+        currentPaxCount = getBundlePaxCount(currentSelectedTierObj);
         renderAdditionalMemberFields();
         updateBatchUI();
         return;
       }
 
       const newCount = currentPaxCount + delta;
+      // Allow flexible tickets to scale between 1 and 5 delegates
       if (newCount >= 1 && newCount <= 5) {
         currentPaxCount = newCount;
         renderAdditionalMemberFields();
@@ -2135,85 +2164,103 @@
       }
     }
 
-    // Updates price, button text, and swaps the exact GCash QR image (Option B)
     function updateBatchUI() {
       if (!currentSelectedTierObj) return;
 
       const countEl = document.getElementById("paxCountDisplay");
       const decBtn = document.getElementById("decrementBtn");
       const incBtn = document.getElementById("incrementBtn");
+      const lockBadge = document.getElementById("bundleLockedBadge");
       const paxNotice = document.getElementById("paxNoticeText");
+      const paxTitle = document.getElementById("paxTitleText");
+      const paxCard = document.getElementById("paxCardContainer");
 
-      if (countEl) countEl.innerText = currentPaxCount;
+      const isBundle = isBundleTier(currentSelectedTierObj);
+      let totalAmount = 0;
 
-      const isDelegationPass = (currentSelectedTierObj.tierId || "").toUpperCase().includes("SQUAD") || 
-                               (currentSelectedTierObj.name || "").toUpperCase().includes("DELEGATION");
+      if (isBundle) {
+        // Flat Promo Rate (Does NOT multiply by pax)
+        totalAmount = currentSelectedTierObj.price;
+        currentPaxCount = getBundlePaxCount(currentSelectedTierObj);
 
-      if (isDelegationPass) {
-        currentPaxCount = 5;
-        if (countEl) countEl.innerText = 5;
-        if (decBtn) decBtn.disabled = true;
-        if (incBtn) incBtn.disabled = true;
-        if (paxNotice) paxNotice.innerText = "Fixed delegation bundle (5 pax)";
+        if (countEl) countEl.innerText = `${currentPaxCount} PAX`;
+        if (decBtn) decBtn.classList.add("hidden");
+        if (incBtn) incBtn.classList.add("hidden");
+        if (lockBadge) lockBadge.classList.remove("hidden");
+
+        if (paxTitle) paxTitle.innerText = "PROMO BUNDLE UNLOCKED";
+        if (paxNotice) paxNotice.innerHTML = `<span class="text-amber-300 font-semibold font-mono-code">🎁 Includes ${currentPaxCount} delegate passes (Fixed bundle rate)</span>`;
+        if (paxCard) paxCard.className = "mt-3 bg-gradient-to-r from-amber-500/10 via-slate-900 to-slate-950 border border-amber-400/40 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-3 shadow-md";
       } else {
-        if (decBtn) decBtn.disabled = (currentPaxCount <= 1);
-        if (incBtn) incBtn.disabled = (currentPaxCount >= 5);
+        // Flexible Stepper Rate (Multiplies price by pax)
+        totalAmount = currentSelectedTierObj.price * currentPaxCount;
+
+        if (countEl) countEl.innerText = currentPaxCount;
+        if (decBtn) {
+          decBtn.classList.remove("hidden");
+          decBtn.disabled = (currentPaxCount <= 1);
+        }
+        if (incBtn) {
+          incBtn.classList.remove("hidden");
+          incBtn.disabled = (currentPaxCount >= 5);
+        }
+        if (lockBadge) lockBadge.classList.add("hidden");
+
+        if (paxTitle) paxTitle.innerText = "NUMBER OF DELEGATES";
         if (paxNotice) paxNotice.innerText = currentPaxCount === 1 ? "Single delegate registration" : `Group pass (${currentPaxCount} delegates)`;
+        if (paxCard) paxCard.className = "mt-3 bg-slate-950/80 border border-white/10 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-3";
       }
 
-      // Calculate dynamic total
-      const totalAmount = currentSelectedTierObj.price * currentPaxCount;
-
-      // Update hidden submission inputs
+      // Update hidden price input
       const tierPriceInput = document.getElementById("selectedTierPrice");
       if (tierPriceInput) tierPriceInput.value = totalAmount;
 
-      // Update Section 3 GCash QR Action Card
+      // Update Section 3: GCash QR Card
       const qrTierNotice = document.getElementById("qrTierNotice");
       const qrTierDisplay = document.getElementById("qrTierDisplay");
       const qrAmountDisplay = document.getElementById("qrAmountDisplay");
       const downloadBtnText = document.getElementById("downloadBtnText");
       const qrImg = document.getElementById("gcashQrImage");
 
-      if (qrTierNotice) {
-        qrTierNotice.innerText = `TIER: ${currentSelectedTierObj.name.toUpperCase()} • ${currentPaxCount} PAX (₱${totalAmount})`;
-      }
-      if (qrTierDisplay) {
-        qrTierDisplay.innerText = `${currentSelectedTierObj.name} (${currentPaxCount} Pax)`;
-      }
-      if (qrAmountDisplay) {
-        qrAmountDisplay.innerText = `₱${totalAmount.toLocaleString()}.00`;
-      }
-      if (downloadBtnText) {
-        downloadBtnText.innerText = `SAVE GCASH QR (₱${totalAmount.toLocaleString()} • ${currentPaxCount} PAX)`;
-      }
+      const bundleTagText = isBundle ? ` • ${currentPaxCount} PAX BUNDLE` : ` • ${currentPaxCount} PAX`;
 
-      // OPTION B: SWAP THE EXACT GCASH QR FOR THIS PAX COUNT
+      if (qrTierNotice) qrTierNotice.innerText = `TIER: ${currentSelectedTierObj.name.toUpperCase()}${bundleTagText} (₱${totalAmount.toLocaleString()})`;
+      if (qrTierDisplay) qrTierDisplay.innerText = `${currentSelectedTierObj.name} (${currentPaxCount} Pax${isBundle ? ' Bundle' : ''})`;
+      if (qrAmountDisplay) qrAmountDisplay.innerText = `₱${totalAmount.toLocaleString()}.00`;
+      if (downloadBtnText) downloadBtnText.innerText = `SAVE GCASH QR (₱${totalAmount.toLocaleString()}${bundleTagText})`;
+
+      // Update QR Code Image
       if (qrImg) {
-        const qrMatrix = currentSelectedTierObj.qrUrls || {};
-        const specificQrUrl = qrMatrix[currentPaxCount] || currentSelectedTierObj.qrUrl;
-
-        if (specificQrUrl && specificQrUrl.trim() !== "") {
-          qrImg.src = specificQrUrl;
+        if (isBundle) {
+          // For bundle: use the flat bundle QR (Col E)
+          qrImg.src = currentSelectedTierObj.qrUrl || currentSelectedTierObj.qrUrls?.[1] || "";
         } else {
-          // Fallback if specific QR is not yet uploaded for this count in Google Sheets
-          qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=GCASH+PAYMENT+FOR+${encodeURIComponent(currentSelectedTierObj.name)}+PAX+${currentPaxCount}+TOTAL+PHP+${totalAmount}`;
+          // For flexible: use QR matched to this specific pax count
+          const qrMatrix = currentSelectedTierObj.qrUrls || {};
+          qrImg.src = qrMatrix[currentPaxCount] || currentSelectedTierObj.qrUrl || "";
+        }
+
+        // Fallback generator if empty
+        if (!qrImg.src || qrImg.src.trim() === "") {
+          qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=GCASH+PAYMENT+FOR+${encodeURIComponent(currentSelectedTierObj.name)}+TOTAL+PHP+${totalAmount}`;
         }
       }
     }
 
-    // Dynamically builds input cards for Delegates 2 to 5
+    // Dynamically builds delegate boxes up to 6 pax (supports 5+1)
     function renderAdditionalMemberFields() {
       const container = document.getElementById("additionalMembersContainer");
       if (!container) return;
 
-      // Save currently typed values before re-rendering
+      const isBundle = isBundleTier(currentSelectedTierObj);
+
+      // Preserve previously typed values up to 6 members
       const existingValues = [];
-      for (let i = 2; i <= 5; i++) {
-        existingValues[i] = {
+      for (let i = 2; i <= 6; i++) {
+        membersData.push({
           name: document.getElementById(`member_name_${i}`)?.value || "",
           email: document.getElementById(`member_email_${i}`)?.value || ""
-        };
+        });
       }
 
       let html = "";
@@ -2221,12 +2268,22 @@
         const prevName = existingValues[i]?.name || "";
         const prevEmail = existingValues[i]?.email || "";
 
+        // Contextual badge for promos
+        let memberRoleBadge = "Group Member";
+        if (isBundle) {
+          if (currentSelectedTierObj.name.includes("5+1") && i === 6) {
+            memberRoleBadge = "🎁 Free Included Pass (6th Pax)";
+          } else {
+            memberRoleBadge = "🎁 Included Promo Pass";
+          }
+        }
+
         html += `
           <div class="bg-slate-900/40 border border-white/10 rounded-2xl p-3.5 space-y-2.5 transition-all">
             <div class="flex items-center justify-between text-[10px] font-mono-code text-slate-400 uppercase font-bold">
               <span class="flex items-center gap-1.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-                <span>Delegate #${i} (Group Member)</span>
+                <span class="w-1.5 h-1.5 rounded-full ${isBundle ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}"></span>
+                <span>Delegate #${i} (${memberRoleBadge})</span>
               </span>
               <span class="text-slate-500">Unique Pass Issued</span>
             </div>
