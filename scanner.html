@@ -149,26 +149,44 @@
       </div>
     </div>
 
-    <!-- MANUAL LOOKUP (Supports Pass ID, Full Name, or Reg ID) -->
-    <div class="bg-slate-900/70 border border-white/10 rounded-2xl p-3 backdrop-blur-md mb-4 shadow-lg">
+    <!-- MANUAL LOOKUP (LIVE SEARCH ➜ SELECT ➜ CONFIRM) -->
+    <div class="bg-slate-900/70 border border-white/10 rounded-2xl p-3.5 backdrop-blur-md mb-4 shadow-lg">
       <details class="group" id="manualDetailsAccordion" open>
         <summary class="flex justify-between items-center cursor-pointer list-none text-xs font-mono-code font-bold text-slate-300">
           <span class="flex items-center gap-2">
-            <i data-lucide="keyboard" class="w-4 h-4 text-amber-400"></i>
-            <span>MANUAL LOOKUP (NAME OR PASS ID)</span>
+            <i data-lucide="search" class="w-4 h-4 text-amber-400"></i>
+            <span>SEARCH DELEGATE (NAME OR PASS ID)</span>
           </span>
           <i data-lucide="chevron-down" class="w-4 h-4 text-slate-500 transition-transform group-open:rotate-180"></i>
         </summary>
 
-        <form onsubmit="handleManualSearch(event)" class="mt-3 pt-3 border-t border-white/5 flex gap-2">
-          <div class="relative flex-1">
-            <input type="text" id="manualCode" placeholder="e.g. EMPOWERED-0003 or Lawrence" required
-              class="w-full bg-slate-800/80 border border-white/10 rounded-xl pl-3 pr-8 py-2 text-sm text-white font-mono-code placeholder:text-slate-500 focus:outline-none focus:border-amber-400 transition" />
-            <button type="button" onclick="document.getElementById('manualCode').value=''" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white text-xs cursor-pointer">✕</button>
+        <form onsubmit="handleManualSearch(event)" class="mt-3 pt-3 border-t border-white/5">
+          <div class="flex gap-2">
+            <div class="relative flex-1">
+              <input type="text" id="manualCode" placeholder="Type name or pass ID..." autocomplete="off"
+                oninput="onManualInput(event)"
+                class="w-full bg-slate-800/80 border border-white/10 rounded-xl pl-3 pr-8 py-2.5 text-sm text-white font-mono-code placeholder:text-slate-500 focus:outline-none focus:border-amber-400 transition" />
+              <button type="button" onclick="clearManualSearch()" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white text-xs cursor-pointer p-1">✕</button>
+            </div>
+            <button type="submit" id="manualSearchBtn" class="bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs uppercase tracking-wider active:scale-95 transition flex items-center gap-1 cursor-pointer flex-shrink-0">
+              <i data-lucide="search" class="w-3.5 h-3.5"></i>
+              <span>Find</span>
+            </button>
           </div>
-          <button type="submit" id="manualSearchBtn" class="bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs uppercase tracking-wider active:scale-95 transition flex items-center gap-1 cursor-pointer">
-            <span>Check</span>
-          </button>
+
+          <!-- Live Candidate Results Drawer -->
+          <div id="searchResultsContainer" class="hidden mt-3 pt-3 border-t border-white/10 animate-in fade-in duration-200">
+            <div class="flex items-center justify-between mb-2 px-0.5">
+              <span class="text-[10px] font-mono-code uppercase text-slate-400 font-bold flex items-center gap-1.5">
+                <i data-lucide="users" class="w-3.5 h-3.5 text-amber-400"></i>
+                <span id="searchResultsCount">0 Matches</span>
+              </span>
+              <span class="text-[9px] font-mono-code text-slate-500">Tap card to review & check in</span>
+            </div>
+
+            <!-- Scrollable delegate cards list -->
+            <div id="searchResultsList" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
+          </div>
         </form>
       </details>
     </div>
@@ -196,6 +214,62 @@
   <footer class="text-center py-3 text-[10px] font-mono-code text-slate-500 border-t border-white/5">
     Hope of Life Christian Ministries • Acts 1:8
   </footer>
+
+  <!-- ======================================================== -->
+  <!-- MANUAL CHECK-IN CONFIRMATION MODAL                      -->
+  <!-- ======================================================== -->
+  <div id="confirmCheckInModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-amber-500/40 w-full max-w-sm rounded-3xl p-5 sm:p-6 text-center shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+      
+      <!-- Close Button -->
+      <button type="button" onclick="closeConfirmModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-full transition">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+
+      <!-- Modal Badge -->
+      <div id="confirmBadge" class="inline-flex items-center gap-1.5 text-[10px] font-mono-code font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3 bg-blue-500/20 text-blue-300 border border-blue-400/40">
+        <i data-lucide="user-check" class="w-3.5 h-3.5"></i>
+        <span>Delegate Verification</span>
+      </div>
+
+      <!-- Delegate Details Card -->
+      <div class="my-3 bg-black/50 border border-white/10 rounded-2xl p-4 text-left font-mono-code space-y-2">
+        <div>
+          <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Pass Identifier</span>
+          <span id="confirmPassId" class="text-base font-black text-amber-300">EMPOWERED-0000</span>
+        </div>
+        <div class="border-t border-white/5 pt-2">
+          <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Full Name</span>
+          <span id="confirmName" class="text-lg font-bold text-white leading-tight block">Lawrence Cruz</span>
+        </div>
+        <div class="border-t border-white/5 pt-2 flex items-center justify-between">
+          <div>
+            <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Church / Org</span>
+            <span id="confirmChurch" class="text-xs text-blue-300 font-semibold block">Official Delegation</span>
+          </div>
+          <div class="text-right">
+            <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Tier</span>
+            <span id="confirmTier" class="text-xs text-amber-300 font-bold block">STANDARD</span>
+          </div>
+        </div>
+        <div id="confirmStatusNotice" class="border-t border-white/5 pt-2 text-[10px]"></div>
+      </div>
+
+      <!-- Actions -->
+      <div class="mt-4 flex gap-2">
+        <button type="button" id="confirmAdmitBtn" onclick="executeManualAdmit()"
+          class="flex-1 bg-gradient-to-r from-emerald-400 to-green-500 hover:from-emerald-300 hover:to-green-400 text-slate-950 font-bebas text-2xl py-2.5 rounded-xl uppercase tracking-wider shadow-lg shadow-emerald-500/30 active:scale-95 transition flex items-center justify-center gap-1.5 cursor-pointer">
+          <i data-lucide="check" class="w-5 h-5 stroke-[3]"></i>
+          <span>CONFIRM ENTRY</span>
+        </button>
+        <button type="button" onclick="closeConfirmModal()"
+          class="bg-white/10 hover:bg-white/15 text-slate-200 font-mono-code text-xs font-bold px-4 py-2.5 rounded-xl transition">
+          Cancel
+        </button>
+      </div>
+
+    </div>
+  </div>
 
   <!-- ======================================================== -->
   <!-- FULLSCREEN VERIFICATION MODAL                            -->
@@ -366,15 +440,233 @@
       await processPassVerification(decodedText);
     }
 
-    // Manual Search
-    async function handleManualSearch(e) {
-      e.preventDefault();
-      const code = document.getElementById("manualCode").value.trim();
-      if (!code || isProcessing) return;
-      isProcessing = true;
-      await processPassVerification(code);
+    // Global variable tracking the delegate currently selected in the confirmation modal
+    let pendingDelegateToAdmit = null;
+
+    // Triggered live on every keystroke
+    function onManualInput(e) {
+      const query = (e.target.value || "").trim();
+      renderLiveSearchResults(query);
     }
 
+    function clearManualSearch() {
+      const input = document.getElementById("manualCode");
+      if (input) input.value = "";
+      const container = document.getElementById("searchResultsContainer");
+      if (container) container.classList.add("hidden");
+    }
+
+    // Searches local in-memory roster and displays all matching delegate cards
+    function renderLiveSearchResults(rawQuery) {
+      const container = document.getElementById("searchResultsContainer");
+      const listEl = document.getElementById("searchResultsList");
+      const countEl = document.getElementById("searchResultsCount");
+
+      const query = rawQuery.trim().toUpperCase();
+
+      if (query.length < 2) {
+        container.classList.add("hidden");
+        return;
+      }
+
+      // Collect unique delegates matching Name, Pass ID, Reg ID, or Church
+      const matches = [];
+      const seenPasses = new Set();
+
+      localRoster.forEach((d) => {
+        if (d && d.passId && !seenPasses.has(d.passId)) {
+          seenPasses.add(d.passId);
+
+          const name = (d.name || "").toUpperCase();
+          const passId = (d.passId || "").toUpperCase();
+          const regId = (d.regId || "").toUpperCase();
+          const church = (d.church || "").toUpperCase();
+
+          if (name.includes(query) || passId.includes(query) || regId.includes(query) || church.includes(query)) {
+            matches.push(d);
+          }
+        }
+      });
+
+      countEl.innerText = `${matches.length} Match${matches.length === 1 ? '' : 'es'} Found`;
+      container.classList.remove("hidden");
+
+      if (matches.length === 0) {
+        listEl.innerHTML = `
+          <div class="bg-slate-950/60 border border-white/5 rounded-xl p-3 text-center text-xs font-mono-code text-slate-400">
+            <div>No matching delegate found in roster.</div>
+            <button type="button" onclick="fallbackCloudLookup('${query}')" class="mt-2 text-amber-400 hover:text-amber-300 underline text-[11px] font-bold">
+              Try Searching Google Cloud ☁️
+            </button>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      // Render each matching attendee card
+      listEl.innerHTML = matches.map(d => {
+        const isChecked = !!d.checkedIn;
+        const statusBadge = isChecked 
+          ? `<span class="bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[9px] font-mono-code font-bold uppercase px-2 py-0.5 rounded-md">Admitted ${d.checkInTime ? `(${d.checkInTime})` : ''}</span>`
+          : `<span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[9px] font-mono-code font-bold uppercase px-2 py-0.5 rounded-md flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Ready</span>`;
+
+        return `
+          <div onclick="openConfirmModal('${d.passId}')" 
+            class="bg-slate-950/70 hover:bg-slate-900 border border-white/10 hover:border-amber-400/60 p-2.5 rounded-xl cursor-pointer transition active:scale-[0.98] flex items-center justify-between gap-3 select-none">
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-xs sm:text-sm font-bold text-white truncate">${escapeHtml(d.name)}</span>
+                ${statusBadge}
+              </div>
+              <div class="text-[11px] text-blue-300 truncate mt-0.5">${escapeHtml(d.church)}</div>
+              <div class="text-[10px] font-mono-code text-slate-400 mt-0.5 flex items-center gap-2">
+                <span class="text-amber-400 font-bold">${d.passId}</span>
+                <span>•</span>
+                <span>${escapeHtml(d.tier || 'Standard')}</span>
+              </div>
+            </div>
+            <div class="flex-shrink-0 text-right">
+              <span class="text-xs font-mono-code font-bold ${isChecked ? 'text-amber-400' : 'text-emerald-400'} flex items-center gap-1">
+                <span>${isChecked ? 'Review' : 'Admit'}</span>
+                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+              </span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      lucide.createIcons();
+    }
+
+    // Called when clicking "Find" button or pressing Enter in search field
+    function handleManualSearch(e) {
+      e.preventDefault();
+      const query = document.getElementById("manualCode").value.trim();
+      if (!query) return;
+
+      renderLiveSearchResults(query);
+
+      // If only 1 delegate matches, pop up the confirmation modal immediately!
+      const seenPasses = new Set();
+      const matches = [];
+      localRoster.forEach(d => {
+        if (d && d.passId && !seenPasses.has(d.passId)) {
+          seenPasses.add(d.passId);
+          const q = query.toUpperCase();
+          if ((d.name || "").toUpperCase().includes(q) || (d.passId || "").toUpperCase().includes(q)) {
+            matches.push(d);
+          }
+        }
+      });
+
+      if (matches.length === 1) {
+        openConfirmModal(matches[0].passId);
+      }
+    }
+
+    // Opens the review and check-in confirmation modal for the chosen delegate
+    function openConfirmModal(passId) {
+      const delegate = localRoster.get(passId.toUpperCase());
+      if (!delegate) return;
+
+      pendingDelegateToAdmit = delegate;
+
+      const modal = document.getElementById("confirmCheckInModal");
+      const passEl = document.getElementById("confirmPassId");
+      const nameEl = document.getElementById("confirmName");
+      const churchEl = document.getElementById("confirmChurch");
+      const tierEl = document.getElementById("confirmTier");
+      const statusNotice = document.getElementById("confirmStatusNotice");
+      const admitBtn = document.getElementById("confirmAdmitBtn");
+
+      passEl.innerText = delegate.passId;
+      nameEl.innerText = delegate.name;
+      churchEl.innerText = delegate.church || "Official Delegate";
+      tierEl.innerText = delegate.tier || "STANDARD PASS";
+
+      if (delegate.checkedIn) {
+        statusNotice.className = "border-t border-white/5 pt-2 text-[10px] text-amber-300 font-bold bg-amber-500/10 p-2 rounded-lg";
+        statusNotice.innerHTML = `⚠️ ALREADY CHECKED IN AT ${delegate.checkInTime || 'EARLIER'}`;
+        admitBtn.disabled = true;
+        admitBtn.className = "flex-1 bg-slate-800 text-slate-500 font-bebas text-2xl py-2.5 rounded-xl uppercase tracking-wider cursor-not-allowed opacity-50";
+        admitBtn.innerHTML = `<span>ALREADY ADMITTED</span>`;
+      } else {
+        statusNotice.className = "border-t border-white/5 pt-2 text-[10px] text-emerald-400 font-semibold";
+        statusNotice.innerHTML = `● Delegate pass is verified and ready for gate admission.`;
+        admitBtn.disabled = false;
+        admitBtn.className = "flex-1 bg-gradient-to-r from-emerald-400 to-green-500 hover:from-emerald-300 hover:to-green-400 text-slate-950 font-bebas text-2xl py-2.5 rounded-xl uppercase tracking-wider shadow-lg shadow-emerald-500/30 active:scale-95 transition flex items-center justify-center gap-1.5 cursor-pointer";
+        admitBtn.innerHTML = `<i data-lucide="check" class="w-5 h-5 stroke-[3]"></i> <span>CONFIRM ENTRY</span>`;
+      }
+
+      modal.classList.remove("hidden");
+      lucide.createIcons();
+    }
+
+    function closeConfirmModal() {
+      const modal = document.getElementById("confirmCheckInModal");
+      if (modal) modal.classList.add("hidden");
+      pendingDelegateToAdmit = null;
+    }
+
+    // Executed when clicking "CONFIRM ENTRY" inside the confirmation modal
+    function executeManualAdmit() {
+      if (!pendingDelegateToAdmit) return;
+
+      const delegate = pendingDelegateToAdmit;
+
+      if (delegate.checkedIn) {
+        alert("This pass has already been admitted!");
+        closeConfirmModal();
+        return;
+      }
+
+      // 1. Mark delegate as checked in locally
+      const nowTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      delegate.checkedIn = true;
+      delegate.checkInTime = nowTime;
+
+      // 2. Audio & Visual celebrations
+      playBeep('success');
+      addRecentScan({
+        name: delegate.name,
+        church: delegate.church,
+        passId: delegate.passId,
+        tier: delegate.tier,
+        time: nowTime
+      });
+
+      // 3. Update counter badge
+      const counter = document.getElementById("counterText");
+      if (counter) {
+        const parts = counter.innerText.split('/');
+        if (parts.length === 2) {
+          const current = parseInt(parts[0].trim(), 10) || 0;
+          const total = parts[1].trim();
+          counter.innerText = `${current + 1} / ${total}`;
+        }
+      }
+
+      // 4. Background cloud sync to Google Sheets
+      syncCheckInToCloud(delegate.passId);
+
+      // 5. Close confirm modal & auto-clear search
+      closeConfirmModal();
+      clearManualSearch();
+
+      // 6. Flash success admission screen
+      showModal('success', {
+        title: "DELEGATE ADMITTED",
+        badge: "ENTRY VERIFIED ● PASS ACTIVE",
+        name: delegate.name,
+        church: delegate.church,
+        tier: delegate.tier,
+        passId: delegate.passId,
+        time: `Admitted at ${nowTime}`
+      });
+    }
+
+    // Direct Camera Scanner Check-In (Leaves 1-shot QR camera scans instant)
     async function processPassVerification(code) {
       if (!code) return;
 
@@ -384,49 +676,9 @@
       }
       cleanCode = cleanCode.toUpperCase();
 
-      // ========================================================
-      // 1. INSTANT LOCAL VALIDATION (EXACT OR PARTIAL NAME MATCH)
-      // ========================================================
-      let delegate = isRosterLoaded ? localRoster.get(cleanCode) : null;
+      if (isRosterLoaded && localRoster.has(cleanCode)) {
+        const delegate = localRoster.get(cleanCode);
 
-      // 1B. Fallback: Search local memory for partial name / surname matches
-      if (!delegate && isRosterLoaded && cleanCode.length >= 3) {
-        const partialMatches = [];
-        const seenPasses = new Set();
-
-        localRoster.forEach((record) => {
-          if (record && record.passId && !seenPasses.has(record.passId)) {
-            seenPasses.add(record.passId);
-            const dName = (record.name || "").toUpperCase();
-            const dReg = (record.regId || "").toUpperCase();
-
-            if (dName.includes(cleanCode) || dReg.includes(cleanCode)) {
-              partialMatches.push(record);
-            }
-          }
-        });
-
-        if (partialMatches.length === 1) {
-          delegate = partialMatches[0];
-        } else if (partialMatches.length > 1) {
-          playBeep('error');
-          const sampleNames = partialMatches.slice(0, 3).map(m => m.name).join(", ");
-          showModal('warning', {
-            title: "MULTIPLE MATCHES",
-            badge: `${partialMatches.length} DELEGATES FOUND`,
-            name: sampleNames + (partialMatches.length > 3 ? "..." : ""),
-            church: "Multiple attendees match this query",
-            passId: "MULTIPLE",
-            tier: "PLEASE SPECIFY",
-            time: "Enter exact Full Name or Pass ID."
-          });
-          return;
-        }
-      }
-
-      // If resolved locally (either exact key or unique partial name match)
-      if (delegate) {
-        // A. Duplicate Check
         if (delegate.checkedIn) {
           playBeep('error');
           showModal('warning', {
@@ -441,12 +693,11 @@
           return;
         }
 
-        // B. Valid & Admitted!
-        playBeep('success');
         const nowTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
         delegate.checkedIn = true;
         delegate.checkInTime = nowTime;
 
+        playBeep('success');
         addRecentScan({
           name: delegate.name,
           church: delegate.church,
@@ -465,7 +716,6 @@
           time: `Admitted at ${nowTime}`
         });
 
-        // Update gate counter
         const counter = document.getElementById("counterText");
         if (counter) {
           const parts = counter.innerText.split('/');
@@ -476,14 +726,15 @@
           }
         }
 
-        // Background cloud sync
         syncCheckInToCloud(delegate.passId);
         return;
       }
 
-      // ========================================================
-      // 3. FALLBACK TO CLOUD IF NOT FOUND LOCALLY
-      // ========================================================
+      // Cloud Fallback for unknown QR passes
+      fallbackCloudLookup(cleanCode);
+    }
+
+    async function fallbackCloudLookup(cleanCode) {
       try {
         const response = await fetch(`${APPS_SCRIPT_API_URL}?action=checkIn&query=${encodeURIComponent(cleanCode)}`);
         const result = await response.json();
@@ -502,7 +753,6 @@
           });
           syncRosterFromCloud();
         } else if (result && result.errorType === 'ALREADY_CHECKED_IN') {
-          // Properly show yellow warning modal with actual delegate info
           playBeep('error');
           const d = result.delegate || {};
           showModal('warning', {
@@ -514,20 +764,7 @@
             tier: d.tier || "STANDARD",
             time: result.message || "Pass was already scanned"
           });
-        } else if (result && result.errorType === 'NOT_APPROVED') {
-          playBeep('error');
-          const d = result.delegate || {};
-          showModal('error', {
-            title: "NOT APPROVED FOR ENTRY",
-            badge: `STATUS: ${d.status || 'PENDING'}`,
-            name: d.name || "Delegate Found",
-            church: d.church || "N/A",
-            passId: d.passId || cleanCode,
-            tier: d.tier || "STANDARD",
-            time: result.message || "Registration is not approved"
-          });
         } else {
-          // Pass not found at all
           playBeep('error');
           showModal('error', {
             title: "PASS NOT FOUND",
@@ -538,7 +775,7 @@
             time: result ? result.message : "Not in authorized roster."
           });
         }
-      } catch (networkErr) {
+      } catch (err) {
         playBeep('error');
         showModal('error', {
           title: "LOOKUP FAILED",
@@ -549,6 +786,15 @@
           time: "Network request failed. Try manual code."
         });
       }
+    }
+
+    function escapeHtml(text) {
+      return (text || '').toString()
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
     }
 
     // Fire-and-forget background sync
