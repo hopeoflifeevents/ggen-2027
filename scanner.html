@@ -465,10 +465,36 @@
             time: result.delegate.checkInTime
           });
           syncRosterFromCloud();
+        } else if (result && result.errorType === 'ALREADY_CHECKED_IN') {
+          // Properly show yellow warning modal with actual delegate info
+          playBeep('error');
+          const d = result.delegate || {};
+          showModal('warning', {
+            title: "ALREADY CHECKED IN",
+            badge: "DUPLICATE ENTRY DETECTED",
+            name: d.name || "Known Delegate",
+            church: d.church || "N/A",
+            passId: d.passId || cleanCode,
+            tier: d.tier || "STANDARD",
+            time: result.message || "Pass was already scanned"
+          });
+        } else if (result && result.errorType === 'NOT_APPROVED') {
+          playBeep('error');
+          const d = result.delegate || {};
+          showModal('error', {
+            title: "NOT APPROVED FOR ENTRY",
+            badge: `STATUS: ${d.status || 'PENDING'}`,
+            name: d.name || "Delegate Found",
+            church: d.church || "N/A",
+            passId: d.passId || cleanCode,
+            tier: d.tier || "STANDARD",
+            time: result.message || "Registration is not approved"
+          });
         } else {
+          // Pass not found at all
           playBeep('error');
           showModal('error', {
-            title: "PASS NOT FOUND / DECLINED",
+            title: "PASS NOT FOUND",
             badge: "ACCESS DENIED",
             name: "Unknown Delegate",
             church: "N/A",
@@ -479,12 +505,12 @@
       } catch (networkErr) {
         playBeep('error');
         showModal('error', {
-          title: "PASS NOT FOUND",
-          badge: "NO MATCH IN ROSTER",
-          name: "Unknown Pass",
+          title: "LOOKUP FAILED",
+          badge: "OFFLINE / TIMEOUT",
+          name: "Connection Interrupted",
           church: "Please check desk",
           passId: cleanCode,
-          time: "Not in approved delegate database."
+          time: "Network request failed. Try manual code."
         });
       }
     }
@@ -637,11 +663,26 @@
         const data = await response.json();
 
         if (data && data.success && data.roster) {
+          // Collect existing locally checked-in passes before re-indexing
+          const locallyAdmittedPasses = new Map();
+          localRoster.forEach((val) => {
+            if (val && val.checkedIn && val.passId) {
+              locallyAdmittedPasses.set(val.passId.toUpperCase(), val.checkInTime);
+            }
+          });
+
           localRoster.clear();
           let admittedCount = 0;
 
           data.roster.forEach(delegate => {
-            // Index by Pass ID, Reg ID, and uppercase Name for fast lookup
+            const passKey = (delegate.passId || "").toUpperCase();
+
+            // Retain local check-in if cloud snapshot hasn't processed sync yet
+            if (locallyAdmittedPasses.has(passKey)) {
+              delegate.checkedIn = true;
+              delegate.checkInTime = locallyAdmittedPasses.get(passKey);
+            }
+
             if (delegate.passId) localRoster.set(delegate.passId.toUpperCase(), delegate);
             if (delegate.regId) localRoster.set(delegate.regId.toUpperCase(), delegate);
             if (delegate.name) localRoster.set(delegate.name.toUpperCase().trim(), delegate);
@@ -653,13 +694,11 @@
           document.getElementById("counterText").innerText = `${admittedCount} / ${data.totalApproved}`;
           if (statusText) statusText.innerText = `Roster Ready (${data.totalApproved} Passes)`;
           
-          // Save a backup snapshot to localStorage in case page is refreshed while offline
           localStorage.setItem("GGEN_CACHED_ROSTER", JSON.stringify(data.roster));
-          console.log(`✅ Loaded ${data.totalApproved} delegates locally.`);
+          console.log(`✅ Loaded & merged ${data.totalApproved} delegates locally.`);
         }
       } catch (err) {
         console.warn("⚠️ Network sync failed, checking offline cache...", err);
-        // Fallback to cached copy if internet is down
         const cached = localStorage.getItem("GGEN_CACHED_ROSTER");
         if (cached) {
           const rosterArr = JSON.parse(cached);
