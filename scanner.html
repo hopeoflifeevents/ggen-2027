@@ -432,12 +432,151 @@
       }
     }
 
-    // QR Success
+    // Anti-bounce filter: Prevents re-scanning the same phone while delegate pulls it away
+    let lastScannedCode = "";
+    let lastScannedTime = 0;
+
+    // QR Success from Camera
     async function onScanSuccess(decodedText) {
       if (isProcessing) return;
+
+      let raw = decodedText ? decodedText.toString().trim() : "";
+      if (raw.includes('|')) {
+        raw = raw.split('|')[0].trim();
+      }
+      const cleanCode = raw.toUpperCase();
+
+      // Debounce: ignore same code scanned within 3 seconds
+      const now = Date.now();
+      if (cleanCode === lastScannedCode && (now - lastScannedTime) < 3000) {
+        return;
+      }
+
       isProcessing = true;
-      document.getElementById("laser").style.display = "none";
-      await processPassVerification(decodedText);
+      lastScannedCode = cleanCode;
+      lastScannedTime = now;
+
+      // Pause laser line
+      const laser = document.getElementById("laser");
+      if (laser) laser.style.display = "none";
+
+      // Gentle haptic feedback for phone detection
+      if (navigator.vibrate) navigator.vibrate(60);
+
+      // Process and display confirmation modal
+      await processPassVerification(cleanCode);
+    }
+
+    // Resolves delegate and opens the Review & Confirm modal
+    async function processPassVerification(code) {
+      if (!code) {
+        isProcessing = false;
+        return;
+      }
+
+      let cleanCode = code.toString().trim();
+      if (cleanCode.includes('|')) {
+        cleanCode = cleanCode.split('|')[0].trim();
+      }
+      cleanCode = cleanCode.toUpperCase();
+
+      // 1. Check local in-memory roster
+      let delegate = isRosterLoaded ? localRoster.get(cleanCode) : null;
+
+      // 2. Local partial search fallback if queried by partial name/ID
+      if (!delegate && isRosterLoaded && cleanCode.length >= 3) {
+        const partialMatches = [];
+        const seenPasses = new Set();
+
+        localRoster.forEach((record) => {
+          if (record && record.passId && !seenPasses.has(record.passId)) {
+            seenPasses.add(record.passId);
+            const dName = (record.name || "").toUpperCase();
+            const dReg = (record.regId || "").toUpperCase();
+
+            if (dName.includes(cleanCode) || dReg.includes(cleanCode)) {
+              partialMatches.push(record);
+            }
+          }
+        });
+
+        if (partialMatches.length === 1) {
+          delegate = partialMatches[0];
+        }
+      }
+
+      // If found in local roster, show confirmation modal immediately!
+      if (delegate) {
+        openConfirmModal(delegate.passId);
+        return;
+      }
+
+      // 3. Fallback to Cloud if pass is newly added or not cached locally
+      await fallbackCloudLookup(cleanCode);
+    }
+
+    // Cloud query fallback for unknown QR codes
+    async function fallbackCloudLookup(cleanCode) {
+      const statusText = document.getElementById("cameraStatusText");
+      if (statusText) statusText.innerText = "Querying Cloud...";
+
+      try {
+        const response = await fetch(`${APPS_SCRIPT_API_URL}?action=checkIn&query=${encodeURIComponent(cleanCode)}`);
+        const result = await response.json();
+
+        if (result && result.success && result.delegate) {
+          // Add newly discovered delegate into local roster so next scan is instant
+          const d = {
+            passId: result.delegate.passId,
+            name: result.delegate.name,
+            church: result.delegate.church,
+            tier: result.delegate.tier,
+            checkedIn: true,
+            checkInTime: result.delegate.checkInTime
+          };
+
+          localRoster.set(d.passId.toUpperCase(), d);
+          localRoster.set(d.name.toUpperCase(), d);
+
+          // Delegate was already verified on cloud, pop confirmation modal
+          openConfirmModal(d.passId);
+
+        } else if (result && result.errorType === 'ALREADY_CHECKED_IN') {
+          playBeep('error');
+          const d = result.delegate || {};
+          showModal('warning', {
+            title: "ALREADY CHECKED IN",
+            badge: "DUPLICATE ENTRY DETECTED",
+            name: d.name || "Known Delegate",
+            church: d.church || "N/A",
+            passId: d.passId || cleanCode,
+            tier: d.tier || "STANDARD",
+            time: result.message || "Pass was already scanned"
+          });
+        } else {
+          playBeep('error');
+          showModal('error', {
+            title: "PASS NOT FOUND",
+            badge: "ACCESS DENIED",
+            name: "Unknown Pass",
+            church: "Not in approved list",
+            passId: cleanCode,
+            time: result ? result.message : "Not found in database."
+          });
+        }
+      } catch (err) {
+        playBeep('error');
+        showModal('error', {
+          title: "LOOKUP FAILED",
+          badge: "OFFLINE / TIMEOUT",
+          name: "Connection Interrupted",
+          church: "Please check desk",
+          passId: cleanCode,
+          time: "Network request failed. Try manual search."
+        });
+      } finally {
+        if (statusText && isRosterLoaded) statusText.innerText = `Roster Ready (${localRoster.size} Entries)`;
+      }
     }
 
     // Global variable tracking the delegate currently selected in the confirmation modal
@@ -607,6 +746,13 @@
       const modal = document.getElementById("confirmCheckInModal");
       if (modal) modal.classList.add("hidden");
       pendingDelegateToAdmit = null;
+
+      // Resume camera scanning & laser line if camera was active
+      setTimeout(() => {
+        const laser = document.getElementById("laser");
+        if (laser) laser.style.display = "block";
+        isProcessing = false;
+      }, 300);
     }
 
     // Executed when clicking "CONFIRM ENTRY" inside the confirmation modal
@@ -664,128 +810,6 @@
         passId: delegate.passId,
         time: `Admitted at ${nowTime}`
       });
-    }
-
-    // Direct Camera Scanner Check-In (Leaves 1-shot QR camera scans instant)
-    async function processPassVerification(code) {
-      if (!code) return;
-
-      let cleanCode = code.toString().trim();
-      if (cleanCode.includes('|')) {
-        cleanCode = cleanCode.split('|')[0].trim();
-      }
-      cleanCode = cleanCode.toUpperCase();
-
-      if (isRosterLoaded && localRoster.has(cleanCode)) {
-        const delegate = localRoster.get(cleanCode);
-
-        if (delegate.checkedIn) {
-          playBeep('error');
-          showModal('warning', {
-            title: "ALREADY CHECKED IN",
-            badge: "DUPLICATE ENTRY DETECTED",
-            name: delegate.name,
-            church: delegate.church,
-            passId: delegate.passId,
-            tier: delegate.tier || "STANDARD",
-            time: `Admitted at ${delegate.checkInTime || "earlier"}`
-          });
-          return;
-        }
-
-        const nowTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-        delegate.checkedIn = true;
-        delegate.checkInTime = nowTime;
-
-        playBeep('success');
-        addRecentScan({
-          name: delegate.name,
-          church: delegate.church,
-          passId: delegate.passId,
-          tier: delegate.tier,
-          time: nowTime
-        });
-
-        showModal('success', {
-          title: "DELEGATE ADMITTED",
-          badge: "ENTRY VERIFIED ● PASS ACTIVE",
-          name: delegate.name,
-          church: delegate.church,
-          tier: delegate.tier,
-          passId: delegate.passId,
-          time: `Admitted at ${nowTime}`
-        });
-
-        const counter = document.getElementById("counterText");
-        if (counter) {
-          const parts = counter.innerText.split('/');
-          if (parts.length === 2) {
-            const current = parseInt(parts[0].trim(), 10) || 0;
-            const total = parts[1].trim();
-            counter.innerText = `${current + 1} / ${total}`;
-          }
-        }
-
-        syncCheckInToCloud(delegate.passId);
-        return;
-      }
-
-      // Cloud Fallback for unknown QR passes
-      fallbackCloudLookup(cleanCode);
-    }
-
-    async function fallbackCloudLookup(cleanCode) {
-      try {
-        const response = await fetch(`${APPS_SCRIPT_API_URL}?action=checkIn&query=${encodeURIComponent(cleanCode)}`);
-        const result = await response.json();
-
-        if (result && result.success) {
-          playBeep('success');
-          addRecentScan(result.delegate);
-          showModal('success', {
-            title: "DELEGATE ADMITTED",
-            badge: "ENTRY VERIFIED ● PASS ACTIVE",
-            name: result.delegate.name,
-            church: result.delegate.church,
-            tier: result.delegate.tier,
-            passId: result.delegate.passId,
-            time: result.delegate.checkInTime
-          });
-          syncRosterFromCloud();
-        } else if (result && result.errorType === 'ALREADY_CHECKED_IN') {
-          playBeep('error');
-          const d = result.delegate || {};
-          showModal('warning', {
-            title: "ALREADY CHECKED IN",
-            badge: "DUPLICATE ENTRY DETECTED",
-            name: d.name || "Known Delegate",
-            church: d.church || "N/A",
-            passId: d.passId || cleanCode,
-            tier: d.tier || "STANDARD",
-            time: result.message || "Pass was already scanned"
-          });
-        } else {
-          playBeep('error');
-          showModal('error', {
-            title: "PASS NOT FOUND",
-            badge: "ACCESS DENIED",
-            name: "Unknown Delegate",
-            church: "N/A",
-            passId: cleanCode,
-            time: result ? result.message : "Not in authorized roster."
-          });
-        }
-      } catch (err) {
-        playBeep('error');
-        showModal('error', {
-          title: "LOOKUP FAILED",
-          badge: "OFFLINE / TIMEOUT",
-          name: "Connection Interrupted",
-          church: "Please check desk",
-          passId: cleanCode,
-          time: "Network request failed. Try manual code."
-        });
-      }
     }
 
     function escapeHtml(text) {
@@ -918,7 +942,7 @@
         modal.classList.add("hidden");
         document.getElementById("laser").style.display = "block";
         document.getElementById("manualCode").value = "";
-        isProcessing = false;
+        isProcessing = false; // Re-arms camera for next attendee
       }, 200);
     }
 
