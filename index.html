@@ -886,17 +886,21 @@
       }
 
       const CLIENT_CACHE_KEY = "GGEN_CONTENT_SESSION_CACHE";
+      const CLIENT_CACHE_TIME_KEY = "GGEN_CONTENT_CACHE_TIMESTAMP";
+      const CACHE_LIFETIME_MS = 60 * 1000; // 60 Seconds Cache
 
-      // 1. Check if browser session already has the content
+      // 1. Check if browser session has fresh (less than 60s old) content
       const cached = sessionStorage.getItem(CLIENT_CACHE_KEY);
-      if (cached) {
+      const cacheTime = Number(sessionStorage.getItem(CLIENT_CACHE_TIME_KEY)) || 0;
+
+      if (cached && (Date.now() - cacheTime < CACHE_LIFETIME_MS)) {
         try {
           const cachedData = JSON.parse(cached);
           if (cachedData && cachedData.pricing) renderPricingTiers(cachedData.pricing);
           if (cachedData && cachedData.speakers) renderSpeakers(cachedData.speakers);
           if (cachedData && cachedData.team) renderTeam(cachedData.team);
           lucide.createIcons();
-          return; // Instant render complete! Zero server calls.
+          return;
         } catch (e) {
           sessionStorage.removeItem(CLIENT_CACHE_KEY);
         }
@@ -904,12 +908,12 @@
 
       // 2. Fetch fresh content from Apps Script
       try {
-        const response = await fetch(`${APPS_SCRIPT_API_URL}?action=getContent`);
+        const response = await fetch(`${APPS_SCRIPT_API_URL}?action=getContent&t=${Date.now()}`);
         const data = await response.json();
 
         if (data.success) {
-          // Save in browser session
           sessionStorage.setItem(CLIENT_CACHE_KEY, JSON.stringify(data));
+          sessionStorage.setItem(CLIENT_CACHE_TIME_KEY, Date.now().toString());
 
           if (data.pricing) renderPricingTiers(data.pricing);
           renderSpeakers(data.speakers);
@@ -2247,20 +2251,26 @@
       }
     }
 
-    // Dynamically builds delegate boxes up to 6 pax (supports 5+1)
+    // Dynamically builds delegate boxes up to 6 pax (supports B1T1 and 5+1 promos)
     function renderAdditionalMemberFields() {
       const container = document.getElementById("additionalMembersContainer");
       if (!container) return;
 
       const isBundle = isBundleTier(currentSelectedTierObj);
 
-      // Preserve previously typed values up to 6 members
+      // Preserve previously typed values so user input isn't lost
       const existingValues = [];
       for (let i = 2; i <= 6; i++) {
-        membersData.push({
+        existingValues[i] = {
           name: document.getElementById(`member_name_${i}`)?.value || "",
           email: document.getElementById(`member_email_${i}`)?.value || ""
-        });
+        };
+      }
+
+      // If single pax, clear any extra boxes
+      if (currentPaxCount <= 1) {
+        container.innerHTML = "";
+        return;
       }
 
       let html = "";
@@ -2271,7 +2281,7 @@
         // Contextual badge for promos
         let memberRoleBadge = "Group Member";
         if (isBundle) {
-          if (currentSelectedTierObj.name.includes("5+1") && i === 6) {
+          if (currentSelectedTierObj?.name?.includes("5+1") && i === 6) {
             memberRoleBadge = "🎁 Free Included Pass (6th Pax)";
           } else {
             memberRoleBadge = "🎁 Included Promo Pass";
@@ -2292,14 +2302,14 @@
               <div class="relative">
                 <i data-lucide="user" class="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
                 <input type="text" id="member_name_${i}" required value="${prevName}" placeholder="Full Name (Delegate #${i})"
-                  oninput="saveFormDraft()"
+                  oninput="if (typeof saveFormDraft === 'function') saveFormDraft();"
                   class="w-full bg-slate-800/60 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400 transition" />
               </div>
 
               <div class="relative">
                 <i data-lucide="mail" class="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
                 <input type="email" id="member_email_${i}" required value="${prevEmail}" placeholder="Email (Pass delivered here)"
-                  oninput="saveFormDraft()"
+                  oninput="if (typeof saveFormDraft === 'function') saveFormDraft();"
                   class="w-full bg-slate-800/60 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400 transition" />
               </div>
             </div>
@@ -2308,7 +2318,9 @@
       }
 
       container.innerHTML = html;
-      lucide.createIcons();
+      if (window.lucide && typeof lucide.createIcons === "function") {
+        lucide.createIcons();
+      }
     }
   </script>
 
