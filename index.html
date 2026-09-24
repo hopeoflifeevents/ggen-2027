@@ -1552,7 +1552,7 @@
         return;
       }
 
-      // 3. Compile & Validate All Batch Members (1 to 5 Pax)
+      // 3. Compile & Validate All Batch Members (1 to 6 Pax)
       const leadName = (document.getElementById("fullName")?.value || "").trim();
       const leadEmail = (document.getElementById("email")?.value || "").trim().toLowerCase();
       const leadContact = (document.getElementById("contact")?.value || "").trim();
@@ -1574,10 +1574,11 @@
         }
       ];
 
-      // Process Additional Group / Promo Members (Delegates 2 through N - Option B Flexible)
-      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      // Declare isBundle once for the entire submit scope
       const isBundle = isBundleTier(currentSelectedTierObj);
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
+      // Process Additional Group / Promo Members (Delegates 2 through N - Option B Flexible)
       for (let i = 2; i <= currentPaxCount; i++) {
         const mNameInput = document.getElementById(`member_name_${i}`);
         const mEmailInput = document.getElementById(`member_email_${i}`);
@@ -1635,13 +1636,12 @@
         }
       }, 2200);
 
-      // Resolve Active Tier details
+      // Resolve Active Tier details & pricing
       const tierId = currentSelectedTierObj?.tierId || document.getElementById("selectedTierId")?.value || "EARLY";
       const tierName = currentSelectedTierObj?.name || document.getElementById("selectedTierName")?.value || "Pass";
-      const isBundle = isBundleTier(currentSelectedTierObj);
       const pricePerPax = currentSelectedTierObj?.price || Number(document.getElementById("selectedTierPrice")?.value) || 0;
       
-      // For bundle: totalAmount is the flat rate; for flexible: price * count
+      // Calculate total amount (Flat bundle rate vs. Per-head flexible rate)
       const totalAmount = isBundle ? pricePerPax : (pricePerPax * currentPaxCount);
 
       const payload = {
@@ -1692,7 +1692,7 @@
           }
 
           // Clear mobile auto-draft from localStorage
-          localStorage.removeItem("GGEN_REG_DRAFT_2027");
+          localStorage.removeItem(DRAFT_STORAGE_KEY);
 
           // Build member summary pills for confirmation screen
           const membersPills = (result.registeredMembers || members).map((m, idx) => `
