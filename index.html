@@ -1566,6 +1566,12 @@
       const btn = document.getElementById("submitBtn");
       const feedback = document.getElementById("feedback");
 
+      // 0. Validate Selected Tier Availability (Prevents submitting expired/sold-out tiers)
+      if (currentSelectedTierObj && currentSelectedTierObj.isAvailable === false) {
+        alert(`⚠️ The selected pass tier "${currentSelectedTierObj.name}" is currently ${currentSelectedTierObj.statusType === 'SOLD_OUT' ? 'sold out' : 'closed/unavailable'}. Please choose an active tier.`);
+        return;
+      }
+
       // 1. Validate Lead Delegate Email
       const isEmailValid = checkEmailField();
       if (!isEmailValid) {
