@@ -1665,7 +1665,10 @@
       }, 900);
 
       const progressTimer2 = setTimeout(() => {
-        if (btn.disabled) btn.innerHTML = `${spinnerSvg} <span>SECURING GROUP PASSES...</span>`;
+        if (btn.disabled) {
+          const text = currentPaxCount > 1 ? "SECURING GROUP PASSES..." : "SECURING YOUR PASS...";
+          btn.innerHTML = `${spinnerSvg} <span>${text}</span>`;
+        }
       }, 2200);
 
       // Resolve Active Tier details
@@ -1733,28 +1736,42 @@
 
           setTimeout(() => {
             feedback.classList.remove("hidden");
+
+            const finalPax = result.paxCount || currentPaxCount;
+            const isSingle = (finalPax <= 1);
+            const primaryRegId = result.registeredMembers?.[0]?.regId || result.batchId || "GGEN-PASS";
+
             feedback.innerHTML = `
               <div class="bg-amber-950/40 border border-amber-500/50 rounded-2xl p-4 sm:p-5 text-amber-200 shadow-2xl">
                 <div class="flex items-center gap-1.5 text-amber-400 font-bold text-[11px] uppercase tracking-wider mb-1">
                   <i data-lucide="clock" class="w-3.5 h-3.5"></i>
                   <span>STATUS: PAYMENT VERIFICATION IN PROGRESS</span>
                 </div>
-                <div class="font-bebas text-2xl sm:text-3xl text-white">GROUP REGISTRATION SUBMITTED!</div>
+                
+                <div class="font-bebas text-2xl sm:text-3xl text-white">
+                  ${isSingle ? 'REGISTRATION SUBMITTED!' : 'GROUP REGISTRATION SUBMITTED!'}
+                </div>
+                
                 <p class="text-xs text-slate-300 mt-1">
-                  Thank you, <strong class="text-white">${result.leadName || leadName}</strong>. Batch ID: 
-                  <span class="font-mono-code bg-black/50 text-amber-300 px-2 py-0.5 rounded font-bold">${result.batchId || "BATCH"}</span>
+                  Thank you, <strong class="text-white">${result.leadName || leadName}</strong>. 
+                  ${isSingle ? 'Reference No:' : 'Batch ID:'} 
+                  <span class="font-mono-code bg-black/50 text-amber-300 px-2 py-0.5 rounded font-bold">
+                    ${isSingle ? primaryRegId : (result.batchId || "BATCH")}
+                  </span>
                 </p>
 
-                <!-- Registered Delegates Breakdown -->
+                <!-- Registered Delegate(s) Breakdown -->
                 <div class="my-3 bg-slate-950/70 border border-white/10 rounded-xl p-3">
                   <div class="text-[9px] font-mono-code uppercase text-slate-400 font-bold mb-1">
-                    Registered Delegates (${result.paxCount || currentPaxCount} Pax • Total ₱${result.totalAmount || totalAmount}):
+                    ${isSingle ? 'Registered Delegate' : `Registered Delegates (${finalPax} Pax)`} • Total ₱${result.totalAmount || totalAmount}:
                   </div>
                   ${membersPills}
                 </div>
 
                 <p class="text-[11px] text-slate-400 leading-relaxed">
-                  Your payment receipt has been received in our verification queue. Once our finance committee approves the transfer, <strong>individual admission passes with unique QR barcodes</strong> will be emailed to each registered delegate!
+                  Your payment receipt has been received in our verification queue. Once our finance committee approves the transfer, 
+                  <strong>${isSingle ? 'your official admission pass with a unique QR barcode' : 'individual admission passes with unique QR barcodes'}</strong> 
+                  will be emailed to ${isSingle ? 'you' : 'each registered delegate'}!
                 </p>
               </div>
             `;
