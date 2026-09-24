@@ -1574,31 +1574,34 @@
         }
       ];
 
-      // Validate Additional Group Members (Delegates 2 through N)
+      // Process Additional Group / Promo Members (Delegates 2 through N - Option B Flexible)
       const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      const isBundle = isBundleTier(currentSelectedTierObj);
+
       for (let i = 2; i <= currentPaxCount; i++) {
         const mNameInput = document.getElementById(`member_name_${i}`);
         const mEmailInput = document.getElementById(`member_email_${i}`);
-        const mName = (mNameInput?.value || "").trim();
+        const rawName = (mNameInput?.value || "").trim();
         let mEmail = (mEmailInput?.value || "").trim().toLowerCase();
 
-        if (!mName) {
-          alert(`⚠️ Please provide the Full Name for Delegate #${i}.`);
-          mNameInput?.focus();
-          return;
+        // Option B: If companion name is blank, assign default Guest/Companion title
+        let finalMemberName = rawName;
+        if (!finalMemberName) {
+          const companionTag = isBundle ? `Companion #${i}` : `Guest #${i}`;
+          finalMemberName = `${leadName} (${companionTag})`;
         }
 
-        // If member email is left blank, fallback to Lead email so tickets aren't lost
+        // If email is blank, pass will be sent to Delegate #1 (Lead)
         if (!mEmail) {
           mEmail = leadEmail;
         } else if (!emailRegex.test(mEmail)) {
-          alert(`⚠️ Invalid email address format for Delegate #${i}.`);
+          alert(`⚠️ Invalid email address format for Delegate #${i}. Please correct or leave blank.`);
           mEmailInput?.focus();
           return;
         }
 
         members.push({
-          fullName: mName,
+          fullName: finalMemberName,
           email: mEmail,
           contact: "",
           isLead: false
@@ -2251,7 +2254,7 @@
       }
     }
 
-    // Dynamically builds delegate boxes up to 6 pax (supports B1T1 and 5+1 promos)
+    // Dynamically builds delegate boxes up to 6 pax (Option B: Companion fields are optional)
     function renderAdditionalMemberFields() {
       const container = document.getElementById("additionalMembersContainer");
       if (!container) return;
@@ -2279,10 +2282,10 @@
         const prevEmail = existingValues[i]?.email || "";
 
         // Contextual badge for promos
-        let memberRoleBadge = "Group Member";
+        let memberRoleBadge = "Optional Companion";
         if (isBundle) {
           if (currentSelectedTierObj?.name?.includes("5+1") && i === 6) {
-            memberRoleBadge = "🎁 Free Included Pass (6th Pax)";
+            memberRoleBadge = "🎁 Free Pass (6th Pax)";
           } else {
             memberRoleBadge = "🎁 Included Promo Pass";
           }
@@ -2295,20 +2298,20 @@
                 <span class="w-1.5 h-1.5 rounded-full ${isBundle ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}"></span>
                 <span>Delegate #${i} (${memberRoleBadge})</span>
               </span>
-              <span class="text-slate-500">Unique Pass Issued</span>
+              <span class="text-amber-400/90 font-mono-code font-normal text-[9.5px]">Optional (Defaults to Guest)</span>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <div class="relative">
                 <i data-lucide="user" class="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-                <input type="text" id="member_name_${i}" required value="${prevName}" placeholder="Full Name (Delegate #${i})"
+                <input type="text" id="member_name_${i}" value="${prevName}" placeholder="Full Name (Optional - or leave blank)"
                   oninput="if (typeof saveFormDraft === 'function') saveFormDraft();"
                   class="w-full bg-slate-800/60 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400 transition" />
               </div>
 
               <div class="relative">
                 <i data-lucide="mail" class="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-                <input type="email" id="member_email_${i}" required value="${prevEmail}" placeholder="Email (Pass delivered here)"
+                <input type="email" id="member_email_${i}" value="${prevEmail}" placeholder="Email (Optional - pass sent to Lead)"
                   oninput="if (typeof saveFormDraft === 'function') saveFormDraft();"
                   class="w-full bg-slate-800/60 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400 transition" />
               </div>
