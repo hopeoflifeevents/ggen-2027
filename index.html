@@ -1805,15 +1805,7 @@
               result.batchId || 
               (result.registeredMembers && result.registeredMembers[0] && result.registeredMembers[0].regId) ||
               `GGEN-${Date.now().toString().slice(-4)}`;
-
-            <p class="text-xs text-slate-300 mt-1">
-              Thank you, <strong class="text-white">${result.leadName || leadName}</strong>. 
-              ${isSingle ? 'Reference No:' : 'Batch ID:'} 
-              <span class="font-mono-code bg-black/50 text-amber-300 px-2 py-0.5 rounded font-bold">
-                ${isSingle ? primaryRegId : (result.batchId || primaryRegId)}
-              </span>
-            </p>
-
+  
             feedback.innerHTML = `
               <div class="bg-amber-950/40 border border-amber-500/50 rounded-2xl p-4 sm:p-5 text-amber-200 shadow-2xl">
                 <div class="flex items-center gap-1.5 text-amber-400 font-bold text-[11px] uppercase tracking-wider mb-1">
@@ -1829,18 +1821,10 @@
                   Thank you, <strong class="text-white">${result.leadName || leadName}</strong>. 
                   ${isSingle ? 'Reference No:' : 'Batch ID:'} 
                   <span class="font-mono-code bg-black/50 text-amber-300 px-2 py-0.5 rounded font-bold">
-                    ${isSingle ? primaryRegId : (result.batchId || "BATCH")}
+                    ${isSingle ? primaryRegId : (result.batchId || primaryRegId)}
                   </span>
                 </p>
-
-                <div class="mt-3.5 pt-3 border-t border-amber-500/20">
-                  <button type="button" onclick="openStoryModal('${result.leadName || leadName}', '${affiliation}', '${tierName}')"
-                    class="w-full min-h-[46px] bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 text-slate-950 font-mono-code font-black text-xs py-3 px-4 rounded-xl transition flex items-center justify-center gap-2 shadow-xl shadow-amber-400/30 active:scale-[0.98] cursor-pointer">
-                    <i data-lucide="sparkles" class="w-4 h-4 text-slate-950 flex-shrink-0"></i>
-                    <span>POST "I'M ATTENDING" ON INSTAGRAM / TIKTOK</span>
-                  </button>
-                </div>
-
+  
                 <!-- Registered Delegate(s) Breakdown -->
                 <div class="my-3 bg-slate-950/70 border border-white/10 rounded-xl p-3">
                   <div class="text-[9px] font-mono-code uppercase text-slate-400 font-bold mb-1">
@@ -1848,8 +1832,17 @@
                   </div>
                   ${membersPills}
                 </div>
-
-                <p class="text-[11px] text-slate-400 leading-relaxed">
+  
+                <!-- Celebratory Instagram & TikTok Story Button -->
+                <div class="mt-3.5 pt-3 border-t border-amber-500/20">
+                  <button type="button" onclick="openStoryModal('${result.leadName || leadName}', '${affiliation}', '${tierName}')"
+                    class="w-full min-h-[46px] bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 text-slate-950 font-mono-code font-black text-xs py-3 px-4 rounded-xl transition flex items-center justify-center gap-2 shadow-xl shadow-amber-400/30 active:scale-[0.98] cursor-pointer">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-slate-950 flex-shrink-0"></i>
+                    <span>POST "I'M ATTENDING" ON INSTAGRAM / TIKTOK</span>
+                  </button>
+                </div>
+  
+                <p class="text-[11px] text-slate-400 leading-relaxed mt-3">
                   Your payment receipt has been received in our verification queue. Once our finance committee approves the transfer, 
                   <strong>${isSingle ? 'your official admission pass with a unique QR barcode' : 'individual admission passes with unique QR barcodes'}</strong> 
                   will be emailed to ${isSingle ? 'you' : 'each registered delegate'}!
