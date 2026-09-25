@@ -1065,7 +1065,7 @@
     }
 
     // ==============================================================
-    // COMPLETE ERROR-FREE RENDER PRICING TIERS
+    // FAIL-PROOF RENDER PRICING TIERS
     // ==============================================================
     function renderPricingTiers(tiers) {
       const container = document.getElementById("pricingTiersContainer");
@@ -1076,20 +1076,17 @@
       // 1. Evaluate Date Validity and Status for each tier
       const evaluatedTiers = tiers.map(tier => {
         let isAvailable = true;
-        let statusType = "ACTIVE"; // ACTIVE, OPENS_SOON, EXPIRED, SOLD_OUT
+        let statusType = "ACTIVE";
         let dateBadgeText = "";
 
-        // Build human-friendly date range string
         const coverageText = (typeof buildCoverageDateText === "function") 
           ? buildCoverageDateText(tier.startDate, tier.endDate) 
           : "";
 
-        // Check manual override from Google Sheet
         if (tier.status === "SOLD_OUT") {
           isAvailable = false;
           statusType = "SOLD_OUT";
         } else {
-          // Check Start Date in Philippine Standard Time
           if (tier.startDate) {
             const start = parsePhilippineDate(tier.startDate, false);
             if (start && !isNaN(start.getTime()) && now < start) {
@@ -1099,7 +1096,6 @@
             }
           }
 
-          // Check End Date in Philippine Standard Time
           if (isAvailable && tier.endDate) {
             const end = parsePhilippineDate(tier.endDate, true);
             if (end && !isNaN(end.getTime())) {
@@ -1123,10 +1119,8 @@
         };
       });
 
-      // 2. STORE GLOBALLY
       activeTiersList = evaluatedTiers;
 
-      // 3. Select default tier: prioritize saved draft tier if available, else first active tier
       let defaultIdx = evaluatedTiers.findIndex(t => t.isAvailable);
       if (window._savedDraftTierId) {
         const draftIdx = evaluatedTiers.findIndex(t => t.tierId === window._savedDraftTierId && t.isAvailable);
@@ -1134,16 +1128,13 @@
       }
       if (defaultIdx === -1) defaultIdx = 0;
 
-      // Initialize global selected tier object
       if (evaluatedTiers[defaultIdx] && evaluatedTiers[defaultIdx].isAvailable) {
         currentSelectedTierObj = evaluatedTiers[defaultIdx];
       }
 
-      // 4. Render HTML Cards
       container.innerHTML = evaluatedTiers.map((tier, idx) => {
         const isSelected = idx === defaultIdx && tier.isAvailable;
 
-        // Synchronize hidden inputs and Section 3 QR card on initial render
         if (isSelected) {
           const tierIdInput = document.getElementById("selectedTierId");
           const tierNameInput = document.getElementById("selectedTierName");
@@ -1154,7 +1145,6 @@
           if (tierPriceInput) tierPriceInput.value = tier.price;
         }
 
-        // Build Status Pill Badge
         let statusBadgeHtml = '';
         if (tier.statusType === 'ACTIVE') {
           statusBadgeHtml = `
@@ -1182,11 +1172,35 @@
           `;
         }
 
-        // DYNAMIC SQUAD SAVINGS CALLOUT (Editable from Google Sheets Column S)
-        const savingsBadgeHtml = tier.savingsCallout ? `
-          <span class="inline-flex items-center gap-1 text-[9px] font-mono-code font-extrabold uppercase text-emerald-300 bg-emerald-500/15 border border-emerald-500/40 px-2 py-0.5 rounded-md shadow-sm">
+        // -------------------------------------------------------------
+        // RESOLVE SAVINGS CALLOUT (SHEET COLUMN S OR AUTO-CALCULATION)
+        // -------------------------------------------------------------
+        let savingsText = (tier.savingsCallout || "").trim();
+        
+        // If Sheet Column S is empty or still cached, auto-match your sheet values:
+        if (!savingsText) {
+          const orig = Number(tier.originalPrice) || 0;
+          const cur = Number(tier.price) || 0;
+          const nameUpper = (tier.name || "").toUpperCase();
+
+          if (nameUpper.includes("B1T1") || nameUpper.includes("BUY 1 TAKE 1") || nameUpper.includes("2-FOR-1")) {
+            savingsText = "1 Delegate Enters 100% FREE!";
+          } else if (nameUpper.includes("5+1") || nameUpper.includes("SQUAD6") || nameUpper.includes("6 PAX")) {
+            savingsText = "1 Enters FREE (Save ₱1,000)";
+          } else if (orig > cur) {
+            savingsText = `Save ₱${(orig - cur).toLocaleString()} vs Regular`;
+          }
+        }
+
+        // Don't show badge if regular price
+        if (savingsText.toLowerCase().includes("regular price")) {
+          savingsText = "";
+        }
+
+        const savingsBadgeHtml = savingsText ? `
+          <span class="inline-flex items-center gap-1 font-mono-code font-extrabold text-[9px] uppercase px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm">
             <i data-lucide="tag" class="w-2.5 h-2.5 text-emerald-400 flex-shrink-0"></i>
-            <span>${tier.savingsCallout}</span>
+            <span>${savingsText}</span>
           </span>
         ` : '';
 
@@ -1210,7 +1224,6 @@
               </div>
 
               <div class="min-w-0">
-                <!-- THIS IS WHERE IT GOES -->
                 <div class="flex items-center gap-2 flex-wrap">
                   <span class="font-bebas text-lg sm:text-xl tracking-wider text-white leading-tight">
                     ${tier.name}
@@ -1259,7 +1272,6 @@
         `;
       }).join('');
 
-      // 5. Synchronize Batch Stepper & GCash Card immediately
       if (typeof updateBatchUI === "function") {
         updateBatchUI();
       }
