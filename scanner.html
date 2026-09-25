@@ -1095,7 +1095,7 @@
     }
 
     // ==============================================================
-    // AUTOMATIC MULTI-GATE BACKGROUND SYNC HEARTBEAT (EVERY 20 SECONDS)
+    // SMART MULTI-GATE BACKGROUND SYNC (PAUSES ON SCREEN LOCK)
     // ==============================================================
     let backgroundSyncInterval = null;
     
@@ -1103,7 +1103,10 @@
       if (backgroundSyncInterval) clearInterval(backgroundSyncInterval);
     
       backgroundSyncInterval = setInterval(async () => {
-        // Don't poll if volunteer is actively reviewing someone in the confirmation modal
+        // 1. Quota Guard: Pause polling if screen is locked or tab is minimized
+        if (document.hidden) return;
+    
+        // 2. Pause if volunteer is actively reviewing someone or offline
         if (!navigator.onLine || isProcessing || pendingDelegateToAdmit) return;
     
         try {
@@ -1119,37 +1122,40 @@
               const local = localRoster.get(key);
     
               if (local) {
-                // If another gate marked this delegate as checked in, update our local memory silently
                 if (remote.checkedIn && !local.checkedIn) {
                   local.checkedIn = true;
                   local.checkInTime = remote.checkInTime;
                   freshAdmissions++;
                 }
               } else {
-                // New approved delegate added during the event
                 localRoster.set(key, remote);
                 if (remote.name) localRoster.set(remote.name.toUpperCase().trim(), remote);
               }
             });
     
-            // Refresh stats badge silently
             fetchStats();
     
             if (freshAdmissions > 0) {
-              console.log(`🔄 Synced ${freshAdmissions} new admission(s) from other gates.`);
+              console.log(`🔄 Synced ${freshAdmissions} admission(s) from other gates.`);
             }
           }
         } catch (e) {
-          // Silent failover; don't bother the volunteer
+          // Silent failover
         }
-      }, 20000); // Polls every 20 seconds
+      }, 35000); // Polls every 35 seconds (saving ~45% quota compared to 20s)
     }
+    
+    // Immediately resume sync the moment the volunteer unlocks their phone screen
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden && navigator.onLine) {
+        syncRosterFromCloud();
+      }
+    });
 
-    document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener("DOMContentLoaded", async () => {
       requestCameraAccess();
-      syncRosterFromCloud().then(() => {
-        startHeartbeatSync(); // Starts multi-gate sync once initial roster is loaded
-      });
+      await syncRosterFromCloud();
+      startHeartbeatSync(); // Starts multi-gate sync once initial roster is loaded
     });
   </script>
 </body>
