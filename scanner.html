@@ -800,7 +800,11 @@
     
           const response = await fetch(APPS_SCRIPT_API_URL, {
             method: 'POST',
-            body: JSON.stringify({ action: 'checkIn', query: delegate.passId }),
+            body: JSON.stringify({ 
+              action: 'checkIn', 
+              query: delegate.passId,
+              passKey: getGatePasskey() // Security Passkey
+            }),
             signal: controller.signal
           });
           clearTimeout(timeoutId);
@@ -894,7 +898,11 @@
       try {
         const res = await fetch(APPS_SCRIPT_API_URL, {
           method: 'POST',
-          body: JSON.stringify({ action: 'checkIn', query: passId })
+          body: JSON.stringify({ 
+            action: 'checkIn', 
+            query: passId,
+            passKey: getGatePasskey() // Security Passkey
+          })
         });
         const data = await res.json();
         console.log(`☁️ Synced ${passId} to cloud:`, data.message || "OK");
@@ -1145,12 +1153,49 @@
       }, 35000); // Polls every 35 seconds (saving ~45% quota compared to 20s)
     }
     
-    // Immediately resume sync the moment the volunteer unlocks their phone screen
-    document.addEventListener("visibilitychange", () => {
-      if (!document.hidden && navigator.onLine) {
-        syncRosterFromCloud();
+    // ==============================================================
+    // iOS SAFARI WAKE-UP AUTO-RECOVERY (RE-ARMS FROZEN CAMERAS)
+    // ==============================================================
+    document.addEventListener("visibilitychange", async () => {
+      if (!document.hidden) {
+        // 1. Sync data when screen wakes up
+        if (navigator.onLine) {
+          syncRosterFromCloud();
+        }
+    
+        // 2. Hardware Wake-up: Re-arm camera if iOS WebKit terminated the video track
+        if (html5QrCode) {
+          try {
+            const state = html5QrCode.getState();
+            // State 3 = PAUSED, State 1 = NOT_STARTED / TERMINATED
+            if (state === 3) {
+              await html5QrCode.resume();
+            } else if (state === 1 && cameraList.length > 0) {
+              startScanner(cameraList[currentCameraIndex].id);
+            }
+          } catch (err) {
+            console.warn("Camera stream interrupted by OS. Restarting...", err);
+            if (cameraList.length > 0) {
+              startScanner(cameraList[currentCameraIndex].id);
+            }
+          }
+        }
       }
     });
+
+    // ==============================================================
+    // GATE PASSKEY SECURITY MANAGER
+    // ==============================================================
+    function getGatePasskey() {
+      let key = localStorage.getItem("GGEN_GATE_PASSKEY");
+      if (!key) {
+        key = prompt("🔐 Enter Gate Scanner Passkey to unlock admissions:", "GGEN2027_GATE");
+        if (key) {
+          localStorage.setItem("GGEN_GATE_PASSKEY", key.trim());
+        }
+      }
+      return key || "GGEN2027_GATE";
+    }
 
     document.addEventListener("DOMContentLoaded", async () => {
       requestCameraAccess();
