@@ -236,9 +236,21 @@
         </div>
 
         <button type="button" onclick="openStoryModal('YOUR NAME', 'YOUR CHURCH / CAMPUS', 'OFFICIAL PASS')"
-          class="inline-flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-amber-400/50 text-slate-300 hover:text-white px-3.5 py-1.5 rounded-full font-mono-code text-[10px] uppercase tracking-wider transition active:scale-95 shadow-sm cursor-pointer">
-          <i data-lucide="sparkles" class="w-3 h-3 text-amber-400"></i>
-          <span>CREATE STORY CARD ↗</span>
+          class="group relative inline-flex items-center gap-2.5 bg-gradient-to-r from-blue-900/60 via-slate-900 to-amber-950/60 hover:from-blue-800/80 hover:to-amber-900/80 border border-amber-400/50 hover:border-amber-300 rounded-full px-5 py-2.5 shadow-[0_0_20px_rgba(245,158,11,0.25)] hover:shadow-[0_0_30px_rgba(245,158,11,0.45)] transition-all duration-300 active:scale-95 cursor-pointer">
+          
+          <!-- Live Glowing Indicator -->
+          <span class="flex h-2 w-2 relative flex-shrink-0">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-80"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-400"></span>
+          </span>
+        
+          <!-- Action Copy -->
+          <span class="text-[11px] sm:text-xs font-mono-code font-bold uppercase tracking-wider text-white">
+            REP YOUR SQUAD • <span class="text-amber-300 underline decoration-amber-400/60 underline-offset-4">GET IG STORY BADGE</span>
+          </span>
+        
+          <!-- Animated Icon -->
+          <i data-lucide="sparkles" class="w-4 h-4 text-amber-300 transition-transform group-hover:rotate-12 group-hover:scale-110 flex-shrink-0"></i>
         </button>
       </div>
 
@@ -1807,11 +1819,11 @@
                   </span>
                 </p>
 
-                <div class="mt-3">
+                <div class="mt-3.5 pt-3 border-t border-amber-500/20">
                   <button type="button" onclick="openStoryModal('${result.leadName || leadName}', '${affiliation}', '${tierName}')"
-                    class="w-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 text-slate-950 font-mono-code font-bold text-xs py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 shadow-md active:scale-95 cursor-pointer">
-                    <i data-lucide="sparkles" class="w-4 h-4 text-slate-950"></i>
-                    <span>CREATE MY INSTAGRAM / TIKTOK STORY CARD</span>
+                    class="w-full min-h-[46px] bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 text-slate-950 font-mono-code font-black text-xs py-3 px-4 rounded-xl transition flex items-center justify-center gap-2 shadow-xl shadow-amber-400/30 active:scale-[0.98] cursor-pointer">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-slate-950 flex-shrink-0"></i>
+                    <span>POST "I'M ATTENDING" ON INSTAGRAM / TIKTOK</span>
                   </button>
                 </div>
 
@@ -2561,9 +2573,9 @@
 
                     <!-- CREATE STORY CARD -->
                     <button type="button" onclick="openStoryModal('${safeNameAttr}', '${safeChurchAttr}', '${safeTierAttr}')"
-                      class="w-full min-h-[42px] bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white font-mono-code font-bold text-xs py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer">
-                      <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400 flex-shrink-0"></i>
-                      <span>CREATE STORY CARD</span>
+                      class="w-full min-h-[44px] bg-gradient-to-r from-blue-600/30 via-indigo-600/30 to-purple-600/30 hover:from-blue-600/50 hover:to-purple-600/50 border border-blue-400/40 hover:border-blue-300 text-white font-mono-code font-extrabold text-xs py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 active:scale-[0.98] shadow-md cursor-pointer">
+                      <i data-lucide="sparkles" class="w-4 h-4 text-cyan-300 flex-shrink-0"></i>
+                      <span>✨ FLEX MY PASS • CREATE IG STORY</span>
                     </button>
                   </div>
 
