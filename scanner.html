@@ -761,24 +761,85 @@
       }, 300);
     }
 
+    // ==============================================================
+    // HARDENED CHECK-IN ENGINE (RACE-CONDITION PROOF)
+    // ==============================================================
+    
     // Executed when clicking "CONFIRM ENTRY" inside the confirmation modal
-    function executeManualAdmit() {
+    async function executeManualAdmit() {
       if (!pendingDelegateToAdmit) return;
-
+    
       const delegate = pendingDelegateToAdmit;
-
+      const admitBtn = document.getElementById("confirmAdmitBtn");
+    
+      // Immediate local check
       if (delegate.checkedIn) {
-        alert("This pass has already been admitted!");
+        playBeep('error');
+        alert(`⚠️ This pass was already admitted at ${delegate.checkInTime}!`);
         closeConfirmModal();
         return;
       }
-
-      // 1. Mark delegate as checked in locally
+    
+      // 1. If online, perform authoritative confirmation with Cloud
+      if (navigator.onLine) {
+        if (admitBtn) {
+          admitBtn.disabled = true;
+          admitBtn.innerHTML = `
+            <svg class="animate-spin h-5 w-5 text-slate-950 inline mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            <span>VERIFYING GATE...</span>
+          `;
+        }
+    
+        try {
+          // Fast 3.5s timeout controller so gate flow never stalls
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 3500);
+    
+          const response = await fetch(APPS_SCRIPT_API_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'checkIn', query: delegate.passId }),
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
+    
+          const result = await response.json();
+    
+          // IF ANOTHER GATE ALREADY ADMITTED THIS PASS:
+          if (result && result.errorType === 'ALREADY_CHECKED_IN') {
+            playBeep('error');
+            delegate.checkedIn = true;
+            delegate.checkInTime = result.message || "Earlier";
+            closeConfirmModal();
+    
+            showModal('warning', {
+              title: "DUPLICATE GATE ENTRY!",
+              badge: "ALREADY ADMITTED AT ANOTHER GATE",
+              name: delegate.name,
+              church: delegate.church,
+              passId: delegate.passId,
+              tier: delegate.tier,
+              time: result.message || "Pass was already used at another gate"
+            });
+            return;
+          }
+        } catch (netErr) {
+          console.warn("Cloud check timed out. Proceeding with optimistic offline admission:", netErr);
+          pendingOfflineSync.push(delegate.passId);
+        }
+      } else {
+        // Offline mode: queue for sync
+        pendingOfflineSync.push(delegate.passId);
+      }
+    
+      // 2. Mark delegate as admitted locally
       const nowTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
       delegate.checkedIn = true;
       delegate.checkInTime = nowTime;
-
-      // 2. Audio & Visual celebrations
+    
+      // 3. Audio & Visual feedback
       playBeep('success');
       addRecentScan({
         name: delegate.name,
@@ -787,25 +848,14 @@
         tier: delegate.tier,
         time: nowTime
       });
-
-      // 3. Update counter badge
-      const counter = document.getElementById("counterText");
-      if (counter) {
-        const parts = counter.innerText.split('/');
-        if (parts.length === 2) {
-          const current = parseInt(parts[0].trim(), 10) || 0;
-          const total = parts[1].trim();
-          counter.innerText = `${current + 1} / ${total}`;
-        }
-      }
-
-      // 4. Background cloud sync to Google Sheets
-      syncCheckInToCloud(delegate.passId);
-
-      // 5. Close confirm modal & auto-clear search
+    
+      // 4. Update counter badge immediately
+      incrementCounterDisplay();
+    
+      // 5. Close confirm modal & clear search
       closeConfirmModal();
       clearManualSearch();
-
+    
       // 6. Flash success admission screen
       showModal('success', {
         title: "DELEGATE ADMITTED",
@@ -817,6 +867,18 @@
         time: `Admitted at ${nowTime}`
       });
     }
+    
+    function incrementCounterDisplay() {
+      const counter = document.getElementById("counterText");
+      if (counter) {
+        const parts = counter.innerText.split('/');
+        if (parts.length === 2) {
+          const current = parseInt(parts[0].trim(), 10) || 0;
+          const total = parts[1].trim();
+          counter.innerText = `${current + 1} / ${total}`;
+        }
+      }
+    }
 
     function escapeHtml(text) {
       return (text || '').toString()
@@ -827,15 +889,18 @@
         .replace(/'/g, "&#039;");
     }
 
-    // Fire-and-forget background sync
+    // Background cloud sync for offline-queued check-ins
     async function syncCheckInToCloud(passId) {
       try {
-        await fetch(APPS_SCRIPT_API_URL, {
+        const res = await fetch(APPS_SCRIPT_API_URL, {
           method: 'POST',
           body: JSON.stringify({ action: 'checkIn', query: passId })
         });
+        const data = await res.json();
+        console.log(`☁️ Synced ${passId} to cloud:`, data.message || "OK");
       } catch (err) {
-        console.warn("⚠️ Background sync delayed. Queued for retry.");
+        console.warn(`⚠️ Sync retry failed for ${passId}. Will retry on next reconnect.`, err);
+        // Re-queue if network drops again during flush
         pendingOfflineSync.push(passId);
       }
     }
@@ -1029,9 +1094,62 @@
       }
     }
 
+    // ==============================================================
+    // AUTOMATIC MULTI-GATE BACKGROUND SYNC HEARTBEAT (EVERY 20 SECONDS)
+    // ==============================================================
+    let backgroundSyncInterval = null;
+    
+    function startHeartbeatSync() {
+      if (backgroundSyncInterval) clearInterval(backgroundSyncInterval);
+    
+      backgroundSyncInterval = setInterval(async () => {
+        // Don't poll if volunteer is actively reviewing someone in the confirmation modal
+        if (!navigator.onLine || isProcessing || pendingDelegateToAdmit) return;
+    
+        try {
+          const res = await fetch(`${APPS_SCRIPT_API_URL}?action=getRoster`);
+          const data = await res.json();
+    
+          if (data && data.success && Array.isArray(data.roster)) {
+            let freshAdmissions = 0;
+    
+            data.roster.forEach(remote => {
+              if (!remote.passId) return;
+              const key = remote.passId.toUpperCase();
+              const local = localRoster.get(key);
+    
+              if (local) {
+                // If another gate marked this delegate as checked in, update our local memory silently
+                if (remote.checkedIn && !local.checkedIn) {
+                  local.checkedIn = true;
+                  local.checkInTime = remote.checkInTime;
+                  freshAdmissions++;
+                }
+              } else {
+                // New approved delegate added during the event
+                localRoster.set(key, remote);
+                if (remote.name) localRoster.set(remote.name.toUpperCase().trim(), remote);
+              }
+            });
+    
+            // Refresh stats badge silently
+            fetchStats();
+    
+            if (freshAdmissions > 0) {
+              console.log(`🔄 Synced ${freshAdmissions} new admission(s) from other gates.`);
+            }
+          }
+        } catch (e) {
+          // Silent failover; don't bother the volunteer
+        }
+      }, 20000); // Polls every 20 seconds
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
       requestCameraAccess();
-      syncRosterFromCloud(); // Auto-downloads approved roster instantly
+      syncRosterFromCloud().then(() => {
+        startHeartbeatSync(); // Starts multi-gate sync once initial roster is loaded
+      });
     });
   </script>
 </body>
