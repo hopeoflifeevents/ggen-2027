@@ -235,30 +235,36 @@
           </div>
         </div>
 
-        <button type="button" onclick="openStoryModal('YOUR NAME', 'YOUR CHURCH / CAMPUS', 'OFFICIAL PASS')"
-          class="group relative inline-flex items-center gap-2.5 bg-gradient-to-r from-blue-900/60 via-slate-900 to-amber-950/60 hover:from-blue-800/80 hover:to-amber-900/80 border border-amber-400/50 hover:border-amber-300 rounded-full px-5 py-2.5 shadow-[0_0_20px_rgba(245,158,11,0.25)] hover:shadow-[0_0_30px_rgba(245,158,11,0.45)] transition-all duration-300 active:scale-95 cursor-pointer">
+        <!-- SLEEK MOBILE SQUAD & STORY DOCK (50/50 BALANCED) -->
+        <div class="mt-4 w-full max-w-sm sm:max-w-md mx-auto grid grid-cols-2 gap-2 px-1">
           
-          <!-- Live Glowing Indicator -->
-          <span class="flex h-2 w-2 relative flex-shrink-0">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-80"></span>
-            <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-400"></span>
-          </span>
-        
-          <!-- Action Copy -->
-          <span class="text-[11px] sm:text-xs font-mono-code font-bold uppercase tracking-wider text-white">
-            REP YOUR SQUAD • <span class="text-amber-300 underline decoration-amber-400/60 underline-offset-4">GET IG STORY BADGE</span>
-          </span>
-
-          <!-- SQUAD GC INVITE BUTTON -->
-          <button type="button" onclick="openInviteModal()"
-            class="inline-flex items-center gap-1.5 bg-blue-600/15 hover:bg-blue-600/25 border border-blue-400/40 hover:border-blue-400 text-blue-300 hover:text-white px-4 py-2 rounded-full font-mono-code text-[10.5px] uppercase tracking-wider transition active:scale-95 shadow-sm cursor-pointer mt-2">
-            <i data-lucide="message-circle" class="w-3.5 h-3.5 text-blue-400"></i>
-            <span>INVITE YOUTH GROUP / BARKADA GC 📲</span>
+          <!-- 1. Instagram & TikTok Story Badge Button -->
+          <button type="button" 
+            onclick="openStoryModal('YOUR NAME', 'YOUR CHURCH / CAMPUS', 'OFFICIAL PASS')"
+            class="group flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500/15 via-slate-900 to-slate-950 hover:from-amber-500/25 border border-amber-400/40 hover:border-amber-400/80 rounded-2xl py-2.5 px-2.5 transition-all duration-200 active:scale-[0.97] shadow-lg shadow-amber-500/10 cursor-pointer">
+            <div class="w-7 h-7 rounded-xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center text-amber-400 flex-shrink-0 group-hover:scale-110 transition-transform">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+            </div>
+            <div class="text-left min-w-0">
+              <div class="text-[9px] font-mono-code font-bold uppercase text-amber-300 leading-none">STORY BADGE</div>
+              <div class="text-[10px] text-white font-extrabold truncate mt-0.5 leading-none">Flex on IG/TikTok</div>
+            </div>
           </button>
-        
-          <!-- Animated Icon -->
-          <i data-lucide="sparkles" class="w-4 h-4 text-amber-300 transition-transform group-hover:rotate-12 group-hover:scale-110 flex-shrink-0"></i>
-        </button>
+
+          <!-- 2. Youth Group / Barkada GC Invite Button -->
+          <button type="button" 
+            onclick="openInviteModal()"
+            class="group flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500/15 via-slate-900 to-slate-950 hover:from-blue-500/25 border border-blue-400/40 hover:border-blue-400/80 rounded-2xl py-2.5 px-2.5 transition-all duration-200 active:scale-[0.97] shadow-lg shadow-blue-500/10 cursor-pointer">
+            <div class="w-7 h-7 rounded-xl bg-blue-400/10 border border-blue-400/30 flex items-center justify-center text-blue-400 flex-shrink-0 group-hover:scale-110 transition-transform">
+              <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+            </div>
+            <div class="text-left min-w-0">
+              <div class="text-[9px] font-mono-code font-bold uppercase text-blue-300 leading-none">SQUAD GC</div>
+              <div class="text-[10px] text-white font-extrabold truncate mt-0.5 leading-none">Invite Barkada 📲</div>
+            </div>
+          </button>
+
+        </div>
       </div>
 
     </div>
