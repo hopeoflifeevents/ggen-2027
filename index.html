@@ -985,27 +985,26 @@
           isAvailable = false;
           statusType = "SOLD_OUT";
         } else {
-          // Check Start Date
+          // Check Start Date in Philippine Standard Time
           if (tier.startDate) {
-            const start = new Date(tier.startDate);
-            if (!isNaN(start.getTime()) && now < start) {
+            const start = parsePhilippineDate(tier.startDate, false);
+            if (start && now < start) {
               isAvailable = false;
               statusType = "OPENS_SOON";
-              dateBadgeText = `Opens ${typeof formatPrettyDate === "function" ? formatPrettyDate(tier.startDate) : tier.startDate}`;
+              dateBadgeText = `Opens ${formatPrettyDate(tier.startDate)}`;
             }
           }
-
-          // Check End Date (Active through 23:59:59 of that day)
+  
+          // Check End Date in Philippine Standard Time
           if (isAvailable && tier.endDate) {
-            const end = new Date(tier.endDate);
-            end.setHours(23, 59, 59, 999);
-            if (!isNaN(end.getTime())) {
+            const end = parsePhilippineDate(tier.endDate, true);
+            if (end) {
               if (now > end) {
                 isAvailable = false;
                 statusType = "EXPIRED";
-                dateBadgeText = `Ended ${typeof formatPrettyDate === "function" ? formatPrettyDate(tier.endDate) : tier.endDate}`;
+                dateBadgeText = `Ended ${formatPrettyDate(tier.endDate)}`;
               } else {
-                dateBadgeText = `Until ${typeof formatPrettyDate === "function" ? formatPrettyDate(tier.endDate) : tier.endDate}`;
+                dateBadgeText = `Until ${formatPrettyDate(tier.endDate)}`;
               }
             }
           }
@@ -1898,7 +1897,9 @@
     // Global receipt storage
     let currentReceiptBase64 = "";
 
-    // Handles receipt selection & optimizes mobile screenshot before upload
+    // ==============================================================
+    // ZERO-CRASH MOBILE SCREENSHOT COMPRESSOR (LOW RAM USAGE)
+    // ==============================================================
     function handleReceiptSelected(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -1909,44 +1910,52 @@
         return;
       }
 
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const img = new Image();
-        img.onload = function() {
-          // Compress & resize image (Max 1280px dimension, 80% JPEG quality)
-          // Reduces typical 6MB camera screenshots down to ~200KB for instant transmission
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-          const maxDim = 1280;
+      // Create lightweight zero-copy memory pointer
+      const blobUrl = URL.createObjectURL(file);
+      const img = new Image();
 
-          if (width > height && width > maxDim) {
-            height = Math.round((height * maxDim) / width);
-            width = maxDim;
-          } else if (height > maxDim) {
-            width = Math.round((width * maxDim) / height);
-            height = maxDim;
-          }
+      img.onload = function() {
+        // Free pointer immediately to save mobile RAM
+        URL.revokeObjectURL(blobUrl);
 
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
+        // Compress & scale to max 1280px dimension
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const maxDim = 1280;
 
-          currentReceiptBase64 = canvas.toDataURL('image/jpeg', 0.82);
+        if (width > height && width > maxDim) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else if (height > maxDim) {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
 
-          // Update UI with preview thumbnail
-          document.getElementById('receiptPreviewImg').src = currentReceiptBase64;
-          document.getElementById('receiptFileName').innerText = file.name;
-          document.getElementById('receiptFileSize').innerText = `Optimized (${Math.round(currentReceiptBase64.length * 0.75 / 1024)} KB)`;
-          
-          document.getElementById('uploadDropzone').classList.add('hidden');
-          document.getElementById('receiptPreviewContainer').classList.remove('hidden');
-          lucide.createIcons();
-        };
-        img.src = e.target.result;
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Export to optimized JPEG Base64
+        currentReceiptBase64 = canvas.toDataURL('image/jpeg', 0.82);
+
+        // Update UI with preview thumbnail
+        document.getElementById('receiptPreviewImg').src = currentReceiptBase64;
+        document.getElementById('receiptFileName').innerText = file.name;
+        document.getElementById('receiptFileSize').innerText = `Optimized (${Math.round(currentReceiptBase64.length * 0.75 / 1024)} KB)`;
+        
+        document.getElementById('uploadDropzone').classList.add('hidden');
+        document.getElementById('receiptPreviewContainer').classList.remove('hidden');
+        lucide.createIcons();
       };
-      reader.readAsDataURL(file);
+
+      img.onerror = function() {
+        URL.revokeObjectURL(blobUrl);
+        alert("Could not load image. Please select a valid photo.");
+      };
+
+      img.src = blobUrl;
     }
 
     // Removes selected receipt
