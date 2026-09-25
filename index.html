@@ -105,35 +105,41 @@
 
   <div class="relative z-10 max-w-4xl mx-auto px-4 pt-3 sm:pt-5 pb-6">
 
-    <!-- NAVBAR -->
-    <header class="bg-slate-900/60 backdrop-blur-xl border border-white/10 border-t-white/20 rounded-2xl px-4 py-2.5 sm:px-5 sm:py-3 shadow-[0_8px_30px_rgba(0,0,0,0.35)] flex items-center justify-between mb-6">
-      <div class="flex items-center gap-2.5">
+    <!-- NAVBAR (POLISHED FOR ALL MOBILE SCREENS) -->
+    <header class="bg-slate-900/70 backdrop-blur-xl border border-white/10 border-t-white/20 rounded-2xl px-3.5 py-2.5 sm:px-5 sm:py-3 shadow-[0_8px_30px_rgba(0,0,0,0.35)] flex items-center justify-between gap-2 mb-6">
+      
+      <!-- LOGO -->
+      <div class="flex items-center gap-2.5 min-w-0">
         <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-400 border border-blue-400/40 flex items-center justify-center text-white shadow-md shadow-blue-500/30 flex-shrink-0">
           <i data-lucide="flame" class="w-5 h-5 text-amber-300"></i>
         </div>
-        <div class="flex flex-col">
-          <span class="font-bebas text-2xl tracking-wider text-white italic leading-none">
+        <div class="flex flex-col min-w-0">
+          <span class="font-bebas text-xl sm:text-2xl tracking-wider text-white italic leading-none truncate">
             GGEN <span class="text-blue-400">2027</span>
           </span>
-          <!-- Clean Micro Sub-Header -->
-          <span class="text-[7.5px] sm:text-[8.5px] font-mono-code tracking-wider text-slate-400 uppercase leading-none mt-0.5">
-            HOPE OF LIFE CHRISTIAN MINISTRIES
+          <span class="text-[7px] sm:text-[8.5px] font-mono-code tracking-wider text-slate-400 uppercase leading-none mt-0.5 truncate">
+            HOPE OF LIFE MINISTRIES
           </span>
         </div>
       </div>
 
-      <!-- NAVBAR ACTIONS -->
-      <div class="flex items-center gap-2">
-        <button type="button" onclick="openFindPassModal()" 
-          class="bg-white/5 hover:bg-white/10 active:scale-95 text-slate-300 hover:text-white border border-white/10 hover:border-amber-400/50 text-[11px] font-mono-code font-bold uppercase tracking-wider px-3 py-2 rounded-full transition flex items-center gap-1.5 cursor-pointer">
-          <i data-lucide="search" class="w-3.5 h-3.5 text-amber-400"></i>
-          <span class="hidden sm:inline">FIND PASS</span>
+      <!-- NAVBAR ACTIONS (ALIGNED & ZERO-WRAP) -->
+      <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+        
+        <!-- Search / Find Pass (Circular on mobile, pill on desktop) -->
+        <button type="button" onclick="openFindPassModal()" title="Find My Pass"
+          class="h-9 w-9 sm:w-auto bg-white/5 hover:bg-white/10 active:scale-95 text-slate-300 hover:text-white border border-white/10 hover:border-amber-400/50 sm:px-3.5 rounded-full transition flex items-center justify-center gap-1.5 cursor-pointer flex-shrink-0">
+          <i data-lucide="search" class="w-4 h-4 text-amber-400 flex-shrink-0"></i>
+          <span class="hidden sm:inline text-[11px] font-mono-code font-bold uppercase tracking-wider whitespace-nowrap">FIND PASS</span>
         </button>
 
-        <a href="#register" class="group bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 active:scale-95 text-slate-950 text-xs font-extrabold uppercase tracking-wider px-4 py-2 rounded-full transition-all duration-200 shadow-md shadow-amber-400/20 flex items-center gap-1.5">
+        <!-- Claim Pass (Never wraps into 2 lines) -->
+        <a href="#register" 
+          class="h-9 whitespace-nowrap bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 active:scale-95 text-slate-950 text-xs font-black uppercase tracking-wider px-3.5 sm:px-4 rounded-full transition-all duration-200 shadow-md shadow-amber-400/20 flex items-center justify-center gap-1.5 flex-shrink-0">
           <span>CLAIM PASS</span>
-          <i data-lucide="ticket" class="w-3.5 h-3.5 text-slate-950 transition-transform group-hover:rotate-12"></i>
+          <i data-lucide="ticket" class="w-3.5 h-3.5 text-slate-950 flex-shrink-0"></i>
         </a>
+
       </div>
     </header>
 
@@ -229,10 +235,10 @@
           </div>
         </div>
 
-        <button type="button" onclick="shareEvent()"
-          class="inline-flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-amber-400/50 text-slate-300 hover:text-white px-3.5 py-1.5 rounded-full font-mono-code text-[10px] uppercase tracking-wider transition active:scale-95 shadow-sm">
-          <i data-lucide="share-2" class="w-3 h-3 text-amber-400"></i>
-          <span>INVITE YOUR SQUAD ↗</span>
+        <button type="button" onclick="openStoryModal('YOUR NAME', 'YOUR CHURCH / CAMPUS', 'OFFICIAL PASS')"
+          class="inline-flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-amber-400/50 text-slate-300 hover:text-white px-3.5 py-1.5 rounded-full font-mono-code text-[10px] uppercase tracking-wider transition active:scale-95 shadow-sm cursor-pointer">
+          <i data-lucide="sparkles" class="w-3 h-3 text-amber-400"></i>
+          <span>CREATE STORY CARD ↗</span>
         </button>
       </div>
 
@@ -1801,6 +1807,14 @@
                   </span>
                 </p>
 
+                <div class="mt-3">
+                  <button type="button" onclick="openStoryModal('${result.leadName || leadName}', '${affiliation}', '${tierName}')"
+                    class="w-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 text-slate-950 font-mono-code font-bold text-xs py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 shadow-md active:scale-95 cursor-pointer">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-slate-950"></i>
+                    <span>CREATE MY INSTAGRAM / TIKTOK STORY CARD</span>
+                  </button>
+                </div>
+
                 <!-- Registered Delegate(s) Breakdown -->
                 <div class="my-3 bg-slate-950/70 border border-white/10 rounded-xl p-3">
                   <div class="text-[9px] font-mono-code uppercase text-slate-400 font-bold mb-1">
@@ -2438,6 +2452,9 @@
       if (modal) modal.classList.add("hidden");
     }
 
+    // ==============================================================
+    // SELF-SERVICE PASS LOOKUP & DIRECT INSTANT DOWNLOAD
+    // ==============================================================
     async function handleFindPassSubmit(e) {
       e.preventDefault();
       const queryInput = document.getElementById("findPassQuery");
@@ -2448,7 +2465,7 @@
       if (!query) return;
 
       btn.disabled = true;
-      btn.innerHTML = `<span class="animate-spin text-base">⏳</span> <span>Searching...</span>`;
+      btn.innerHTML = `<span class="animate-spin text-base">⏳</span>`;
       resultsEl.classList.remove("hidden");
       resultsEl.innerHTML = `<div class="text-center py-8 text-xs font-mono-code text-slate-400">Searching conference registry...</div>`;
 
@@ -2469,35 +2486,39 @@
           return;
         }
 
-        // Render matching delegates (Handles single passes or group batches)
+        // Render cards with comfortable padding and instant download
         resultsEl.innerHTML = result.records.map((rec, idx) => {
           const isApproved = (rec.status === "APPROVED");
           const isPending = rec.status.startsWith("PENDING");
           
           let badgeHtml = "";
           if (isApproved) {
-            badgeHtml = `<span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono-code font-bold text-[9px] uppercase px-2 py-0.5 rounded-md flex items-center gap-1">
+            badgeHtml = `<span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono-code font-bold text-[9px] uppercase px-2 py-0.5 rounded-md flex items-center gap-1 flex-shrink-0">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Pass Approved
             </span>`;
           } else if (isPending) {
-            badgeHtml = `<span class="bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono-code font-bold text-[9px] uppercase px-2 py-0.5 rounded-md">
+            badgeHtml = `<span class="bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono-code font-bold text-[9px] uppercase px-2 py-0.5 rounded-md flex-shrink-0">
               ⏳ Verification in Progress
             </span>`;
           } else {
-            badgeHtml = `<span class="bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono-code font-bold text-[9px] uppercase px-2 py-0.5 rounded-md">
-              ❌ Declined / Check Receipt
+            badgeHtml = `<span class="bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono-code font-bold text-[9px] uppercase px-2 py-0.5 rounded-md flex-shrink-0">
+              ❌ Declined
             </span>`;
           }
 
+          const safeNameAttr = (rec.name || "").replace(/'/g, "\\'");
+          const safeChurchAttr = (rec.church || "").replace(/'/g, "\\'");
+          const safeTierAttr = (rec.tier || "").replace(/'/g, "\\'");
+
           return `
-            <div class="bg-slate-950 border ${isApproved ? 'border-amber-400/50' : 'border-white/10'} rounded-2xl p-4 shadow-lg transition">
+            <div class="bg-slate-950 border ${isApproved ? 'border-amber-400/50' : 'border-white/10'} rounded-2xl p-4 sm:p-5 shadow-xl mb-3">
               
               <!-- Card Top -->
               <div class="flex items-start justify-between gap-2 mb-2">
-                <div>
+                <div class="min-w-0">
                   <div class="text-[9px] font-mono-code text-slate-400 uppercase tracking-wider font-bold">DELEGATE #${idx + 1}</div>
-                  <h4 class="font-bebas text-xl text-white tracking-wide">${rec.name}</h4>
-                  <div class="text-xs text-blue-300">${rec.church}</div>
+                  <h4 class="font-bebas text-xl text-white tracking-wide truncate">${rec.name}</h4>
+                  <div class="text-xs text-blue-300 truncate">${rec.church}</div>
                 </div>
                 <div>${badgeHtml}</div>
               </div>
@@ -2514,27 +2535,37 @@
                 </div>
               </div>
 
-              <!-- If Approved: Show QR Code & Download Button -->
+              <!-- If Approved: Show QR Code & Direct Download -->
               ${isApproved ? `
-                <div class="mt-3 pt-3 border-t border-white/10 text-center">
-                  <div class="bg-white rounded-xl p-3 inline-block shadow-md mb-2">
-                    <img src="${rec.qrUrl}" alt="Pass QR" class="w-36 h-36 mx-auto object-contain select-none" />
-                    <div class="bg-slate-900 text-amber-300 font-mono-code font-black text-xs py-1 px-2 rounded mt-1.5">
+                <div class="mt-3.5 pt-3.5 border-t border-white/10 text-center">
+                  
+                  <!-- High Contrast QR Box -->
+                  <div class="bg-white rounded-2xl p-3 inline-block shadow-lg mb-3">
+                    <img src="${rec.qrUrl}" alt="Pass QR" class="w-40 h-40 mx-auto object-contain select-none" />
+                    <div class="bg-slate-900 text-amber-300 font-mono-code font-black text-xs py-1 px-2.5 rounded-lg mt-2">
                       ${rec.passId}
                     </div>
                   </div>
 
-                  <div class="flex gap-2 mt-2">
-                    <a href="${rec.qrUrl}" download="Pass_${rec.passId}.png" target="_blank"
-                      class="flex-1 bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 text-slate-950 font-mono-code font-bold text-xs py-2 px-3 rounded-xl transition flex items-center justify-center gap-1.5 active:scale-95 shadow">
-                      <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                      <span>Save QR to Gallery</span>
-                    </a>
+                  <!-- Action Buttons with ample bottom spacing -->
+                  <div class="flex flex-col gap-2 mt-1">
+                    <button type="button" onclick="downloadPassQrDirectly('${rec.qrUrl}', '${rec.passId}', this)"
+                      class="w-full min-h-[46px] bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 active:scale-[0.98] text-slate-950 font-mono-code font-extrabold text-xs py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-amber-400/20 cursor-pointer">
+                      <i data-lucide="download" class="w-4 h-4 text-slate-950 flex-shrink-0"></i>
+                      <span>SAVE QR TO GALLERY</span>
+                    </button>
+
+                    <button type="button" onclick="openStoryModal('${safeNameAttr}', '${safeChurchAttr}', '${safeTierAttr}')"
+                      class="w-full min-h-[42px] bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white font-mono-code font-bold text-xs py-2 px-4 rounded-xl transition flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer">
+                      <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400 flex-shrink-0"></i>
+                      <span>CREATE STORY CARD</span>
+                    </button>
                   </div>
+
                 </div>
               ` : `
-                <div class="mt-2 text-[10px] text-slate-400 leading-relaxed pt-2 border-t border-white/5 font-mono-code">
-                  Our finance team is currently cross-verifying your GCash payment receipt. Once approved, your official QR admission pass will be issued here and delivered to your email.
+                <div class="mt-2 text-[10px] text-slate-400 leading-relaxed pt-2.5 border-t border-white/5 font-mono-code">
+                  Our finance team is currently cross-verifying your GCash payment receipt. Once approved, your official QR admission pass will appear here and arrive in your email.
                 </div>
               `}
 
@@ -2542,6 +2573,8 @@
           `;
         }).join('');
 
+        // Ensure bottom spacing inside modal
+        resultsEl.innerHTML += `<div class="h-4"></div>`;
         lucide.createIcons();
 
       } catch (err) {
@@ -2549,6 +2582,359 @@
         btn.innerHTML = `<span>Lookup</span>`;
         resultsEl.innerHTML = `<div class="bg-rose-950/40 border border-rose-500/40 rounded-2xl p-4 text-center text-xs text-rose-300">Connection error. Please try again.</div>`;
       }
+    }
+
+    // ==============================================================
+    // DIRECT QR IMAGE DOWNLOADER (BYPASSES NEW-TAB RESTRICTIONS)
+    // ==============================================================
+    async function downloadPassQrDirectly(qrUrl, passId, btnEl) {
+      if (!qrUrl) return;
+
+      const originalHtml = btnEl ? btnEl.innerHTML : "";
+      if (btnEl) {
+        btnEl.disabled = true;
+        btnEl.innerHTML = `<span class="animate-spin text-sm">⏳</span> <span>Saving to Photos...</span>`;
+      }
+
+      try {
+        // Fetch direct binary blob to force browser download
+        const response = await fetch(qrUrl);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = `GGEN2027_Pass_${passId}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+
+        if (btnEl) {
+          btnEl.innerHTML = `<i data-lucide="check" class="w-4 h-4 text-slate-950"></i> <span>SAVED TO GALLERY!</span>`;
+          lucide.createIcons();
+          setTimeout(() => {
+            btnEl.disabled = false;
+            btnEl.innerHTML = originalHtml;
+            lucide.createIcons();
+          }, 2000);
+        }
+      } catch (err) {
+        console.warn("Direct blob download restricted, falling back to window open:", err);
+        window.open(qrUrl, "_blank");
+        if (btnEl) {
+          btnEl.disabled = false;
+          btnEl.innerHTML = originalHtml;
+        }
+      }
+    }
+
+    // ==============================================================
+    // VIRAL 9:16 STORY CARD ENGINE (HTML5 CANVAS COMPOSITOR)
+    // Generates 1080x1920 crisp graphics for Instagram, FB & TikTok
+    // ==============================================================
+    let currentStoryData = {
+      name: "OFFICIAL DELEGATE",
+      church: "HOPE OF LIFE CHRISTIAN MINISTRIES",
+      tier: "ALL-ACCESS PASS"
+    };
+
+    function openStoryModal(name, church, tier) {
+      if (name) currentStoryData.name = name.toUpperCase();
+      if (church) currentStoryData.church = church.toUpperCase();
+      if (tier) currentStoryData.tier = tier.toUpperCase();
+
+      const nameInput = document.getElementById("storyInputName");
+      const churchInput = document.getElementById("storyInputChurch");
+      if (nameInput) nameInput.value = currentStoryData.name;
+      if (churchInput) churchInput.value = currentStoryData.church;
+
+      const modal = document.getElementById("storyCardModal");
+      if (modal) {
+        modal.classList.remove("hidden");
+        lucide.createIcons();
+        // Wait for webfonts to be ready before rendering
+        if (document.fonts && document.fonts.ready) {
+          document.fonts.ready.then(() => drawStoryCard());
+        } else {
+          setTimeout(drawStoryCard, 100);
+        }
+      }
+    }
+
+    function closeStoryModal() {
+      const modal = document.getElementById("storyCardModal");
+      if (modal) modal.classList.add("hidden");
+    }
+
+    function drawStoryCard() {
+      const canvas = document.getElementById("storyCanvas");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+
+      const name = (document.getElementById("storyInputName")?.value || currentStoryData.name || "OFFICIAL DELEGATE").toUpperCase();
+      const church = (document.getElementById("storyInputChurch")?.value || currentStoryData.church || "GGEN DELEGATION").toUpperCase();
+      const tier = (currentStoryData.tier || "EMPOWERED DELEGATE").toUpperCase();
+
+      const W = 1080;
+      const H = 1920;
+
+      // 1. Dark Gradient Background
+      const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+      bgGrad.addColorStop(0, "#060913");
+      bgGrad.addColorStop(0.35, "#0b1226");
+      bgGrad.addColorStop(0.7, "#060913");
+      bgGrad.addColorStop(1, "#02040a");
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, W, H);
+
+      // 2. Cyber Glowing Auras (Top Blue, Center Amber)
+      const topGlow = ctx.createRadialGradient(W / 2, 280, 50, W / 2, 280, 650);
+      topGlow.addColorStop(0, "rgba(37, 99, 235, 0.45)");
+      topGlow.addColorStop(0.6, "rgba(79, 70, 229, 0.2)");
+      topGlow.addColorStop(1, "transparent");
+      ctx.fillStyle = topGlow;
+      ctx.fillRect(0, 0, W, H);
+
+      const centerGlow = ctx.createRadialGradient(W / 2, 980, 40, W / 2, 980, 550);
+      centerGlow.addColorStop(0, "rgba(245, 158, 11, 0.28)");
+      centerGlow.addColorStop(0.7, "rgba(217, 119, 6, 0.08)");
+      centerGlow.addColorStop(1, "transparent");
+      ctx.fillStyle = centerGlow;
+      ctx.fillRect(0, 0, W, H);
+
+      // 3. Cyber Grid Accents
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.06)";
+      ctx.lineWidth = 2;
+      for (let y = 140; y < H - 140; y += 160) {
+        ctx.beginPath();
+        ctx.moveTo(80, y);
+        ctx.lineTo(W - 80, y);
+        ctx.stroke();
+      }
+
+      // Outer Corner Crop Marks
+      ctx.strokeStyle = "#facc15";
+      ctx.lineWidth = 4;
+      const m = 60;
+      const len = 40;
+      // Top-Left
+      ctx.beginPath(); ctx.moveTo(m, m + len); ctx.lineTo(m, m); ctx.lineTo(m + len, m); ctx.stroke();
+      // Top-Right
+      ctx.beginPath(); ctx.moveTo(W - m - len, m); ctx.lineTo(W - m, m); ctx.lineTo(W - m, m + len); ctx.stroke();
+      // Bottom-Left
+      ctx.beginPath(); ctx.moveTo(m, H - m - len); ctx.lineTo(m, H - m); ctx.lineTo(m + len, H - m); ctx.stroke();
+      // Bottom-Right
+      ctx.beginPath(); ctx.moveTo(W - m - len, H - m); ctx.lineTo(W - m, H - m); ctx.lineTo(W - m, H - m - len); ctx.stroke();
+
+      ctx.textAlign = "center";
+
+      // 4. Header: Presenter Eyebrow
+      ctx.fillStyle = "#facc15";
+      ctx.font = "bold 24px 'Space Mono', monospace";
+      ctx.letterSpacing = "6px";
+      ctx.fillText("HOPE OF LIFE CHRISTIAN MINISTRIES PRESENTS", W / 2, 220);
+
+      // 5. Main Hero Title: EMPOWERED
+      ctx.save();
+      ctx.shadowColor = "rgba(56, 189, 248, 0.6)";
+      ctx.shadowBlur = 40;
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "italic 900 160px 'Bebas Neue', sans-serif";
+      ctx.letterSpacing = "8px";
+      ctx.fillText("EMPOWERED", W / 2, 370);
+      ctx.restore();
+
+      // Golden Badge under EMPOWERED
+      ctx.fillStyle = "#f59e0b";
+      ctx.fillRect((W - 460) / 2, 400, 460, 48);
+      ctx.fillStyle = "#020617";
+      ctx.font = "900 24px 'Space Mono', monospace";
+      ctx.letterSpacing = "6px";
+      ctx.fillText("GGEN CONFERENCE 2027", W / 2, 434);
+
+      // 6. Huge "I'M ATTENDING!" Callout
+      ctx.fillStyle = "#38bdf8";
+      ctx.font = "700 48px 'Caveat', cursive";
+      ctx.fillText("Wherever You Are, You Are Sent †", W / 2, 530);
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "900 68px 'Bebas Neue', sans-serif";
+      ctx.letterSpacing = "6px";
+      ctx.fillText("I'M ATTENDING!", W / 2, 630);
+
+      // 7. VIP Delegate Glass Card
+      const cardX = 90;
+      const cardY = 690;
+      const cardW = W - 180;
+      const cardH = 680;
+
+      // Card Background
+      ctx.fillStyle = "rgba(11, 17, 32, 0.88)";
+      ctx.strokeStyle = "rgba(250, 204, 21, 0.5)";
+      ctx.lineWidth = 3;
+      roundRect(ctx, cardX, cardY, cardW, cardH, 36, true, true);
+
+      // Card Header Tag
+      ctx.fillStyle = "rgba(16, 185, 129, 0.15)";
+      ctx.strokeStyle = "rgba(16, 185, 129, 0.6)";
+      ctx.lineWidth = 2;
+      roundRect(ctx, (W - 420) / 2, cardY + 50, 420, 52, 26, true, true);
+      ctx.fillStyle = "#34d399";
+      ctx.font = "bold 20px 'Space Mono', monospace";
+      ctx.letterSpacing = "3px";
+      ctx.fillText("● OFFICIAL DELEGATE PASS", W / 2, cardY + 84);
+
+      // Delegate Name (Auto-wrapped if long)
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "900 64px 'Plus Jakarta Sans', sans-serif";
+      ctx.letterSpacing = "1px";
+      wrapText(ctx, name, W / 2, cardY + 210, cardW - 80, 72);
+
+      // Church / Campus
+      ctx.fillStyle = "#38bdf8";
+      ctx.font = "bold 32px 'Plus Jakarta Sans', sans-serif";
+      ctx.letterSpacing = "1px";
+      ctx.fillText(church, W / 2, cardY + 350);
+
+      // Divider Dashed Line
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([12, 10]);
+      ctx.beginPath();
+      ctx.moveTo(cardX + 40, cardY + 420);
+      ctx.lineTo(cardX + cardW - 40, cardY + 420);
+      ctx.stroke();
+      ctx.setLineDash([]); // Reset dash
+
+      // Tier Badge
+      ctx.fillStyle = "#fde047";
+      ctx.font = "900 36px 'Bebas Neue', sans-serif";
+      ctx.letterSpacing = "4px";
+      ctx.fillText(`★ ${tier} ★`, W / 2, cardY + 490);
+
+      // Scripture Highlight
+      ctx.fillStyle = "#94a3b8";
+      ctx.font = "italic 26px 'Plus Jakarta Sans', sans-serif";
+      ctx.fillText('“You will receive power when the Holy Spirit comes...”', W / 2, cardY + 560);
+      ctx.fillStyle = "#fbbf24";
+      ctx.font = "bold 22px 'Space Mono', monospace";
+      ctx.fillText("ACTS 1:8 • PEOPLE • PLACES • PURPOSE †", W / 2, cardY + 605);
+
+      // 8. Event Date & Venue Footer Box
+      const footY = 1430;
+      ctx.fillStyle = "rgba(15, 23, 42, 0.75)";
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+      ctx.lineWidth = 2;
+      roundRect(ctx, 120, footY, W - 240, 180, 28, true, true);
+
+      ctx.fillStyle = "#facc15";
+      ctx.font = "900 42px 'Bebas Neue', sans-serif";
+      ctx.letterSpacing = "3px";
+      ctx.fillText("AUGUST 30, 2027 • 7:30 AM PHT", W / 2, footY + 70);
+
+      ctx.fillStyle = "#f8fafc";
+      ctx.font = "bold 28px 'Plus Jakarta Sans', sans-serif";
+      ctx.fillText("JIA CMNV • QUEZON CITY", W / 2, footY + 120);
+
+      ctx.fillStyle = "#64748b";
+      ctx.font = "20px 'Space Mono', monospace";
+      ctx.fillText("Jesus Is Alive Community Metro North", W / 2, footY + 152);
+
+      // 9. Call-To-Action (Bottom Swipe Up Prompt)
+      ctx.fillStyle = "#38bdf8";
+      ctx.font = "bold 28px 'Space Mono', monospace";
+      ctx.letterSpacing = "2px";
+      ctx.fillText("JOIN MY SQUAD ➜ CLAIM YOUR PASS NOW", W / 2, 1720);
+
+      ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+      ctx.font = "20px 'Space Mono', monospace";
+      ctx.fillText("#GGEN2027 • #EMPOWERED", W / 2, 1780);
+    }
+
+    // Helper: Rounded Rectangle
+    function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+      if (fill) ctx.fill();
+      if (stroke) ctx.stroke();
+    }
+
+    // Helper: Multiline Text Wrapping for Names
+    function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+      const words = text.split(" ");
+      let line = "";
+      let lines = [];
+
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + " ";
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && n > 0) {
+          lines.push(line);
+          line = words[n] + " ";
+        } else {
+          line = testLine;
+        }
+      }
+      lines.push(line);
+
+      // If single line, keep original Y, if multiple lines, adjust slightly
+      const startY = lines.length > 1 ? y - ((lines.length - 1) * lineHeight) / 2 : y;
+      for (let k = 0; k < lines.length; k++) {
+        ctx.fillText(lines[k].trim(), x, startY + k * lineHeight);
+      }
+    }
+
+    // 1-Tap Download PNG
+    function downloadStoryCard() {
+      const canvas = document.getElementById("storyCanvas");
+      if (!canvas) return;
+      const name = (document.getElementById("storyInputName")?.value || "Delegate").replace(/[^a-zA-Z0-9]/g, "_");
+      
+      const link = document.createElement("a");
+      link.download = `GGEN2027_Story_${name}.png`;
+      link.href = canvas.toDataURL("image/png");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Native Mobile Share (Opens Instagram Stories, TikTok, FB, etc.)
+    async function shareStoryCard() {
+      const canvas = document.getElementById("storyCanvas");
+      if (!canvas) return;
+
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+        const name = (document.getElementById("storyInputName")?.value || "Delegate").replace(/[^a-zA-Z0-9]/g, "_");
+        const file = new File([blob], `GGEN2027_Story_${name}.png`, { type: "image/png" });
+
+        // Check if Web Share API with files is supported (iOS Safari, Android Chrome)
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: "GGEN 2027: EMPOWERED",
+              text: "I'm attending GGEN 2027: EMPOWERED! Join my squad on August 30, 2027 at JIA CMNV. Claim your pass now!"
+            });
+          } catch (err) {
+            if (err.name !== "AbortError") downloadStoryCard();
+          }
+        } else {
+          // Fallback to direct download
+          downloadStoryCard();
+          alert("Story card downloaded to your device! Upload it directly to your Instagram or Facebook Story.");
+        }
+      }, "image/png");
     }
   </script>
 
@@ -2638,6 +3024,55 @@
 
       <!-- Dynamic Results Container (Scrollable) -->
       <div id="findPassResults" class="flex-1 overflow-y-auto space-y-3 pr-1 text-left hidden"></div>
+
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- VIRAL "I'M GOING!" STORY CARD GENERATOR MODAL (9:16)     -->
+  <!-- ======================================================== -->
+  <div id="storyCardModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-amber-500/30 w-full max-w-sm sm:max-w-md rounded-3xl p-5 sm:p-6 text-center shadow-2xl relative animate-in fade-in zoom-in-95 duration-200 max-h-[92vh] flex flex-col items-center">
+      
+      <!-- Close Button -->
+      <button type="button" onclick="closeStoryModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-full transition cursor-pointer">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+
+      <!-- Modal Title -->
+      <div class="inline-flex items-center gap-1.5 text-[10px] font-mono-code font-bold uppercase tracking-wider text-amber-300 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-full mb-2">
+        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
+        <span>OFFICIAL STORY GENERATOR</span>
+      </div>
+      <h3 class="font-bebas text-2xl sm:text-3xl text-white tracking-wide leading-none">CLAIM YOUR ATTENDANCE</h3>
+      <p class="text-[11px] text-slate-400 mt-1 mb-3">Share to your Instagram, Facebook, or TikTok story</p>
+
+      <!-- 9:16 Story Preview Canvas -->
+      <div class="relative w-full flex justify-center mb-3">
+        <canvas id="storyCanvas" width="1080" height="1920" 
+          class="max-h-[52vh] sm:max-h-[56vh] w-auto aspect-[9/16] rounded-2xl border-2 border-white/15 shadow-2xl shadow-blue-950/60 object-contain bg-slate-950"></canvas>
+      </div>
+
+      <!-- Quick Customizer Inputs (Optional Tweak) -->
+      <div class="w-full grid grid-cols-2 gap-2 mb-3 text-left">
+        <input type="text" id="storyInputName" placeholder="Your Name" oninput="drawStoryCard()"
+          class="bg-slate-950 border border-white/15 rounded-xl px-2.5 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400 font-mono-code" />
+        <input type="text" id="storyInputChurch" placeholder="Your Church / Campus" oninput="drawStoryCard()"
+          class="bg-slate-950 border border-white/15 rounded-xl px-2.5 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400 font-mono-code" />
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="w-full flex gap-2">
+        <button type="button" onclick="shareStoryCard()"
+          class="flex-1 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 active:scale-95 text-slate-950 font-mono-code font-bold text-xs py-3 px-3 rounded-xl transition flex items-center justify-center gap-1.5 shadow-lg shadow-amber-400/20 cursor-pointer">
+          <i data-lucide="share-2" class="w-4 h-4 text-slate-950"></i>
+          <span>POST TO STORY</span>
+        </button>
+        <button type="button" onclick="downloadStoryCard()"
+          class="bg-white/10 hover:bg-white/15 active:scale-95 text-white font-mono-code font-bold text-xs py-3 px-3.5 rounded-xl transition flex items-center justify-center gap-1 cursor-pointer">
+          <i data-lucide="download" class="w-4 h-4"></i>
+        </button>
+      </div>
 
     </div>
   </div>
