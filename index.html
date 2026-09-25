@@ -961,6 +961,19 @@
     }
 
     // ==============================================================
+    // PHILIPPINE STANDARD TIME (GMT+8) ANCHOR
+    // ==============================================================
+    function parsePhilippineDate(dateStr, isEndOfDay = false) {
+      if (!dateStr) return null;
+      const cleanDate = dateStr.toString().trim().split("T")[0]; // YYYY-MM-DD
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(cleanDate)) {
+        return new Date(dateStr); // Fallback for raw ISO strings
+      }
+      const timePart = isEndOfDay ? "23:59:59.999" : "00:00:00.000";
+      return new Date(`${cleanDate}T${timePart}+08:00`);
+    }
+
+    // ==============================================================
     // COMPLETE ERROR-FREE RENDER PRICING TIERS
     // ==============================================================
     function renderPricingTiers(tiers) {
@@ -988,23 +1001,23 @@
           // Check Start Date in Philippine Standard Time
           if (tier.startDate) {
             const start = parsePhilippineDate(tier.startDate, false);
-            if (start && now < start) {
+            if (start && !isNaN(start.getTime()) && now < start) {
               isAvailable = false;
               statusType = "OPENS_SOON";
-              dateBadgeText = `Opens ${formatPrettyDate(tier.startDate)}`;
+              dateBadgeText = `Opens ${typeof formatPrettyDate === "function" ? formatPrettyDate(tier.startDate) : tier.startDate}`;
             }
           }
-  
+
           // Check End Date in Philippine Standard Time
           if (isAvailable && tier.endDate) {
             const end = parsePhilippineDate(tier.endDate, true);
-            if (end) {
+            if (end && !isNaN(end.getTime())) {
               if (now > end) {
                 isAvailable = false;
                 statusType = "EXPIRED";
-                dateBadgeText = `Ended ${formatPrettyDate(tier.endDate)}`;
+                dateBadgeText = `Ended ${typeof formatPrettyDate === "function" ? formatPrettyDate(tier.endDate) : tier.endDate}`;
               } else {
-                dateBadgeText = `Until ${formatPrettyDate(tier.endDate)}`;
+                dateBadgeText = `Until ${typeof formatPrettyDate === "function" ? formatPrettyDate(tier.endDate) : tier.endDate}`;
               }
             }
           }
@@ -1019,7 +1032,7 @@
         };
       });
 
-      // 2. STORE GLOBALLY (AFTER initialization to prevent ReferenceError)
+      // 2. STORE GLOBALLY
       activeTiersList = evaluatedTiers;
 
       // 3. Select default tier: prioritize saved draft tier if available, else first active tier
