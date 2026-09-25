@@ -248,6 +248,13 @@
           <span class="text-[11px] sm:text-xs font-mono-code font-bold uppercase tracking-wider text-white">
             REP YOUR SQUAD • <span class="text-amber-300 underline decoration-amber-400/60 underline-offset-4">GET IG STORY BADGE</span>
           </span>
+
+          <!-- SQUAD GC INVITE BUTTON -->
+          <button type="button" onclick="openInviteModal()"
+            class="inline-flex items-center gap-1.5 bg-blue-600/15 hover:bg-blue-600/25 border border-blue-400/40 hover:border-blue-400 text-blue-300 hover:text-white px-4 py-2 rounded-full font-mono-code text-[10.5px] uppercase tracking-wider transition active:scale-95 shadow-sm cursor-pointer mt-2">
+            <i data-lucide="message-circle" class="w-3.5 h-3.5 text-blue-400"></i>
+            <span>INVITE YOUTH GROUP / BARKADA GC 📲</span>
+          </button>
         
           <!-- Animated Icon -->
           <i data-lucide="sparkles" class="w-4 h-4 text-amber-300 transition-transform group-hover:rotate-12 group-hover:scale-110 flex-shrink-0"></i>
@@ -584,7 +591,12 @@
                 <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider">
                   1. Select Pass Tier <span class="text-amber-400">*</span>
                 </label>
-                <span class="text-[9.5px] font-mono-code text-slate-400">All tiers include full plenary kit</span>
+                
+                <!-- Quick Squad Invite Trigger -->
+                <button type="button" onclick="openInviteModal()" class="text-[9.5px] font-mono-code text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1 cursor-pointer">
+                  <i data-lucide="share-2" class="w-3 h-3 text-blue-400"></i>
+                  <span>Invite Squad First</span>
+                </button>
               </div>
 
               <!-- Stacked full-width ticket cards container -->
@@ -3177,6 +3189,88 @@
         }
       }, "image/png");
     }
+
+    // ==============================================================
+    // 1-TAP YOUTH GROUP & SQUAD INVITE ENGINE
+    // ==============================================================
+    function openInviteModal() {
+      const modal = document.getElementById("inviteSquadModal");
+      const linkEl = document.getElementById("inviteLinkText");
+      if (linkEl) {
+        linkEl.innerText = window.location.href.split("#")[0];
+      }
+      if (modal) {
+        modal.classList.remove("hidden");
+        lucide.createIcons();
+      }
+    }
+
+    function closeInviteModal() {
+      const modal = document.getElementById("inviteSquadModal");
+      if (modal) modal.classList.add("hidden");
+    }
+
+    function getFullInviteText() {
+      const siteUrl = window.location.href.split("#")[0];
+      return `Hey squad! 🔥 Tara sa GGEN 2027: EMPOWERED this August 30, 2027 sa JIA CMNV, Quezon City! May Buy 1 Take 1 at 5+1 Barkada promos ngayon. Sino sasama sa delegation natin? Check the keynote lineup and claim passes here:\n\n${siteUrl}`;
+    }
+
+    async function copySquadInviteMessage(btnEl) {
+      const fullText = getFullInviteText();
+      const originalHtml = btnEl ? btnEl.innerHTML : "";
+
+      try {
+        await navigator.clipboard.writeText(fullText);
+        if (btnEl) {
+          btnEl.innerHTML = `<i data-lucide="check" class="w-4 h-4 text-emerald-300"></i> <span class="text-emerald-300">COPIED TO CLIPBOARD! PASTE IN YOUR GC!</span>`;
+          lucide.createIcons();
+          setTimeout(() => {
+            btnEl.innerHTML = originalHtml;
+            lucide.createIcons();
+          }, 3000);
+        }
+      } catch (err) {
+        // Fallback for older browsers
+        const tempInput = document.createElement("textarea");
+        tempInput.value = fullText;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand("copy");
+        document.body.removeChild(tempInput);
+
+        if (btnEl) {
+          btnEl.innerHTML = `<i data-lucide="check" class="w-4 h-4 text-emerald-300"></i> <span class="text-emerald-300">COPIED! PASTE IN YOUR GC!</span>`;
+          lucide.createIcons();
+          setTimeout(() => {
+            btnEl.innerHTML = originalHtml;
+            lucide.createIcons();
+          }, 3000);
+        }
+      }
+    }
+
+    async function launchMessengerOrNativeShare() {
+      const fullText = getFullInviteText();
+      const siteUrl = window.location.href.split("#")[0];
+
+      // On mobile, native share provides direct access to Messenger, WhatsApp, Viber, IG DMs
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: "GGEN 2027: EMPOWERED",
+            text: fullText,
+            url: siteUrl
+          });
+          return;
+        } catch (e) {
+          if (e.name === "AbortError") return;
+        }
+      }
+
+      // Desktop fallback: Open Facebook Send/Share dialog
+      const fbUrl = `https://www.facebook.com/dialog/send?link=${encodeURIComponent(siteUrl)}&app_id=291494419107518&redirect_uri=${encodeURIComponent(siteUrl)}`;
+      window.open(fbUrl, "_blank");
+    }
   </script>
 
   <!-- ======================================================== -->
@@ -3323,6 +3417,63 @@
           class="bg-white/10 hover:bg-white/15 active:scale-95 text-white font-mono-code font-bold text-xs py-3 px-3.5 rounded-xl transition flex items-center justify-center gap-1 cursor-pointer">
           <i data-lucide="download" class="w-4 h-4"></i>
         </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 1-TAP YOUTH GROUP / BARKADA INVITE LAUNCHER MODAL        -->
+  <!-- ======================================================== -->
+  <div id="inviteSquadModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-blue-500/40 w-full max-w-sm sm:max-w-md rounded-3xl p-5 sm:p-6 text-center shadow-2xl relative animate-in fade-in zoom-in-95 duration-200 flex flex-col items-center">
+      
+      <!-- Close Button -->
+      <button type="button" onclick="closeInviteModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-full transition cursor-pointer">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+
+      <!-- Badge & Header -->
+      <div class="inline-flex items-center gap-1.5 text-[10px] font-mono-code font-bold uppercase tracking-wider text-blue-300 bg-blue-500/10 border border-blue-500/30 px-3 py-1 rounded-full mb-2">
+        <i data-lucide="message-circle" class="w-3.5 h-3.5 text-blue-400"></i>
+        <span>YOUTH GC & BARKADA INVITER</span>
+      </div>
+      <h3 class="font-bebas text-2xl sm:text-3xl text-white tracking-wide leading-none">INVITE YOUR SQUAD</h3>
+      <p class="text-[11px] text-slate-400 mt-1 mb-4">Paste this ready-made invitation directly into your youth group chat</p>
+
+      <!-- Pre-Crafted Message Preview Box -->
+      <div class="w-full bg-slate-950/80 border border-white/10 rounded-2xl p-3.5 text-left mb-4 relative group">
+        <div class="text-[9px] font-mono-code uppercase text-blue-400 font-bold mb-1 flex items-center gap-1">
+          <i data-lucide="copy" class="w-3 h-3"></i>
+          <span>Ready-to-Paste Invitation Message:</span>
+        </div>
+        <p id="inviteMessageText" class="text-xs text-slate-200 leading-relaxed font-sans select-all pt-1">
+          Hey squad! 🔥 Tara sa GGEN 2027: EMPOWERED this Aug 30, 2027 sa JIA CMNV Quezon City! May Buy 1 Take 1 at 5+1 Barkada promos ngayon. Sino sasama sa delegation natin? Check the lineup & claim passes here:
+        </p>
+        <div class="mt-2 pt-2 border-t border-white/5 font-mono-code text-[11px] text-amber-300 font-bold break-all">
+          <span id="inviteLinkText">https://hopeoflifecm.github.io/ggen-2027</span>
+        </div>
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div class="w-full space-y-2">
+        
+        <!-- Primary 1-Tap Copy Button -->
+        <button type="button" onclick="copySquadInviteMessage(this)"
+          class="w-full min-h-[46px] bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 hover:from-blue-500 hover:to-indigo-500 active:scale-[0.98] text-white font-mono-code font-black text-xs py-3 px-4 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30 cursor-pointer">
+          <i data-lucide="copy" class="w-4 h-4 flex-shrink-0"></i>
+          <span id="copyInviteBtnText">1-TAP COPY INVITATION TO CLIPBOARD</span>
+        </button>
+
+        <!-- Direct Share via Messenger / Native Share Sheet -->
+        <button type="button" onclick="launchMessengerOrNativeShare()"
+          class="w-full min-h-[42px] bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white font-mono-code font-bold text-xs py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer">
+          <svg class="w-4 h-4 fill-[#0099FF] flex-shrink-0" viewBox="0 0 24 24">
+            <path d="M12 0C5.373 0 0 4.974 0 11.111c0 3.498 1.744 6.614 4.469 8.654V24l4.088-2.242c1.092.302 2.246.464 3.443.464 6.627 0 12-4.975 12-11.111C24 4.974 18.627 0 12 0zm1.191 14.963l-3.055-3.26-5.963 3.26L10.79 7.7l3.127 3.26 5.891-3.26-6.617 7.263z"/>
+          </svg>
+          <span>OPEN MESSENGER / CHAT APPS</span>
+        </button>
+
       </div>
 
     </div>
