@@ -53,6 +53,10 @@
       height: 100% !important;
     }
   </style>
+
+  <!-- Central Config -->
+<script src="./config.js"></script>
+  
 </head>
 <body class="text-slate-100 min-h-screen flex flex-col justify-between selection:bg-amber-400 selection:text-black">
 
@@ -300,7 +304,9 @@
     // ==============================================================
     // LIVE DEPLOYED GOOGLE APPS SCRIPT WEB APP URL
     // ==============================================================
-    const APPS_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbxOB6MC6oCHNcOEMwf2KC8eTfhFED6WvRr5jnjL4yi50nRvmADrTi2TWapH3Q8ozg88Fw/exec";
+    const APPS_SCRIPT_API_URL = (window.CONFIG && window.CONFIG.APPS_SCRIPT_API_URL) 
+      ? window.CONFIG.APPS_SCRIPT_API_URL 
+      : "https://script.google.com/macros/s/AKfycbxOB6MC6oCHNcOEMwf2KC8eTfhFED6WvRr5jnjL4yi50nRvmADrTi2TWapH3Q8ozg88Fw/exec";
 
     lucide.createIcons();
 
