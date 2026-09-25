@@ -2084,6 +2084,7 @@
 
       // Reset delegate count & extra member fields back to single pax
       currentPaxCount = 1;
+      previousFlexiblePaxCount = 1; // Reset memory
       renderAdditionalMemberFields();
       updateBatchUI();
     }
@@ -2101,9 +2102,10 @@
     }
 
     // ==============================================================
-    // BATCH REGISTRATION & 5-QR SWITCHER STATE
+    // BATCH REGISTRATION & SMART TIER SWITCHER (WITH MEMORY)
     // ==============================================================
     let currentPaxCount = 1;
+    let previousFlexiblePaxCount = 1; // Remembers what your count was before selecting bundles
     let activeTiersList = [];
     let currentSelectedTierObj = null;
 
@@ -2129,6 +2131,8 @@
     }
 
     function selectTier(id, name, price, cardEl) {
+      const wasBundle = isBundleTier(currentSelectedTierObj);
+
       const matchedTier = activeTiersList.find(t => t.tierId === id) || {
         tierId: id,
         name: name,
@@ -2145,13 +2149,20 @@
       if (tierIdInput) tierIdInput.value = id;
       if (tierNameInput) tierNameInput.value = name;
 
-      // Check if this is a Bundle Promo
+      // -------------------------------------------------------------
+      // SMART PAX RESTORATION LOGIC
+      // -------------------------------------------------------------
       if (isBundleTier(matchedTier)) {
-        // Auto-lock to the bundle's included pax count (e.g., 2 for B1T1, 6 for 5+1)
+        // Auto-lock to the bundle's included pax count (2 for B1T1, 6 for 5+1)
         currentPaxCount = getBundlePaxCount(matchedTier);
       } else {
-        // Reset to 1 pax (or clamp to 1-5 for flexible passes)
-        if (currentPaxCount > 5) currentPaxCount = 1;
+        // Switching back from a bundle promo ➜ restore what it was before!
+        if (wasBundle) {
+          currentPaxCount = previousFlexiblePaxCount || 1;
+        } else {
+          // If already on a flexible tier, ensure count stays within 1-5
+          if (currentPaxCount > 5) currentPaxCount = 1;
+        }
       }
 
       // Update visual selection borders on cards
@@ -2193,6 +2204,7 @@
       // Allow flexible tickets to scale between 1 and 5 delegates
       if (newCount >= 1 && newCount <= 5) {
         currentPaxCount = newCount;
+        previousFlexiblePaxCount = newCount; // Remember user's custom selection
         renderAdditionalMemberFields();
         updateBatchUI();
         if (typeof saveFormDraft === "function") saveFormDraft();
