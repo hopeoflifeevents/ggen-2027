@@ -122,11 +122,19 @@
         </div>
       </div>
 
-      <!-- CLAIM PASS BUTTON -->
-      <a href="#register" class="group bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 active:scale-95 text-slate-950 text-xs font-extrabold uppercase tracking-wider px-4 py-2 rounded-full transition-all duration-200 shadow-md shadow-amber-400/20 flex items-center gap-1.5">
-        <span>CLAIM PASS</span>
-        <i data-lucide="ticket" class="w-3.5 h-3.5 text-slate-950 transition-transform group-hover:rotate-12"></i>
-      </a>
+      <!-- NAVBAR ACTIONS -->
+      <div class="flex items-center gap-2">
+        <button type="button" onclick="openFindPassModal()" 
+          class="bg-white/5 hover:bg-white/10 active:scale-95 text-slate-300 hover:text-white border border-white/10 hover:border-amber-400/50 text-[11px] font-mono-code font-bold uppercase tracking-wider px-3 py-2 rounded-full transition flex items-center gap-1.5 cursor-pointer">
+          <i data-lucide="search" class="w-3.5 h-3.5 text-amber-400"></i>
+          <span class="hidden sm:inline">FIND PASS</span>
+        </button>
+
+        <a href="#register" class="group bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 active:scale-95 text-slate-950 text-xs font-extrabold uppercase tracking-wider px-4 py-2 rounded-full transition-all duration-200 shadow-md shadow-amber-400/20 flex items-center gap-1.5">
+          <span>CLAIM PASS</span>
+          <i data-lucide="ticket" class="w-3.5 h-3.5 text-slate-950 transition-transform group-hover:rotate-12"></i>
+        </a>
+      </div>
     </header>
 
     <!-- Presenter Eyebrow -->
@@ -2412,6 +2420,136 @@
         lucide.createIcons();
       }
     }
+
+    // ==============================================================
+    // SELF-SERVICE PASS LOOKUP & RETRIEVAL LOGIC
+    // ==============================================================
+    function openFindPassModal() {
+      const modal = document.getElementById("findPassModal");
+      if (modal) {
+        modal.classList.remove("hidden");
+        document.getElementById("findPassQuery")?.focus();
+        lucide.createIcons();
+      }
+    }
+
+    function closeFindPassModal() {
+      const modal = document.getElementById("findPassModal");
+      if (modal) modal.classList.add("hidden");
+    }
+
+    async function handleFindPassSubmit(e) {
+      e.preventDefault();
+      const queryInput = document.getElementById("findPassQuery");
+      const btn = document.getElementById("findPassBtn");
+      const resultsEl = document.getElementById("findPassResults");
+      const query = (queryInput?.value || "").trim();
+
+      if (!query) return;
+
+      btn.disabled = true;
+      btn.innerHTML = `<span class="animate-spin text-base">⏳</span> <span>Searching...</span>`;
+      resultsEl.classList.remove("hidden");
+      resultsEl.innerHTML = `<div class="text-center py-8 text-xs font-mono-code text-slate-400">Searching conference registry...</div>`;
+
+      try {
+        const response = await fetch(`${APPS_SCRIPT_API_URL}?action=findPass&query=${encodeURIComponent(query)}`);
+        const result = await response.json();
+
+        btn.disabled = false;
+        btn.innerHTML = `<span>Lookup</span>`;
+
+        if (!result.success) {
+          resultsEl.innerHTML = `
+            <div class="bg-rose-950/40 border border-rose-500/40 rounded-2xl p-4 text-center">
+              <div class="text-rose-400 font-bold text-xs mb-1">Pass Record Not Found</div>
+              <p class="text-[11px] text-slate-300 leading-relaxed">${result.message}</p>
+            </div>
+          `;
+          return;
+        }
+
+        // Render matching delegates (Handles single passes or group batches)
+        resultsEl.innerHTML = result.records.map((rec, idx) => {
+          const isApproved = (rec.status === "APPROVED");
+          const isPending = rec.status.startsWith("PENDING");
+          
+          let badgeHtml = "";
+          if (isApproved) {
+            badgeHtml = `<span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono-code font-bold text-[9px] uppercase px-2 py-0.5 rounded-md flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Pass Approved
+            </span>`;
+          } else if (isPending) {
+            badgeHtml = `<span class="bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono-code font-bold text-[9px] uppercase px-2 py-0.5 rounded-md">
+              ⏳ Verification in Progress
+            </span>`;
+          } else {
+            badgeHtml = `<span class="bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono-code font-bold text-[9px] uppercase px-2 py-0.5 rounded-md">
+              ❌ Declined / Check Receipt
+            </span>`;
+          }
+
+          return `
+            <div class="bg-slate-950 border ${isApproved ? 'border-amber-400/50' : 'border-white/10'} rounded-2xl p-4 shadow-lg transition">
+              
+              <!-- Card Top -->
+              <div class="flex items-start justify-between gap-2 mb-2">
+                <div>
+                  <div class="text-[9px] font-mono-code text-slate-400 uppercase tracking-wider font-bold">DELEGATE #${idx + 1}</div>
+                  <h4 class="font-bebas text-xl text-white tracking-wide">${rec.name}</h4>
+                  <div class="text-xs text-blue-300">${rec.church}</div>
+                </div>
+                <div>${badgeHtml}</div>
+              </div>
+
+              <!-- Pass Tier & Reg Reference -->
+              <div class="bg-slate-900 border border-white/5 rounded-xl p-2.5 my-2 flex items-center justify-between text-[11px] font-mono-code">
+                <div>
+                  <span class="text-slate-500 block text-[9px]">PASS TIER</span>
+                  <span class="text-amber-300 font-bold">${rec.tier}</span>
+                </div>
+                <div class="text-right">
+                  <span class="text-slate-500 block text-[9px]">PASS IDENTIFIER</span>
+                  <span class="${isApproved ? 'text-white font-bold' : 'text-slate-400'}">${rec.passId || rec.regId}</span>
+                </div>
+              </div>
+
+              <!-- If Approved: Show QR Code & Download Button -->
+              ${isApproved ? `
+                <div class="mt-3 pt-3 border-t border-white/10 text-center">
+                  <div class="bg-white rounded-xl p-3 inline-block shadow-md mb-2">
+                    <img src="${rec.qrUrl}" alt="Pass QR" class="w-36 h-36 mx-auto object-contain select-none" />
+                    <div class="bg-slate-900 text-amber-300 font-mono-code font-black text-xs py-1 px-2 rounded mt-1.5">
+                      ${rec.passId}
+                    </div>
+                  </div>
+
+                  <div class="flex gap-2 mt-2">
+                    <a href="${rec.qrUrl}" download="Pass_${rec.passId}.png" target="_blank"
+                      class="flex-1 bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 text-slate-950 font-mono-code font-bold text-xs py-2 px-3 rounded-xl transition flex items-center justify-center gap-1.5 active:scale-95 shadow">
+                      <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                      <span>Save QR to Gallery</span>
+                    </a>
+                  </div>
+                </div>
+              ` : `
+                <div class="mt-2 text-[10px] text-slate-400 leading-relaxed pt-2 border-t border-white/5 font-mono-code">
+                  Our finance team is currently cross-verifying your GCash payment receipt. Once approved, your official QR admission pass will be issued here and delivered to your email.
+                </div>
+              `}
+
+            </div>
+          `;
+        }).join('');
+
+        lucide.createIcons();
+
+      } catch (err) {
+        btn.disabled = false;
+        btn.innerHTML = `<span>Lookup</span>`;
+        resultsEl.innerHTML = `<div class="bg-rose-950/40 border border-rose-500/40 rounded-2xl p-4 text-center text-xs text-rose-300">Connection error. Please try again.</div>`;
+      }
+    }
   </script>
 
   <!-- ======================================================== -->
@@ -2458,6 +2596,48 @@
           Done
         </button>
       </div>
+
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- SELF-SERVICE FIND PASS / REGISTRATION STATUS MODAL       -->
+  <!-- ======================================================== -->
+  <div id="findPassModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-white/15 w-full max-w-lg rounded-3xl p-5 sm:p-6 text-center shadow-2xl relative animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+      
+      <!-- Close Button -->
+      <button type="button" onclick="closeFindPassModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-full transition cursor-pointer">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+
+      <!-- Modal Header -->
+      <div class="mb-4">
+        <div class="inline-flex items-center gap-1.5 text-[10px] font-mono-code font-bold uppercase tracking-wider text-amber-300 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-full mb-2">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5 text-amber-400"></i>
+          <span>DELEGATE SELF-SERVICE PORTAL</span>
+        </div>
+        <h3 class="font-bebas text-2xl sm:text-3xl text-white tracking-wide">FIND MY PASS & STATUS</h3>
+        <p class="text-xs text-slate-400 mt-0.5">Enter your email or reference code to view or re-download your pass</p>
+      </div>
+
+      <!-- Search Input Form -->
+      <form onsubmit="handleFindPassSubmit(event)" class="mb-4">
+        <div class="flex gap-2">
+          <div class="relative flex-1">
+            <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+            <input type="text" id="findPassQuery" required placeholder="Enter Email, Pass ID, or Reg Ref..."
+              class="w-full bg-slate-950/80 border border-white/15 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400 font-mono-code transition" />
+          </div>
+          <button type="submit" id="findPassBtn"
+            class="bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-slate-950 font-bold px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider active:scale-95 transition flex items-center gap-1.5 cursor-pointer flex-shrink-0">
+            <span>Lookup</span>
+          </button>
+        </div>
+      </form>
+
+      <!-- Dynamic Results Container (Scrollable) -->
+      <div id="findPassResults" class="flex-1 overflow-y-auto space-y-3 pr-1 text-left hidden"></div>
 
     </div>
   </div>
