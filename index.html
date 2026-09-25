@@ -2547,16 +2547,21 @@
                     </div>
                   </div>
 
-                  <!-- Action Buttons with ample bottom spacing -->
-                  <div class="flex flex-col gap-2 mt-1">
-                    <button type="button" onclick="downloadPassQrDirectly('${rec.qrUrl}', '${rec.passId}', this)"
-                      class="w-full min-h-[46px] bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 active:scale-[0.98] text-slate-950 font-mono-code font-extrabold text-xs py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-amber-400/20 cursor-pointer">
+                  <!-- Action Buttons with Solid High-Contrast Styling -->
+                  <div class="flex flex-col gap-2.5 mt-3.5 pt-3.5 border-t border-white/10">
+                    
+                    <!-- DOWNLOAD COMPLETE OFFICIAL PASS (Email Style) -->
+                    <button type="button" 
+                      onclick="downloadCompletePassTicket('${rec.qrUrl}', '${rec.passId}', '${safeNameAttr}', '${safeChurchAttr}', '${safeTierAttr}', '${rec.regId}', this)"
+                      style="background-color: #facc15 !important; color: #020617 !important;"
+                      class="w-full min-h-[46px] active:scale-[0.98] font-mono-code font-black text-xs py-3 px-4 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-yellow-500/20 cursor-pointer">
                       <i data-lucide="download" class="w-4 h-4 text-slate-950 flex-shrink-0"></i>
-                      <span>SAVE QR TO GALLERY</span>
+                      <span>DOWNLOAD OFFICIAL PASS</span>
                     </button>
 
+                    <!-- CREATE STORY CARD -->
                     <button type="button" onclick="openStoryModal('${safeNameAttr}', '${safeChurchAttr}', '${safeTierAttr}')"
-                      class="w-full min-h-[42px] bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white font-mono-code font-bold text-xs py-2 px-4 rounded-xl transition flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer">
+                      class="w-full min-h-[42px] bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white font-mono-code font-bold text-xs py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer">
                       <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400 flex-shrink-0"></i>
                       <span>CREATE STORY CARD</span>
                     </button>
@@ -2621,6 +2626,223 @@
         }
       } catch (err) {
         console.warn("Direct blob download restricted, falling back to window open:", err);
+        window.open(qrUrl, "_blank");
+        if (btnEl) {
+          btnEl.disabled = false;
+          btnEl.innerHTML = originalHtml;
+        }
+      }
+    }
+
+    // ==============================================================
+    // FULL EMAIL-STYLE VIP PASS GENERATOR (HTML5 CANVAS COMPOSITOR)
+    // Generates the complete conference pass matching the email design
+    // ==============================================================
+    async function downloadCompletePassTicket(qrUrl, passId, name, church, tier, regId, btnEl) {
+      const originalHtml = btnEl ? btnEl.innerHTML : "";
+      if (btnEl) {
+        btnEl.disabled = true;
+        btnEl.innerHTML = `<span class="animate-spin text-sm">⏳</span> <span>Generating Ticket Pass...</span>`;
+      }
+
+      try {
+        // 1. Create a dedicated HD Canvas (800 x 1280 px)
+        const canvas = document.createElement("canvas");
+        canvas.width = 800;
+        canvas.height = 1280;
+        const ctx = canvas.getContext("2d");
+
+        // 2. Load QR Image with CORS enabled
+        const qrImg = new Image();
+        qrImg.crossOrigin = "anonymous";
+        await new Promise((resolve, reject) => {
+          qrImg.onload = resolve;
+          qrImg.onerror = reject;
+          qrImg.src = qrUrl;
+        });
+
+        // 3. Draw Ticket Background
+        ctx.fillStyle = "#0B1120";
+        ctx.fillRect(0, 0, 800, 1280);
+
+        // Header Gradient Banner
+        const headGrad = ctx.createLinearGradient(0, 0, 800, 260);
+        headGrad.addColorStop(0, "#090e1a");
+        headGrad.addColorStop(0.5, "#1e1b4b");
+        headGrad.addColorStop(1, "#1d4ed8");
+        ctx.fillStyle = headGrad;
+        ctx.fillRect(0, 0, 800, 260);
+
+        // Top Gold Accent Bar
+        ctx.fillStyle = "#facc15";
+        ctx.fillRect(0, 0, 800, 8);
+
+        ctx.textAlign = "center";
+
+        // Header Eyebrow
+        ctx.fillStyle = "#fde047";
+        ctx.font = "bold 15px 'Space Mono', monospace";
+        ctx.letterSpacing = "4px";
+        ctx.fillText("HOPE OF LIFE CHRISTIAN MINISTRIES PRESENTS", 400, 56);
+
+        // Header Title: EMPOWERED
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "italic 900 78px 'Bebas Neue', sans-serif";
+        ctx.letterSpacing = "4px";
+        ctx.fillText("EMPOWERED", 400, 140);
+
+        // Tier Tag
+        ctx.fillStyle = "#facc15";
+        roundRect(ctx, 220, 172, 360, 44, 8, true, false);
+        ctx.fillStyle = "#020617";
+        ctx.font = "900 18px 'Space Mono', monospace";
+        ctx.letterSpacing = "3px";
+        ctx.fillText(`★ ${tier.toUpperCase()} ★`, 400, 201);
+
+        // Coupon Notch Dashed Divider
+        ctx.strokeStyle = "#334155";
+        ctx.lineWidth = 3;
+        ctx.setLineDash([12, 10]);
+        ctx.beginPath();
+        ctx.moveTo(30, 290);
+        ctx.lineTo(770, 290);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Cutout Notches on Left & Right
+        ctx.fillStyle = "#060913";
+        ctx.beginPath(); ctx.arc(0, 290, 20, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(800, 290, 20, 0, Math.PI * 2); ctx.fill();
+
+        // Delegate Status Pill
+        ctx.fillStyle = "rgba(16, 185, 129, 0.15)";
+        ctx.strokeStyle = "rgba(16, 185, 129, 0.6)";
+        ctx.lineWidth = 2;
+        roundRect(ctx, 230, 320, 340, 36, 18, true, true);
+        ctx.fillStyle = "#34d399";
+        ctx.font = "bold 13px 'Space Mono', monospace";
+        ctx.letterSpacing = "2px";
+        ctx.fillText("● PAYMENT VERIFIED & PASS ISSUED", 400, 343);
+
+        // Delegate Title
+        ctx.fillStyle = "#64748b";
+        ctx.font = "bold 14px 'Space Mono', monospace";
+        ctx.letterSpacing = "3px";
+        ctx.fillText("OFFICIAL DELEGATE", 400, 385);
+
+        // Delegate Full Name
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "900 42px 'Plus Jakarta Sans', sans-serif";
+        ctx.fillText(name.toUpperCase(), 400, 440);
+
+        // Church / Campus
+        ctx.fillStyle = "#38bdf8";
+        ctx.font = "bold 22px 'Plus Jakarta Sans', sans-serif";
+        ctx.fillText(church.toUpperCase(), 400, 480);
+
+        // 4. White QR Code Container
+        const qrBoxW = 420;
+        const qrBoxH = 430;
+        const qrBoxX = (800 - qrBoxW) / 2;
+        const qrBoxY = 515;
+
+        ctx.fillStyle = "#ffffff";
+        roundRect(ctx, qrBoxX, qrBoxY, qrBoxW, qrBoxH, 24, true, false);
+
+        ctx.fillStyle = "#059669";
+        ctx.font = "900 14px 'Space Mono', monospace";
+        ctx.letterSpacing = "2px";
+        ctx.fillText("● OFFICIAL ADMISSION CODE", 400, qrBoxY + 36);
+
+        // Draw the QR Code image (230 x 230 px)
+        ctx.drawImage(qrImg, 400 - 115, qrBoxY + 54, 230, 230);
+
+        // Black Pill with Gold Pass ID
+        ctx.fillStyle = "#090d16";
+        roundRect(ctx, 240, qrBoxY + 304, 320, 52, 12, true, false);
+        ctx.fillStyle = "#facc15";
+        ctx.font = "900 26px 'Courier New', monospace";
+        ctx.letterSpacing = "3px";
+        ctx.fillText(passId, 400, qrBoxY + 340);
+
+        // Registration Ref
+        ctx.fillStyle = "#64748b";
+        ctx.font = "bold 13px 'Courier New', monospace";
+        ctx.letterSpacing = "1px";
+        ctx.fillText(`REG REF: ${regId}`, 400, qrBoxY + 388);
+
+        // 5. Schedule & Location Box
+        const locBoxY = 970;
+        ctx.fillStyle = "#0d1527";
+        ctx.strokeStyle = "#1e293b";
+        ctx.lineWidth = 2;
+        roundRect(ctx, 90, locBoxY, 620, 160, 20, true, true);
+
+        // Date Column
+        ctx.fillStyle = "#64748b";
+        ctx.font = "bold 13px 'Space Mono', monospace";
+        ctx.fillText("DATE", 240, locBoxY + 36);
+        ctx.fillStyle = "#f8fafc";
+        ctx.font = "900 22px 'Plus Jakarta Sans', sans-serif";
+        ctx.fillText("AUG 30, 2027", 240, locBoxY + 68);
+
+        // Booths Column
+        ctx.fillStyle = "#64748b";
+        ctx.font = "bold 13px 'Space Mono', monospace";
+        ctx.fillText("CHECK-IN BOOTHS", 550, locBoxY + 36);
+        ctx.fillStyle = "#facc15";
+        ctx.font = "900 22px 'Plus Jakarta Sans', sans-serif";
+        ctx.fillText("7:30 AM PHT", 550, locBoxY + 68);
+
+        // Divider
+        ctx.strokeStyle = "#1e293b";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(110, locBoxY + 90);
+        ctx.lineTo(690, locBoxY + 90);
+        ctx.stroke();
+
+        // Venue Info
+        ctx.fillStyle = "#64748b";
+        ctx.font = "bold 12px 'Space Mono', monospace";
+        ctx.fillText("VENUE", 400, locBoxY + 114);
+        ctx.fillStyle = "#f8fafc";
+        ctx.font = "bold 18px 'Plus Jakarta Sans', sans-serif";
+        ctx.fillText("JIA CMNV, Quezon City (Jesus Is Alive Community Metro North)", 400, locBoxY + 138);
+
+        // 6. Footer Scripture
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "italic 16px 'Plus Jakarta Sans', sans-serif";
+        ctx.fillText('“You will receive power when the Holy Spirit comes on you...” — Acts 1:8', 400, 1180);
+        ctx.fillStyle = "#475569";
+        ctx.font = "13px 'Space Mono', monospace";
+        ctx.fillText("Hope of Life Christian Ministries • GGen Movement", 400, 1210);
+
+        // 7. Trigger Direct Image Download
+        canvas.toBlob((blob) => {
+          if (!blob) throw new Error("Canvas export failed");
+          const blobUrl = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = blobUrl;
+          a.download = `GGEN2027_OfficialPass_${passId}.png`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(blobUrl);
+
+          if (btnEl) {
+            btnEl.disabled = false;
+            btnEl.innerHTML = `<i data-lucide="check" class="w-4 h-4 text-slate-950"></i> <span>PASS DOWNLOADED!</span>`;
+            lucide.createIcons();
+            setTimeout(() => {
+              btnEl.innerHTML = originalHtml;
+              lucide.createIcons();
+            }, 2500);
+          }
+        }, "image/png");
+
+      } catch (err) {
+        console.error("Pass generation failed, falling back to direct QR:", err);
         window.open(qrUrl, "_blank");
         if (btnEl) {
           btnEl.disabled = false;
@@ -3053,12 +3275,22 @@
           class="max-h-[52vh] sm:max-h-[56vh] w-auto aspect-[9/16] rounded-2xl border-2 border-white/15 shadow-2xl shadow-blue-950/60 object-contain bg-slate-950"></canvas>
       </div>
 
-      <!-- Quick Customizer Inputs (Optional Tweak) -->
-      <div class="w-full grid grid-cols-2 gap-2 mb-3 text-left">
-        <input type="text" id="storyInputName" placeholder="Your Name" oninput="drawStoryCard()"
-          class="bg-slate-950 border border-white/15 rounded-xl px-2.5 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400 font-mono-code" />
-        <input type="text" id="storyInputChurch" placeholder="Your Church / Campus" oninput="drawStoryCard()"
-          class="bg-slate-950 border border-white/15 rounded-xl px-2.5 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400 font-mono-code" />
+      <!-- Quick Customizer Inputs with Clear Field Labels -->
+      <div class="w-full grid grid-cols-2 gap-2.5 mb-3 text-left font-mono-code">
+        <div>
+          <label class="block text-[9px] uppercase tracking-wider text-slate-400 font-bold mb-1">
+            Delegate Name
+          </label>
+          <input type="text" id="storyInputName" placeholder="Full Name" oninput="drawStoryCard()"
+            class="w-full bg-slate-950 border border-white/15 focus:border-amber-400 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none transition" />
+        </div>
+        <div>
+          <label class="block text-[9px] uppercase tracking-wider text-slate-400 font-bold mb-1">
+            Church / Campus
+          </label>
+          <input type="text" id="storyInputChurch" placeholder="Campus / Church" oninput="drawStoryCard()"
+            class="w-full bg-slate-950 border border-white/15 focus:border-amber-400 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none transition" />
+        </div>
       </div>
 
       <!-- Action Buttons -->
