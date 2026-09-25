@@ -1176,6 +1176,14 @@
           `;
         }
 
+        // DYNAMIC SQUAD SAVINGS CALLOUT (Editable from Google Sheets Column S)
+        const savingsBadgeHtml = tier.savingsCallout ? `
+          <span class="inline-flex items-center gap-1 text-[9px] font-mono-code font-extrabold uppercase text-emerald-300 bg-emerald-500/15 border border-emerald-500/40 px-2 py-0.5 rounded-md shadow-sm">
+            <i data-lucide="tag" class="w-2.5 h-2.5 text-emerald-400 flex-shrink-0"></i>
+            <span>${tier.savingsCallout}</span>
+          </span>
+        ` : '';
+
         return `
           <div onclick="${tier.isAvailable ? `selectTier('${tier.tierId}', '${tier.name}', ${tier.price}, this)` : ''}"
             data-qr-url="${tier.qrUrl || ''}"
@@ -1196,6 +1204,7 @@
               </div>
 
               <div class="min-w-0">
+                <!-- THIS IS WHERE IT GOES -->
                 <div class="flex items-center gap-2 flex-wrap">
                   <span class="font-bebas text-lg sm:text-xl tracking-wider text-white leading-tight">
                     ${tier.name}
@@ -1210,6 +1219,7 @@
                   ` : ''}
 
                   ${statusBadgeHtml}
+                  ${savingsBadgeHtml}
                 </div>
 
                 ${tier.coverageText ? `
@@ -2326,7 +2336,7 @@
       let totalAmount = 0;
 
       if (isBundle) {
-        // Flat Promo Rate (Does NOT multiply by pax)
+        // Flat Promo Rate
         totalAmount = currentSelectedTierObj.price;
         currentPaxCount = getBundlePaxCount(currentSelectedTierObj);
 
@@ -2335,11 +2345,15 @@
         if (incBtn) incBtn.classList.add("hidden");
         if (lockBadge) lockBadge.classList.remove("hidden");
 
+        const savingsText = currentSelectedTierObj.savingsCallout 
+          ? ` • <strong class="text-emerald-300">${currentSelectedTierObj.savingsCallout}</strong>` 
+          : '';
+
         if (paxTitle) paxTitle.innerText = "PROMO BUNDLE UNLOCKED";
-        if (paxNotice) paxNotice.innerHTML = `<span class="text-amber-300 font-semibold font-mono-code">🎁 Includes ${currentPaxCount} delegate passes (Fixed bundle rate)</span>`;
+        if (paxNotice) paxNotice.innerHTML = `<span class="text-amber-300 font-semibold font-mono-code">🎁 Includes ${currentPaxCount} delegate passes${savingsText}</span>`;
         if (paxCard) paxCard.className = "mt-3 bg-gradient-to-r from-amber-500/10 via-slate-900 to-slate-950 border border-amber-400/40 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-3 shadow-md";
       } else {
-        // Flexible Stepper Rate (Multiplies price by pax)
+        // Flexible Stepper Rate
         totalAmount = currentSelectedTierObj.price * currentPaxCount;
 
         if (countEl) countEl.innerText = currentPaxCount;
@@ -2354,7 +2368,21 @@
         if (lockBadge) lockBadge.classList.add("hidden");
 
         if (paxTitle) paxTitle.innerText = "NUMBER OF DELEGATES";
-        if (paxNotice) paxNotice.innerText = currentPaxCount === 1 ? "Single delegate registration" : `Group pass (${currentPaxCount} delegates)`;
+
+        // PASSIVE UPSELL: Suggest Buy 1 Take 1 when 2 pax is picked on flexible pass!
+        const b1t1Tier = activeTiersList.find(t => isBundleTier(t) && t.isAvailable && getBundlePaxCount(t) === 2);
+        if (currentPaxCount === 2 && b1t1Tier && b1t1Tier.price < totalAmount) {
+          const savings = totalAmount - b1t1Tier.price;
+          paxNotice.innerHTML = `
+            <span class="text-slate-300">Group pass (2 delegates).</span>
+            <span class="block text-amber-300 font-mono-code font-bold text-[10px] mt-0.5">
+              💡 Tip: Switch to <button type="button" onclick="selectTier('${b1t1Tier.tierId}', '${b1t1Tier.name}', ${b1t1Tier.price})" class="underline text-emerald-400 hover:text-emerald-300">B1T1 Promo</button> to save ₱${savings}!
+            </span>
+          `;
+        } else {
+          paxNotice.innerText = currentPaxCount === 1 ? "Single delegate registration" : `Group pass (${currentPaxCount} delegates)`;
+        }
+
         if (paxCard) paxCard.className = "mt-3 bg-slate-950/80 border border-white/10 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-3";
       }
 
@@ -2379,19 +2407,18 @@
       // Update QR Code Image
       if (qrImg) {
         if (isBundle) {
-          // For bundle: use the flat bundle QR (Col E)
           qrImg.src = currentSelectedTierObj.qrUrl || currentSelectedTierObj.qrUrls?.[1] || "";
         } else {
-          // For flexible: use QR matched to this specific pax count
           const qrMatrix = currentSelectedTierObj.qrUrls || {};
           qrImg.src = qrMatrix[currentPaxCount] || currentSelectedTierObj.qrUrl || "";
         }
 
-        // Fallback generator if empty
         if (!qrImg.src || qrImg.src.trim() === "") {
           qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=GCASH+PAYMENT+FOR+${encodeURIComponent(currentSelectedTierObj.name)}+TOTAL+PHP+${totalAmount}`;
         }
       }
+
+      lucide.createIcons();
     }
 
     // Dynamically builds delegate boxes up to 6 pax (Option B: Companion fields are optional)
