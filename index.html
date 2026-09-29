@@ -1498,135 +1498,177 @@
       lucide.createIcons();
     }
 
+    // ==============================================================
+    // 4 PILLARS COLOR MATRIX & AMBIENT STAGE CONFIG
+    // ==============================================================
     const colorConfig = {
       blue: {
-        border: "border-blue-500/40 hover:border-blue-400 hover:shadow-[0_0_30px_rgba(37,99,235,0.4)]",
-        badge: "bg-slate-950/95 text-sky-300 border-sky-400 shadow-md",
-        pulse: "bg-sky-400",
-        glow: "rgba(2,132,199,0.5)",
-        shadow: "rgba(56,189,248,0.5)",
-        subColor: "text-blue-400",
-        plenaryBadge: "bg-blue-500 text-slate-950"
+        border: "border-sky-500/40 hover:border-sky-400 hover:shadow-[0_0_35px_rgba(56,189,248,0.35)]",
+        badge: "bg-sky-950/90 text-sky-300 border-sky-400/60 shadow-lg",
+        pulse: "bg-sky-400 shadow-[0_0_10px_#38bdf8]",
+        glowRgb: "56, 189, 248",
+        subColor: "text-sky-400",
+        chipBg: "bg-sky-500/15 border-sky-400/40 text-sky-300",
+        footerTag: "text-sky-400"
       },
       amber: {
-        border: "border-amber-500/40 hover:border-amber-400 hover:shadow-[0_0_30px_rgba(245,158,11,0.4)]",
-        badge: "bg-slate-950/95 text-amber-300 border-amber-400 shadow-md",
-        pulse: "bg-amber-400",
-        glow: "rgba(245,158,11,0.5)",
-        shadow: "rgba(251,191,36,0.5)",
+        border: "border-amber-500/40 hover:border-amber-400 hover:shadow-[0_0_35px_rgba(245,158,11,0.35)]",
+        badge: "bg-amber-950/90 text-amber-300 border-amber-400/60 shadow-lg",
+        pulse: "bg-amber-400 shadow-[0_0_10px_#f59e0b]",
+        glowRgb: "245, 158, 11",
         subColor: "text-amber-400",
-        plenaryBadge: "bg-amber-400 text-slate-950"
+        chipBg: "bg-amber-500/15 border-amber-400/40 text-amber-300",
+        footerTag: "text-amber-400"
       },
       emerald: {
-        border: "border-emerald-500/40 hover:border-emerald-400 hover:shadow-[0_0_30px_rgba(16,185,129,0.4)]",
-        badge: "bg-slate-950/95 text-emerald-300 border-emerald-400 shadow-md",
-        pulse: "bg-emerald-400",
-        glow: "rgba(16,185,129,0.5)",
-        shadow: "rgba(52,211,153,0.5)",
+        border: "border-emerald-500/40 hover:border-emerald-400 hover:shadow-[0_0_35px_rgba(16,185,129,0.35)]",
+        badge: "bg-emerald-950/90 text-emerald-300 border-emerald-400/60 shadow-lg",
+        pulse: "bg-emerald-400 shadow-[0_0_10px_#10b981]",
+        glowRgb: "16, 185, 129",
         subColor: "text-emerald-400",
-        plenaryBadge: "bg-emerald-400 text-slate-950"
+        chipBg: "bg-emerald-500/15 border-emerald-400/40 text-emerald-300",
+        footerTag: "text-emerald-400"
       },
       purple: {
-        border: "border-purple-500/40 hover:border-purple-400 hover:shadow-[0_0_30px_rgba(168,85,247,0.4)]",
-        badge: "bg-slate-950/95 text-purple-300 border-purple-400 shadow-md",
-        pulse: "bg-purple-400",
-        glow: "rgba(168,85,247,0.5)",
-        shadow: "rgba(192,132,252,0.5)",
+        border: "border-purple-500/40 hover:border-purple-400 hover:shadow-[0_0_35px_rgba(168,85,247,0.35)]",
+        badge: "bg-purple-950/90 text-purple-300 border-purple-400/60 shadow-lg",
+        pulse: "bg-purple-400 shadow-[0_0_10px_#c084fc]",
+        glowRgb: "168, 85, 247",
         subColor: "text-purple-400",
-        plenaryBadge: "bg-purple-400 text-slate-950"
+        chipBg: "bg-purple-500/15 border-purple-400/40 text-purple-300",
+        footerTag: "text-purple-400"
       }
     };
 
     function getPillarThemeKey(sp) {
+      const pNum = (sp.pillarNum || '').toString().trim();
       const text = ((sp.pillarNum || '') + ' ' + (sp.title || '') + ' ' + (sp.theme || '')).toUpperCase();
-      if (text.includes('1') || text.includes('SPIRIT') || text.includes('BLUE')) return 'blue';
-      if (text.includes('2') || text.includes('LIFE') || text.includes('AMBER')) return 'amber';
-      if (text.includes('3') || text.includes('SOCIETY') || text.includes('EMERALD')) return 'emerald';
-      if (text.includes('4') || text.includes('WITNESS') || text.includes('PURPLE')) return 'purple';
+      
+      if (pNum === '1' || pNum === '01' || text.includes('SPIRIT') || text.includes('BLUE')) return 'blue';
+      if (pNum === '2' || pNum === '02' || text.includes('LIFE') || text.includes('AMBER')) return 'amber';
+      if (pNum === '3' || pNum === '03' || text.includes('SOCIETY') || text.includes('EMERALD')) return 'emerald';
+      if (pNum === '4' || pNum === '04' || text.includes('WITNESS') || text.includes('PURPLE')) return 'purple';
       return 'blue';
     }
-
+    
     // ==============================================================
-    // LEVELED PILLARS (MAXIMIZED THEME SUBTITLES, NO CUT-OFFS)
+    // CINEMATIC PILLARS ENGINE (DUAL VIGNETTE + STAGE SPOTLIGHT)
     // ==============================================================
     function renderSpeakers(speakers) {
       const container = document.getElementById("speakersContainer");
-      if (!speakers || speakers.length === 0) return;
-    
+      if (!container || !speakers || speakers.length === 0) return;
+
       container.innerHTML = speakers.map(sp => {
         const themeKey = getPillarThemeKey(sp);
         const theme = colorConfig[themeKey] || colorConfig.blue;
-        const isRevealed = (sp.status === 'REVEALED' && sp.photoUrl);
-    
-        // Clean pillar display name (e.g. "SPIRIT", "LIFE", "SOCIETY", "WITNESS") so top badge never cuts off into "EMPOWE..."
-        const pillarBadgeTitle = sp.title.replace(/EMPOWERED\s+/i, '');
-    
+        const isRevealed = (sp.status === 'REVEALED' && sp.photoUrl && sp.photoUrl.trim() !== "");
+
+        // Clean pillar title so the badge never truncates
+        const pillarBadgeTitle = (sp.title || 'PILLAR').replace(/EMPOWERED\s+/i, '').toUpperCase();
+        const pillarPNum = (sp.pillarNum || '1').toString().replace(/^0+/, '');
+
         return `
-          <div class="group relative rounded-3xl overflow-hidden border ${theme.border} shadow-2xl transition-all duration-500 hover:-translate-y-2 h-[440px] sm:h-[460px] flex flex-col justify-between p-5 bg-slate-950">
+          <div class="group relative rounded-3xl overflow-hidden border ${theme.border} shadow-2xl transition-all duration-500 hover:-translate-y-2 h-[450px] sm:h-[470px] flex flex-col justify-between p-5 bg-slate-950 select-none">
             
-            <!-- Background Photo / Silhouette -->
-            <div class="absolute inset-0 z-0 overflow-hidden">
+            <!-- 1. BACKGROUND PHOTO / THEMATIC STAGE SPOTLIGHT -->
+            <div class="absolute inset-0 z-0 overflow-hidden bg-slate-950">
               ${isRevealed ? `
-                <img src="${sp.photoUrl}" alt="${sp.speakerName}" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700" />
+                <!-- Speaker Photo -->
+                <img src="${sp.photoUrl}" alt="${sp.speakerName}" 
+                  class="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105" />
+
+                <!-- DUAL-VIGNETTE SCRIM (Protects top badges & dissolves white photo backdrops into obsidian) -->
+                <div class="absolute inset-x-0 top-0 h-32 pointer-events-none" 
+                  style="background: linear-gradient(180deg, rgba(6, 9, 19, 0.92) 0%, rgba(6, 9, 19, 0.55) 50%, transparent 100%);"></div>
+                <div class="absolute inset-x-0 bottom-0 h-3/5 pointer-events-none" 
+                  style="background: linear-gradient(0deg, #060913 0%, rgba(6, 9, 19, 0.95) 45%, rgba(6, 9, 19, 0.4) 80%, transparent 100%);"></div>
               ` : `
-                <div class="w-full h-full bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 flex items-center justify-center relative">
-                  <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_${theme.glow},_transparent_70%)]"></div>
-                  <svg class="relative z-10 w-28 sm:w-32 h-auto text-slate-950 group-hover:text-slate-900 transition-colors duration-300 drop-shadow-[0_0_15px_${theme.shadow}]" viewBox="0 0 100 120" fill="currentColor">
-                    <circle cx="50" cy="38" r="20" />
-                    <path d="M15 120 C15 75, 32 68, 50 68 C68 68, 85 75, 85 120 Z" />
-                  </svg>
+                <!-- Unrevealed Mystery Stage Atmosphere -->
+                <div class="w-full h-full relative flex items-center justify-center overflow-hidden">
+                  
+                  <!-- Dynamic Theme Stage Lights (Fixed with inline styles) -->
+                  <div class="absolute inset-0 pointer-events-none" 
+                    style="background: radial-gradient(circle at 50% 40%, rgba(${theme.glowRgb}, 0.22) 0%, rgba(${theme.glowRgb}, 0.05) 55%, transparent 75%);"></div>
+                  
+                  <!-- Upward Volumetric Stage Cone -->
+                  <div class="absolute bottom-16 left-1/2 -translate-x-1/2 w-48 h-64 pointer-events-none"
+                    style="background: linear-gradient(0deg, rgba(${theme.glowRgb}, 0.28) 0%, transparent 85%); clip-path: polygon(25% 100%, 75% 100%, 100% 0%, 0% 0%); transform: rotate(180deg);"></div>
+
+                  <!-- Mysterious Backlit Silhouette -->
+                  <div class="relative z-10 w-28 sm:w-32 h-auto text-slate-900 drop-shadow-[0_0_20px_rgba(${theme.glowRgb},0.4)] transition-transform duration-500 group-hover:scale-105">
+                    <svg viewBox="0 0 100 120" fill="currentColor">
+                      <circle cx="50" cy="36" r="19" />
+                      <path d="M16 120 C16 76, 32 68, 50 68 C68 68, 84 76, 84 120 Z" />
+                    </svg>
+                    <!-- Backlight Head Ring -->
+                    <div class="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full border border-white/10 pointer-events-none"
+                      style="box-shadow: 0 0 15px rgba(${theme.glowRgb}, 0.6);"></div>
+                  </div>
+
+                  <!-- Deep Bottom Gradient -->
+                  <div class="absolute inset-x-0 bottom-0 h-1/2 pointer-events-none"
+                    style="background: linear-gradient(0deg, #060913 0%, rgba(6, 9, 19, 0.95) 60%, transparent 100%);"></div>
                 </div>
               `}
-              <div class="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-slate-950/60 to-transparent pointer-events-none"></div>
-              <div class="absolute inset-x-0 bottom-0 h-[52%] bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent pointer-events-none"></div>
             </div>
-    
-            <!-- 1. TOP HEADER: CLEAN PILLAR BADGE (NO ELLIPSIS / NO CUT-OFF) -->
+
+            <!-- 2. TOP HEADER BADGES (Anchored with rich dark contrast) -->
             <div class="relative z-10 flex items-center justify-between gap-1.5 h-8 w-full">
-              <div class="${theme.badge} border text-xs sm:text-[13px] font-bebas tracking-wider px-3 py-1 rounded-xl uppercase shadow-lg flex items-center gap-1.5 whitespace-nowrap">
+              <div class="${theme.badge} border text-xs sm:text-[12.5px] font-bebas tracking-wider px-3 py-1 rounded-xl uppercase flex items-center gap-1.5 whitespace-nowrap">
                 <span class="w-2 h-2 rounded-full ${theme.pulse} ${isRevealed ? '' : 'animate-ping'} flex-shrink-0"></span>
                 <span>${pillarBadgeTitle}</span>
               </div>
-              <span class="bg-slate-950/90 border border-white/15 text-[9px] font-mono-code font-bold ${theme.subColor} px-2.5 py-1 rounded-xl uppercase shadow-sm whitespace-nowrap flex-shrink-0">
-                PLENARY ${sp.pillarNum}
+              <span class="bg-slate-950/90 border border-white/15 text-[9px] font-mono-code font-bold ${theme.subColor} px-2.5 py-1 rounded-xl uppercase shadow-md whitespace-nowrap flex-shrink-0">
+                PLENARY ${pillarPNum}
               </span>
             </div>
-    
-            <!-- 2. BOTTOM CONTENT -->
+
+            <!-- 3. BOTTOM CARD CONTENT -->
             <div class="relative z-10 text-left w-full">
               
-              <!-- Reveal Slot (Locks vertical baseline across all cards) -->
-              <div class="h-6 flex items-center mb-1">
-                ${!isRevealed ? `
-                  <span class="bg-amber-400 text-slate-950 font-mono-code font-black text-[9px] uppercase px-2 py-0.5 rounded tracking-wider shadow-md inline-block">
-                    PLENARY REVEAL SOON
+              <!-- Status Chip Slot -->
+              <div class="h-6 flex items-center mb-1.5">
+                ${isRevealed ? `
+                  <span class="inline-flex items-center gap-1 font-mono-code font-bold text-[9px] uppercase px-2 py-0.5 rounded-md ${theme.chipBg}">
+                    <i data-lucide="mic" class="w-2.5 h-2.5"></i>
+                    <span>KEYNOTE SPEAKER</span>
                   </span>
-                ` : ''}
+                ` : `
+                  <span class="inline-flex items-center gap-1 bg-amber-400 text-slate-950 font-mono-code font-black text-[9px] uppercase px-2 py-0.5 rounded-md tracking-wider shadow-md">
+                    <i data-lucide="sparkles" class="w-2.5 h-2.5 text-slate-950"></i>
+                    <span>REVEAL COMING SOON</span>
+                  </span>
+                `}
               </div>
-    
-              <!-- Speaker / Plenary Name -->
+
+              <!-- Main Title / Speaker Name -->
               <div class="h-14 sm:h-16 flex items-center">
                 <h3 class="font-bebas text-2xl sm:text-[1.75rem] text-white tracking-wide leading-tight drop-shadow-md line-clamp-2">
                   ${isRevealed ? sp.speakerName : sp.title}
                 </h3>
               </div>
-    
-              <!-- Church / Ministry / Title -->
+
+              <!-- Subtitle / Church or Theme Slot (NO DUPLICATION) -->
               <p class="text-[11px] ${theme.subColor} font-semibold uppercase tracking-wider font-mono-code truncate">
-                ${isRevealed ? sp.speakerTitle : sp.subtitle}
+                ${isRevealed ? (sp.speakerTitle || 'Guest Keynote') : 'PLENARY FOCUS'}
               </p>
-    
-              <!-- 3. FOOTER: 100% WIDTH DEDICATED TO THEME SUBTITLE -->
-              <div class="mt-3 pt-2.5 border-t border-white/10 flex items-center justify-between text-[10px] sm:text-[11px] font-mono-code">
-                <span class="text-white font-bold tracking-wider uppercase block text-left truncate w-full">
-                  ${sp.subtitle ? sp.subtitle.toUpperCase() : ''}
+
+              <!-- Footer Statement Line -->
+              <div class="mt-2.5 pt-2 border-t border-white/10 flex items-center justify-between text-[10px] sm:text-[10.5px] font-mono-code">
+                <span class="text-slate-300 font-bold tracking-wider uppercase block text-left truncate w-full" title="${sp.subtitle || ''}">
+                  “${(sp.subtitle || 'Power from within').toUpperCase()}”
                 </span>
               </div>
             </div>
-    
+
           </div>
         `;
       }).join('');
+
+      // Refresh icons for new mic/sparkle chips
+      if (window.lucide && typeof lucide.createIcons === 'function') {
+        lucide.createIcons();
+      }
     }
     
     // ==============================================================
