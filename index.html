@@ -3387,6 +3387,60 @@
       ctx.letterSpacing = "4px";
       ctx.fillText("#GGEN2027 • #EMPOWERED", W / 2, 1810);
     }
+
+    // ==============================================================
+    // CANVAS DRAWING HELPERS (REQUIRED FOR STORY CARD)
+    // ==============================================================
+
+    // Helper: Rounded Rectangle for Canvas
+    function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+      if (typeof radius === 'undefined') radius = 5;
+      if (typeof radius === 'number') {
+        radius = { tl: radius, tr: radius, br: radius, bl: radius };
+      } else {
+        const defaultRadius = { tl: 0, tr: 0, br: 0, bl: 0 };
+        for (const side in defaultRadius) {
+          radius[side] = radius[side] || defaultRadius[side];
+        }
+      }
+      ctx.beginPath();
+      ctx.moveTo(x + radius.tl, y);
+      ctx.lineTo(x + width - radius.tr, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius.tr);
+      ctx.lineTo(x + width, y + height - radius.br);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius.br, y + height);
+      ctx.lineTo(x + radius.bl, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius.bl);
+      ctx.lineTo(x, y + radius.tl);
+      ctx.quadraticCurveTo(x, y, x + radius.tl, y);
+      ctx.closePath();
+      if (fill) ctx.fill();
+      if (stroke) ctx.stroke();
+    }
+
+    // Helper: Multiline Text Wrapping for Delegate Names
+    function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+      const words = (text || "").split(" ");
+      let line = "";
+      let lines = [];
+
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + " ";
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && n > 0) {
+          lines.push(line);
+          line = words[n] + " ";
+        } else {
+          line = testLine;
+        }
+      }
+      lines.push(line);
+
+      const startY = lines.length > 1 ? y - ((lines.length - 1) * lineHeight) / 2 : y;
+      for (let k = 0; k < lines.length; k++) {
+        ctx.fillText(lines[k].trim(), x, startY + k * lineHeight);
+      }
+    }
     
     // 1-Tap Download PNG
     function downloadStoryCard() {
