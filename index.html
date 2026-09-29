@@ -1564,12 +1564,14 @@
     // ==============================================================
     // CINEMATIC PILLARS ENGINE (SOFT BLEND + 4 VIBRANT THEMES)
     // ==============================================================
+    // ==============================================================
+    // CINEMATIC PILLARS ENGINE (GLITCH-FREE NATIVE SVG RIM LIGHTING)
+    // ==============================================================
     function renderSpeakers(speakers) {
       const container = document.getElementById("speakersContainer");
       if (!container || !speakers || speakers.length === 0) return;
 
       container.innerHTML = speakers.map((sp, idx) => {
-        // Pass index to guarantee correct 01=Blue, 02=Amber, 03=Emerald, 04=Purple
         const themeKey = getPillarThemeKey(sp, idx);
         const theme = colorConfig[themeKey] || colorConfig.blue;
         const isRevealed = (sp.status === 'REVEALED' && sp.photoUrl && sp.photoUrl.trim() !== "");
@@ -1585,39 +1587,50 @@
               ${isRevealed ? `
                 <!-- Speaker Photo -->
                 <img src="${sp.photoUrl}" alt="${sp.speakerName}" 
-                  class="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105" />
+                  class="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                  style="filter: brightness(0.8) contrast(1.12);" />
 
-                <!-- RADIAL STUDIO BLEND: Melts grey studio backgrounds into dark obsidian on all 4 sides -->
+                <!-- Stage Light Overlay: Tints the grey studio wall with the Pillar's theme color -->
                 <div class="absolute inset-0 pointer-events-none" 
-                  style="background: radial-gradient(circle at 50% 35%, transparent 25%, rgba(6, 9, 19, 0.65) 60%, #060913 95%);"></div>
-                
-                <!-- Linear Scrims for Top Badges and Bottom Text -->
-                <div class="absolute inset-x-0 top-0 h-28 pointer-events-none" 
-                  style="background: linear-gradient(180deg, rgba(6, 9, 19, 0.95) 0%, rgba(6, 9, 19, 0.6) 50%, transparent 100%);"></div>
-                <div class="absolute inset-x-0 bottom-0 h-3/5 pointer-events-none" 
-                  style="background: linear-gradient(0deg, #060913 0%, rgba(6, 9, 19, 0.95) 50%, transparent 100%);"></div>
+                  style="background: radial-gradient(circle at 50% 35%, rgba(${theme.glowRgb}, 0.22) 0%, transparent 65%);"></div>
+
+                <!-- Deep Dark Scrim: Dissolves the photo edges and studio ceiling into obsidian -->
+                <div class="absolute inset-0 pointer-events-none" 
+                  style="background: linear-gradient(180deg, rgba(6, 9, 19, 0.9) 0%, rgba(6, 9, 19, 0.35) 35%, rgba(6, 9, 19, 0.95) 75%, #060913 100%);"></div>
               ` : `
-                <!-- Mystery Card Atmosphere (Color-matched to Pillar) -->
+                <!-- Mystery Card Atmosphere -->
                 <div class="w-full h-full relative flex items-center justify-center overflow-hidden">
                   
-                  <!-- Soft Color Glow Core -->
+                  <!-- Soft Radial Stage Glow (Wide & Diffused) -->
                   <div class="absolute inset-0 pointer-events-none" 
-                    style="background: radial-gradient(circle at 50% 40%, rgba(${theme.glowRgb}, 0.28) 0%, rgba(${theme.glowRgb}, 0.08) 50%, transparent 75%);"></div>
-                  
-                  <!-- Soft Upward Light Column (No glitchy polygon cutouts) -->
-                  <div class="absolute inset-x-12 bottom-0 top-12 pointer-events-none"
-                    style="background: radial-gradient(ellipse at 50% 50%, rgba(${theme.glowRgb}, 0.18) 0%, transparent 70%);"></div>
+                    style="background: radial-gradient(circle at 50% 40%, rgba(${theme.glowRgb}, 0.3) 0%, rgba(${theme.glowRgb}, 0.08) 55%, transparent 75%);"></div>
 
-                  <!-- Mysterious Backlit Silhouette -->
-                  <div class="relative z-10 w-28 sm:w-32 h-auto text-slate-900 drop-shadow-[0_0_25px_rgba(${theme.glowRgb},0.45)] transition-transform duration-500 group-hover:scale-105">
-                    <svg viewBox="0 0 100 120" fill="currentColor">
-                      <circle cx="50" cy="36" r="19" />
-                      <path d="M16 120 C16 76, 32 68, 50 68 C68 68, 84 76, 84 120 Z" />
-                    </svg>
-                    <!-- Halo Rim Light -->
-                    <div class="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full pointer-events-none"
-                      style="box-shadow: 0 0 20px rgba(${theme.glowRgb}, 0.7);"></div>
-                  </div>
+                  <!-- GLITCH-FREE NATIVE SVG SILHOUETTE (Rim Light Locked 1:1) -->
+                  <svg class="relative z-10 w-28 sm:w-32 h-auto transition-transform duration-500 group-hover:scale-105" viewBox="0 0 100 120" fill="none">
+                    <defs>
+                      <!-- Perfect Concentric Rim Gradient -->
+                      <linearGradient id="rimGrad_${idx}" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="rgba(${theme.glowRgb}, 0.85)" />
+                        <stop offset="50%" stop-color="rgba(${theme.glowRgb}, 0.25)" />
+                        <stop offset="100%" stop-color="transparent" />
+                      </linearGradient>
+
+                      <!-- Soft Head Aura (Centered exactly at cx=50, cy=38) -->
+                      <radialGradient id="headAura_${idx}" cx="50%" cy="38%" r="40%">
+                        <stop offset="0%" stop-color="rgba(${theme.glowRgb}, 0.45)" />
+                        <stop offset="100%" stop-color="transparent" />
+                      </radialGradient>
+                    </defs>
+
+                    <!-- Concentric Ambient Halo behind Head -->
+                    <circle cx="50" cy="38" r="30" fill="url(#headAura_${idx})" />
+
+                    <!-- Silhouette Head with Precision Rim Stroke -->
+                    <circle cx="50" cy="38" r="20" fill="#070c18" stroke="url(#rimGrad_${idx})" stroke-width="1.8" />
+
+                    <!-- Silhouette Torso with Precision Rim Stroke -->
+                    <path d="M15 120 C15 76, 32 68, 50 68 C68 68, 85 76, 85 120 Z" fill="#070c18" stroke="url(#rimGrad_${idx})" stroke-width="1.8" />
+                  </svg>
 
                   <!-- Bottom Darkness Dissolve -->
                   <div class="absolute inset-x-0 bottom-0 h-1/2 pointer-events-none"
