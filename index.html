@@ -615,7 +615,7 @@
         </span>
       </div>
 
-      <div id="teamContainer" class="flex overflow-x-auto pb-4 sm:pb-0 gap-4 sm:grid sm:grid-cols-4 snap-x snap-mandatory no-scrollbar">
+      <div id="teamContainer" class="flex overflow-x-auto pb-4 sm:pb-0 gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 snap-x snap-mandatory no-scrollbar">
         <div class="w-full py-12 text-center text-xs text-slate-500 font-mono-code">
           Loading team...
         </div>
@@ -1748,57 +1748,102 @@
     }
     
     // ==============================================================
-    // 2. LEVELED TEAM CARDS (ALL BADGES & NAMES AT EXACT SAME HEIGHT)
+    // EDITORIAL TEAM ENGINE (COLOR-CODED BADGES + PHOTO HARMONIZER)
     // ==============================================================
+    
+    // Departmental badge color-coding
+    function getTeamBadgeStyles(role, dept) {
+      const text = `${role || ''} ${dept || ''}`.toUpperCase();
+      if (text.includes("DIRECTOR") || text.includes("LEAD")) {
+        return "bg-amber-400 text-slate-950 font-black shadow-md shadow-amber-400/20";
+      }
+      if (text.includes("LOGISTICS") || text.includes("DELEGATE")) {
+        return "bg-sky-500/20 text-sky-300 border border-sky-400/50 shadow-sm";
+      }
+      if (text.includes("MEDIA") || text.includes("TECH") || text.includes("CREATIVE")) {
+        return "bg-purple-500/20 text-purple-300 border border-purple-400/50 shadow-sm";
+      }
+      if (text.includes("FINANCE") || text.includes("REGISTRATION")) {
+        return "bg-emerald-500/20 text-emerald-300 border border-emerald-400/50 shadow-sm";
+      }
+      if (text.includes("WORSHIP") || text.includes("MUSIC")) {
+        return "bg-rose-500/20 text-rose-300 border border-rose-400/50 shadow-sm";
+      }
+      return "bg-white/10 text-slate-200 border border-white/15";
+    }
+
     function renderTeam(team) {
       const container = document.getElementById("teamContainer");
-      if (!team || team.length === 0) return;
-    
+      if (!container || !team || team.length === 0) return;
+
       container.innerHTML = team.map(tm => {
+        const badgeClass = getTeamBadgeStyles(tm.roleBadge, tm.department);
+        
+        // Clean display title without clumsy "..." truncation
+        const cleanDept = (tm.department || 'Hope of Life CM')
+          .replace(/Christian Ministries/i, 'CM')
+          .trim();
+
         return `
-          <div class="w-72 sm:w-auto flex-shrink-0 snap-center group relative rounded-3xl overflow-hidden border border-white/10 hover:border-amber-400/60 shadow-2xl transition-all duration-500 hover:-translate-y-2 h-[400px] sm:h-[430px] flex flex-col justify-end p-5 bg-slate-950">
+          <div class="w-72 sm:w-auto flex-shrink-0 snap-center group relative rounded-3xl overflow-hidden border border-white/10 hover:border-amber-400/60 shadow-2xl transition-all duration-500 hover:-translate-y-2 h-[410px] sm:h-[440px] flex flex-col justify-end p-5 bg-slate-950 select-none">
             
-            <!-- Photo -->
-            <div class="absolute inset-0 z-0">
+            <!-- 1. PHOTO WITH UNIFIED EDITORIAL GRADING -->
+            <div class="absolute inset-0 z-0 overflow-hidden bg-slate-950">
               ${tm.photoUrl ? `
-                <img src="${tm.photoUrl}" alt="${tm.name}" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700" />
+                <img src="${tm.photoUrl}" alt="${tm.name}" 
+                  class="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                  style="filter: saturate(0.92) contrast(1.06);" />
+
+                <!-- Top vignette: protects heads against bright outdoor skies or white ceilings -->
+                <div class="absolute inset-x-0 top-0 h-24 pointer-events-none"
+                  style="background: linear-gradient(180deg, rgba(6, 9, 19, 0.85) 0%, rgba(6, 9, 19, 0.25) 50%, transparent 100%);"></div>
+
+                <!-- Subtle ambient perimeter vignette: harmonizes outdoor backgrounds with dark cards -->
+                <div class="absolute inset-0 pointer-events-none"
+                  style="background: radial-gradient(circle at 50% 35%, transparent 40%, rgba(6, 9, 19, 0.45) 85%);"></div>
+
+                <!-- Deep bottom text backing -->
+                <div class="absolute inset-x-0 bottom-0 h-[55%] pointer-events-none"
+                  style="background: linear-gradient(0deg, #060913 0%, rgba(6, 9, 19, 0.95) 45%, rgba(6, 9, 19, 0.3) 80%, transparent 100%);"></div>
               ` : `
+                <!-- Fallback Icon Avatar -->
                 <div class="w-full h-full bg-gradient-to-b from-blue-950/40 via-slate-900 to-slate-950 flex items-center justify-center">
                   <svg class="w-24 h-24 text-slate-700/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                     <circle cx="12" cy="7" r="4"></circle>
                   </svg>
                 </div>
+                <div class="absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent pointer-events-none"></div>
               `}
-              <div class="absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent pointer-events-none"></div>
             </div>
-    
-            <!-- Content Container -->
+
+            <!-- 2. CARD CONTENT -->
             <div class="relative z-10 text-left w-full">
               
-              <!-- FIXED-HEIGHT ROLE BADGE: Forces every badge onto the exact same horizontal line -->
-              <div class="h-7 flex items-center mb-1">
-                <span class="inline-block bg-amber-400 text-slate-950 font-mono-code font-black text-[9px] sm:text-[9.5px] uppercase px-2.5 py-0.5 rounded-md tracking-wider shadow-md truncate max-w-full">
+              <!-- DEPARTMENTAL COLOR-CODED BADGE -->
+              <div class="h-7 flex items-center mb-1.5">
+                <span class="inline-block font-mono-code text-[9px] sm:text-[9.5px] uppercase px-2.5 py-0.5 rounded-md tracking-wider ${badgeClass} truncate max-w-full">
                   ${tm.roleBadge}
                 </span>
               </div>
-    
-              <!-- FIXED-HEIGHT NAME CONTAINER: Prevents 1-line and 3-line names from misaligning the card -->
+
+              <!-- LEVELED NAME CONTAINER -->
               <div class="h-14 sm:h-16 flex items-center">
-                <h3 class="font-bebas text-2xl sm:text-[1.65rem] text-white tracking-wide leading-tight drop-shadow-md line-clamp-2">
+                <h3 class="font-bebas text-2xl sm:text-[1.7rem] text-white tracking-wide leading-tight drop-shadow-md line-clamp-2">
                   ${tm.name}
                 </h3>
               </div>
-    
-              <!-- DEPARTMENT FOOTER: Prevents long church names from wrapping clumsily -->
+
+              <!-- CLEAN, UNCLIPPED FOOTER -->
               <div class="mt-2 pt-2 border-t border-white/10 flex items-center justify-between text-[10px] font-mono-code text-slate-300">
-                <span class="text-blue-400 font-semibold truncate max-w-[140px] sm:max-w-[155px]" title="${tm.department}">
-                  ${tm.department}
+                <span class="text-sky-300 font-semibold tracking-wider uppercase truncate" title="${tm.department || ''}">
+                  ${cleanDept}
                 </span>
-                <span class="text-slate-500 font-bold flex-shrink-0">• GGen</span>
+                <span class="text-slate-500 font-bold flex-shrink-0 ml-1.5">• GGen</span>
               </div>
+
             </div>
-    
+
           </div>
         `;
       }).join('');
