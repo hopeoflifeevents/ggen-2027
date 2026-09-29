@@ -527,7 +527,8 @@
       if (statusText) statusText.innerText = "Querying Cloud...";
 
       try {
-        const response = await fetch(`${APPS_SCRIPT_API_URL}?action=checkIn&query=${encodeURIComponent(cleanCode)}`);
+        const passKey = typeof getGatePasskey === "function" ? getGatePasskey() : "GGEN2027_GATE";
+        const response = await fetch(`${APPS_SCRIPT_API_URL}?action=checkIn&query=${encodeURIComponent(cleanCode)}&passKey=${encodeURIComponent(passKey)}`);
         const result = await response.json();
 
         if (result && result.success && result.delegate) {
